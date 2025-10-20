@@ -1,0 +1,231 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+:root {
+  /* SK Group corporate color scheme */
+  --sk-red: 234 0 44; /* #EA002C - SK's signature red */
+  --sk-dark-gray: 51 51 51; /* #333333 */
+  --sk-light-gray: 102 102 102; /* #666666 */
+
+  /* Professional corporate theme */
+  --background: 15 15 20;
+  --foreground: 248 250 252;
+  --card: 20 20 28;
+  --card-foreground: 248 250 252;
+  --popover: 20 20 28;
+  --popover-foreground: 248 250 252;
+  --primary: 234 0 44; /* SK Red */
+  --primary-foreground: 255 255 255;
+  --secondary: 51 51 51; /* SK Dark Gray */
+  --secondary-foreground: 248 250 252;
+  --muted: 30 30 40;
+  --muted-foreground: 156 163 175;
+  --accent: 234 0 44;
+  --accent-foreground: 255 255 255;
+  --destructive: 239 68 68;
+  --destructive-foreground: 248 250 252;
+  --border: 40 40 50;
+  --input: 30 30 40;
+  --ring: 234 0 44;
+  --radius: 0.5rem;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.145 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.145 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.396 0.141 25.723);
+  --destructive-foreground: oklch(0.637 0.237 25.331);
+  --border: oklch(0.269 0 0);
+  --input: oklch(0.269 0 0);
+  --ring: oklch(0.439 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-ring: oklch(0.439 0 0);
+}
+
+@theme inline {
+  --color-sk-red: rgb(var(--sk-red));
+  --color-sk-dark-gray: rgb(var(--sk-dark-gray));
+  --color-sk-light-gray: rgb(var(--sk-light-gray));
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Corporate gradient with SK brand colors */
+    background: linear-gradient(135deg, rgb(15, 15, 20) 0%, rgb(20, 18, 22) 50%, rgb(25, 20, 25) 100%);
+    background-attachment: fixed;
+    color: #f8fafc !important;
+  }
+}
+
+/* Enhanced corporate card styling for Q&A interface */
+.corporate-card {
+  background: rgba(30, 30, 30, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(230, 30, 42, 0.15);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+  transition: all 0.3s ease;
+}
+
+.corporate-card:hover {
+  border-color: rgba(230, 30, 42, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(230, 30, 42, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Subtle SK red glow for accents */
+.glow-sk {
+  box-shadow: 0 0 20px rgba(234, 0, 44, 0.3), 0 0 40px rgba(234, 0, 44, 0.15);
+}
+
+/* Professional glass effect - kept from previous version */
+.glass-card {
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.3), inset 0 1px 0 0 rgba(255, 255, 255, 0.03);
+}
+
+/* Adding ranking gradient animations for rank changes */
+@keyframes rank-up-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(34, 197, 94, 0.4);
+  }
+}
+
+@keyframes rank-down-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 20px 5px rgba(239, 68, 68, 0.4);
+  }
+}
+
+.rank-up-gradient {
+  animation: rank-up-pulse 2s ease-out;
+  border-color: rgba(34, 197, 94, 0.5) !important;
+}
+
+.rank-down-gradient {
+  animation: rank-down-pulse 2s ease-out;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+/* Adding LIVE banner pulse animation */
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.live-pulse {
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+/* Custom range input styling for volume control */
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e61e2a;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(230, 30, 42, 0.4);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e61e2a;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(230, 30, 42, 0.4);
+}
