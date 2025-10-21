@@ -34,7 +34,10 @@ export interface UseSTTReturn {
  */
 export function useSTT(
   sessionId: string,
-  backendUrl: string = "ws://localhost:8000"
+  // 로컬 개발: ws://localhost:8000
+  // backendUrl: string = "ws://localhost:8000"
+  // 배포 (HTTPS): wss://ceo-seminar-2025.skax.co.kr
+  backendUrl: string = "wss://ceo-seminar-2025.skax.co.kr"
 ): UseSTTReturn {
   // 상태 관리
   const [isRecording, setIsRecording] = useState(false)
