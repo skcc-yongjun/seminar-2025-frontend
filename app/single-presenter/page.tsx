@@ -1,11 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Home, List, CheckCircle2, Mic, Sparkles } from "lucide-react"
+import { Home, List, CheckCircle2, Mic, Sparkles, MicOff, Volume2 } from "lucide-react"
 import Link from "next/link"
 import { QuestionCard } from "@/components/question-card"
+import { useSTT } from "@/hooks/use-stt"
+import { Card } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 
 const questions = [
   {
@@ -70,8 +73,23 @@ export default function SinglePresenterView() {
     topic: "AI Biz.Model 구축 방향",
   }
 
+  // STT Hook 사용 - 세션 시작 시 한 번만 생성
+  const sessionId = useMemo(() => `${presenterInfo.name}_${Date.now()}`, [presenterInfo.name])
+  const {
+    isRecording,
+    isConnected,
+    transcript,
+    confidence,
+    error: sttError,
+    startRecording,
+    stopRecording,
+    clearTranscript,
+  } = useSTT(sessionId)
+
+  // monitoring 단계에서 타이머 및 녹음 시작
   useEffect(() => {
     if (phase === "monitoring") {
+      // 타이머 시작
       const interval = setInterval(() => {
         setPresentationTime((prev) => prev + 1)
         setLiveScores({
@@ -82,15 +100,25 @@ export default function SinglePresenterView() {
         })
       }, 1000)
 
-      return () => clearInterval(interval)
-    }
-  }, [phase])
+      // STT 녹음 시작
+      if (!isRecording) {
+        startRecording()
+      }
 
-  useEffect(() => {
-    if (phase === "monitoring" && presentationTime >= 10) {
-      setPhase("completion")
+      return () => {
+        clearInterval(interval)
+      }
+    } else if (phase === "completion" && isRecording) {
+      // 발표 완료 시 녹음 중지
+      stopRecording()
     }
-  }, [presentationTime, phase])
+  }, [phase, isRecording, startRecording, stopRecording])
+
+  // useEffect(() => {
+  //   if (phase === "monitoring" && presentationTime >= 10) {
+  //     setPhase("completion")
+  //   }
+  // }, [presentationTime, phase])
 
   useEffect(() => {
     if (phase === "completion") {
@@ -238,8 +266,9 @@ export default function SinglePresenterView() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="absolute bottom-20 left-0 right-0 flex justify-center px-8"
+                className="absolute bottom-20 left-0 right-0 flex flex-col items-center px-8 gap-6"
               >
+                {/* 오디오 파형 시각화 */}
                 <div className="w-full max-w-2xl">
                   <div className="flex items-center justify-center gap-1 h-16">
                     {Array.from({ length: 60 }).map((_, i) => (
@@ -259,16 +288,93 @@ export default function SinglePresenterView() {
                     ))}
                   </div>
                 </div>
+
+                {/* 실시간 STT 결과 표시 */}
+                <Card className="w-full max-w-4xl bg-black/60 backdrop-blur-md border border-white/10 p-6">
+                  <div className="space-y-3">
+                    {/* 상태 표시 */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          {isRecording ? (
+                            <>
+                              <Volume2 className="w-5 h-5 text-[#E61E2A] animate-pulse" />
+                              <Badge variant="outline" className="border-[#E61E2A]/50 text-[#E61E2A]">
+                                녹음 중
+                              </Badge>
+                            </>
+                          ) : (
+                            <>
+                              <MicOff className="w-5 h-5 text-gray-400" />
+                              <Badge variant="outline" className="border-gray-500 text-gray-400">
+                                대기 중
+                              </Badge>
+                            </>
+                          )}
+                        </div>
+                        {isConnected && (
+                          <Badge variant="outline" className="border-green-500/50 text-green-400">
+                            STT 연결됨
+                          </Badge>
+                        )}
+                        {confidence > 0 && (
+                          <Badge variant="outline" className="border-blue-500/50 text-blue-400">
+                            신뢰도: {(confidence * 100).toFixed(0)}%
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 에러 메시지 */}
+                    {sttError && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                        <p className="text-red-400 text-sm">{sttError}</p>
+                      </div>
+                    )}
+
+                    {/* 트랜스크립트 표시 */}
+                    <div className="min-h-[120px] max-h-[200px] overflow-y-auto p-4 bg-black/40 rounded-lg border border-white/5">
+                      {transcript ? (
+                        <p className="text-white text-base leading-relaxed whitespace-pre-wrap">{transcript}</p>
+                      ) : (
+                        <p className="text-gray-500 text-sm italic">음성 인식 결과가 여기에 표시됩니다...</p>
+                      )}
+                    </div>
+                  </div>
+                </Card>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1 }}
-                className="absolute bottom-8 right-8"
+                className="absolute bottom-8 right-8 flex gap-3"
               >
                 <Button
-                  onClick={() => setPhase("completion")}
+                  onClick={() => {
+                    if (isRecording) {
+                      stopRecording()
+                    }
+                  }}
+                  variant="outline"
+                  className="border-white/20 hover:bg-white/5 text-white bg-black/40 backdrop-blur-md gap-2"
+                >
+                  {isRecording ? (
+                    <>
+                      <MicOff className="w-4 h-4" />
+                      녹음 중지
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-4 h-4" />
+                      녹음 시작
+                    </>
+                  )}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setPhase("completion")
+                  }}
                   variant="outline"
                   className="border-white/20 hover:bg-white/5 text-white bg-black/40 backdrop-blur-md"
                 >
