@@ -81,15 +81,15 @@ pnpm dev
 
 ## 🔧 Hook API
 
-### `useSTT(sessionId, backendUrl)`
+### `useSTT(presentationId, backendUrl)`
 
 실시간 STT를 위한 커스텀 Hook입니다.
 
 #### 파라미터
 
 ```typescript
-sessionId: string     // 세션 고유 ID (예: "윤풍영_1729512345")
-backendUrl?: string   // 백엔드 WebSocket URL (기본값: "ws://localhost:8000")
+presentationId: string  // 발표 고유 ID (예: "윤풍영_1729512345", PRESENTATION 테이블의 PK)
+backendUrl?: string     // 백엔드 WebSocket URL (기본값: "ws://localhost:8000")
 ```
 
 #### 반환값
@@ -124,7 +124,7 @@ function MyComponent() {
     error,
     startRecording,
     stopRecording,
-  } = useSTT("session_123")
+  } = useSTT("윤풍영_1729512345")  // presentationId
 
   return (
     <div>
@@ -220,7 +220,7 @@ useSTT()
 
 ```typescript
 // 다른 백엔드 서버 사용
-const stt = useSTT("session_123", "wss://my-backend.com")
+const stt = useSTT("윤풍영_1729512345", "wss://my-backend.com")
 ```
 
 ### 2. 오디오 설정 커스터마이징
@@ -290,8 +290,8 @@ function highlightKeywords(text: string, keywords: string[]) {
 curl http://localhost:8000/seminar/api/health
 
 // 올바른 URL 사용
-const stt = useSTT("session_123", "ws://localhost:8000")  // ✅
-// const stt = useSTT("session_123", "wss://localhost:8000")  // ❌ (로컬에서)
+const stt = useSTT("윤풍영_1729512345", "ws://localhost:8000")  // ✅
+// const stt = useSTT("윤풍영_1729512345", "wss://localhost:8000")  // ❌ (로컬에서)
 ```
 
 ### 3. 오디오 품질 문제

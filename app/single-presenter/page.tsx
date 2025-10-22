@@ -73,8 +73,9 @@ export default function SinglePresenterView() {
     topic: "AI Biz.Model 구축 방향",
   }
 
-  // STT Hook 사용 - 세션 시작 시 한 번만 생성
-  const sessionId = useMemo(() => `${presenterInfo.name}_${Date.now()}`, [presenterInfo.name])
+  // STT Hook 사용 - 발표 시작 시 한 번만 생성
+  // presentationId는 PRESENTATION 테이블의 PK와 일치해야 함
+  const presentationId = useMemo(() => `${presenterInfo.name}_${Date.now()}`, [presenterInfo.name])
   const {
     isRecording,
     isConnected,
@@ -84,7 +85,7 @@ export default function SinglePresenterView() {
     startRecording,
     stopRecording,
     clearTranscript,
-  } = useSTT(sessionId)
+  } = useSTT(presentationId)
 
   // monitoring 단계에서 타이머 및 녹음 시작
   useEffect(() => {

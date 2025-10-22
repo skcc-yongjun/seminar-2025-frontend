@@ -28,12 +28,12 @@ export interface UseSTTReturn {
 /**
  * 실시간 STT를 위한 커스텀 Hook
  * 
- * @param sessionId - 세션 ID (발표자 식별용)
+ * @param presentationId - 발표 ID (PRESENTATION 테이블의 presentation_id)
  * @param backendUrl - 백엔드 WebSocket URL (기본값: ws://localhost:8000)
  * @returns STT 관련 상태와 함수들
  */
 export function useSTT(
-  sessionId: string,
+  presentationId: string,
   // 로컬 개발: ws://localhost:8000
   // backendUrl: string = "ws://localhost:8000"
   // 배포 (HTTPS): wss://ceo-seminar-2025.skax.co.kr
@@ -59,7 +59,7 @@ export function useSTT(
    */
   const connectWebSocket = useCallback((): Promise<WebSocket> => {
     return new Promise((resolve, reject) => {
-      const wsUrl = `${backendUrl}/seminar/api/ws/stt/${sessionId}`
+      const wsUrl = `${backendUrl}/seminar/api/ws/stt/${presentationId}`
       const ws = new WebSocket(wsUrl)
 
       ws.binaryType = "arraybuffer"
@@ -106,7 +106,7 @@ export function useSTT(
 
       wsRef.current = ws
     })
-  }, [sessionId, backendUrl])
+  }, [presentationId, backendUrl])
 
   /**
    * 오디오를 PCM 형식으로 변환
