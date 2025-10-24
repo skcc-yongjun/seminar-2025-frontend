@@ -119,8 +119,8 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
     return (
       <div className="min-h-screen p-4 md:p-8 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">카테고리를 찾을 수 없습니다</h1>
-          <Link href="/qna" className="text-sk-red hover:underline">
+          <h1 className="text-4xl font-bold text-foreground mb-6">카테고리를 찾을 수 없습니다</h1>
+          <Link href="/qna" className="text-sk-red hover:underline text-xl">
             카테고리 목록으로 돌아가기
           </Link>
         </div>
@@ -129,38 +129,40 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-8 relative overflow-hidden">
+    <div className="min-h-screen h-screen p-4 md:p-8 relative overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sk-red/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sk-red/10 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-[1800px] mx-auto relative z-10 px-8 h-full flex flex-col">
         {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Link
             href="/qna"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-6"
+            className="inline-flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors mb-8 text-lg"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-7 h-7" />
             <span>카테고리 목록으로</span>
           </Link>
 
-          <div className="flex items-center gap-4 mb-4">
-            <div className="w-16 h-16 bg-sk-red rounded-xl flex items-center justify-center shadow-lg">
-              <MessageCircle className="w-8 h-8 text-white" />
+          <div className="flex items-center gap-6 mb-6">
+            <div className="w-24 h-24 bg-sk-red rounded-xl flex items-center justify-center shadow-lg">
+              <MessageCircle className="w-12 h-12 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-foreground text-balance">{data.title}</h1>
-              <p className="text-sk-red/70 mt-2">{data.subtitle}</p>
+              <h1 className="text-6xl md:text-7xl font-bold text-foreground text-balance">{data.title}</h1>
+              <p className="text-sk-red/70 mt-3 text-2xl">{data.subtitle}</p>
             </div>
           </div>
-          <p className="text-muted-foreground">AI 아바타가 순차적으로 생성되고 있습니다...</p>
+          {Object.values(generationStatus).some(status => status !== "complete") && (
+            <p className="text-muted-foreground text-xl">AI 아바타가 순차적으로 생성되고 있습니다...</p>
+          )}
         </motion.div>
 
         {/* Questions List */}
-        <div className={category === "group" || category === "business" ? "grid grid-cols-2 gap-6" : "space-y-4"}>
+        <div className={`flex-1 grid grid-cols-2 gap-12`}>
           {data.questions.map((question, index) => {
             const status = generationStatus[question.id] || "pending"
             const isClickable = status === "complete"
@@ -173,40 +175,39 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
                 transition={{ delay: index * 0.1 }}
               >
                 {isClickable ? (
-                  <Link href={`/qna/${category}/${question.id}`} className="block group">
-                    <div className="relative rounded-xl overflow-hidden border border-border/50 transition-all duration-300 hover:border-sk-red/50 hover:shadow-lg hover:shadow-sk-red/10 active:scale-[0.99] h-full">
+                  <Link href={`/qna/${category}/${question.id}`} className="block group h-full">
+                    <div className="relative rounded-xl overflow-hidden border border-border/50 transition-all duration-300 hover:border-border hover:shadow-xl hover:shadow-black/10 hover:scale-[1.02] active:scale-[0.98] h-full min-h-[350px] flex flex-col">
                       {/* Gradient overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-r from-sk-red/0 via-sk-red/5 to-sk-red/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
                       {/* Content */}
                       <div
-                        className={`relative backdrop-blur-sm bg-card/50 ${category === "group" || category === "business" ? "p-8" : "p-6"}`}
+                        className={`relative backdrop-blur-sm bg-card/50 flex-1 flex flex-col p-8`}
                       >
-                        <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 flex flex-col">
                           <div className="flex-1">
-                            <h3
-                              className={`font-semibold text-foreground mb-2 group-hover:text-sk-red transition-colors ${category === "group" || category === "business" ? "text-2xl" : "text-xl"}`}
-                            >
-                              {question.question}
-                            </h3>
                             <p
-                              className={`text-muted-foreground ${category === "group" || category === "business" ? "text-base" : "text-sm"}`}
+                              className={`text-muted-foreground/80 text-3xl leading-relaxed group-hover:text-muted-foreground/70 transition-colors mb-4`}
+                              style={{ wordBreak: 'keep-all' }}
                             >
                               {question.description}
                             </p>
+                            
+                            <h3
+                              className={`font-semibold text-foreground/90 mb-8 group-hover:text-foreground/80 transition-colors text-6xl leading-tight`}
+                              style={{ wordBreak: 'keep-all' }}
+                            >
+                              {question.question}
+                            </h3>
                           </div>
-                          <div className="flex-shrink-0 flex items-center gap-3">
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="text-xs text-green-500 font-medium whitespace-nowrap">
+                          <div className="flex justify-end items-end mt-4">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-green-500 font-medium">
                                 AI 이미지 생성 완료
                               </span>
-                            </div>
-                            <div
-                              className={`rounded-full bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors ${category === "group" || category === "business" ? "w-12 h-12" : "w-10 h-10"}`}
-                            >
-                              <CheckCircle
-                                className={`text-green-500 ${category === "group" || category === "business" ? "w-6 h-6" : "w-5 h-5"}`}
-                              />
+                              <div className="rounded-full bg-green-500/10 flex items-center justify-center group-hover:bg-green-500/20 transition-colors w-8 h-8">
+                                <CheckCircle className="text-green-500 w-4 h-4" />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -214,28 +215,30 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
                     </div>
                   </Link>
                 ) : (
-                  <div className="relative rounded-xl overflow-hidden border border-border/30 opacity-60 cursor-not-allowed h-full">
+                  <div className="relative rounded-xl overflow-hidden border border-border/30 opacity-60 cursor-not-allowed h-full min-h-[350px] flex flex-col">
                     {/* Content */}
                     <div
-                      className={`relative backdrop-blur-sm bg-card/30 ${category === "group" || category === "business" ? "p-8" : "p-6"}`}
+                      className={`relative backdrop-blur-sm bg-card/30 flex-1 flex flex-col p-8`}
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1 flex flex-col">
                         <div className="flex-1">
-                          <h3
-                            className={`font-semibold text-foreground/70 mb-2 ${category === "group" || category === "business" ? "text-2xl" : "text-xl"}`}
-                          >
-                            {question.question}
-                          </h3>
                           <p
-                            className={`text-muted-foreground/70 ${category === "group" || category === "business" ? "text-base" : "text-sm"}`}
+                            className={`text-gray-500 text-3xl leading-relaxed mb-4`}
+                            style={{ wordBreak: 'keep-all' }}
                           >
                             {question.description}
                           </p>
+                          <h3
+                            className={`font-semibold text-gray-400 mb-8 text-6xl leading-tight`}
+                            style={{ wordBreak: 'keep-all' }}
+                          >
+                            {question.question}
+                          </h3>
                         </div>
-                        <div className="flex-shrink-0 flex items-center gap-3">
-                          {status === "generating" && (
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="text-xs text-sk-red font-medium whitespace-nowrap">
+                        <div className="flex justify-end items-end mt-4">
+                          {status === "generating" ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-sk-red font-medium">
                                 AI 이미지 생성중
                               </span>
                               <div className="flex items-center gap-1">
@@ -258,48 +261,45 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
                                   />
                                 </div>
                               </div>
+                              <div className="rounded-full bg-sk-red/10 flex items-center justify-center w-8 h-8">
+                                <AnimatePresence mode="wait">
+                                  <motion.div
+                                    key="generating"
+                                    initial={{ scale: 0.8, opacity: 0 }}
+                                    animate={{
+                                      scale: [0.8, 1.1, 0.8],
+                                      opacity: 1,
+                                      rotate: [0, 5, -5, 0],
+                                    }}
+                                    exit={{ scale: 0.8, opacity: 0 }}
+                                    transition={{
+                                      scale: {
+                                        duration: 1.5,
+                                        repeat: Number.POSITIVE_INFINITY,
+                                        ease: "easeInOut",
+                                      },
+                                      rotate: {
+                                        duration: 2,
+                                        repeat: Number.POSITIVE_INFINITY,
+                                        ease: "easeInOut",
+                                      },
+                                    }}
+                                  >
+                                    <Brain className="text-sk-red w-4 h-4" />
+                                  </motion.div>
+                                </AnimatePresence>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground font-medium">
+                                대기중
+                              </span>
+                              <div className="rounded-full bg-muted-foreground/10 flex items-center justify-center w-8 h-8">
+                                <Brain className="text-muted-foreground w-4 h-4" />
+                              </div>
                             </div>
                           )}
-                          <div
-                            className={`rounded-full bg-sk-red/10 flex items-center justify-center ${category === "group" || category === "business" ? "w-12 h-12" : "w-10 h-10"}`}
-                          >
-                            <AnimatePresence mode="wait">
-                              {status === "generating" ? (
-                                <motion.div
-                                  key="generating"
-                                  initial={{ scale: 0.8, opacity: 0 }}
-                                  animate={{
-                                    scale: [0.8, 1.1, 0.8],
-                                    opacity: 1,
-                                    rotate: [0, 5, -5, 0],
-                                  }}
-                                  exit={{ scale: 0.8, opacity: 0 }}
-                                  transition={{
-                                    scale: {
-                                      duration: 1.5,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      ease: "easeInOut",
-                                    },
-                                    rotate: {
-                                      duration: 2,
-                                      repeat: Number.POSITIVE_INFINITY,
-                                      ease: "easeInOut",
-                                    },
-                                  }}
-                                >
-                                  <Brain
-                                    className={`text-sk-red ${category === "group" || category === "business" ? "w-6 h-6" : "w-5 h-5"}`}
-                                  />
-                                </motion.div>
-                              ) : (
-                                <motion.div key="pending" initial={{ opacity: 0.3 }} animate={{ opacity: 0.3 }}>
-                                  <Brain
-                                    className={`text-muted-foreground ${category === "group" || category === "business" ? "w-6 h-6" : "w-5 h-5"}`}
-                                  />
-                                </motion.div>
-                              )}
-                            </AnimatePresence>
-                          </div>
                         </div>
                       </div>
                     </div>
