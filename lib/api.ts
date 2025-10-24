@@ -1,9 +1,10 @@
 // API configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
-
 export const API_ENDPOINTS = {
   presentations: `${API_BASE_URL}/api/presentations`,
   presentationAnalysis: (id: string) => `${API_BASE_URL}/api/presentations/${id}/analysis`,
+  category: (category: string) => `${API_BASE_URL}/api/category/${category}`,
+  question: (category: string, question: string) => `${API_BASE_URL}/api/question/${category}/${question}`,
   // Add more endpoints as needed
   // evaluations: `${API_BASE_URL}/api/evaluations`,
 } as const
@@ -55,4 +56,21 @@ export interface PresentationAnalysisResponse {
 export interface ApiError {
   message: string
   status?: number
+}
+
+export interface CategoryResponse {
+  title: string
+  subtitle: string
+  questions: Array<{
+    id: string
+    question: string
+    description: string
+  }>
+}
+
+export interface QuestionResponse {
+  id: string
+  title: string
+  answer: string
+  categoryName: string
 }

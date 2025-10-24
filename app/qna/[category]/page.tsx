@@ -3,112 +3,80 @@
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, MessageCircle, Brain, CheckCircle, Sparkles } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, use } from "react"
+import { API_ENDPOINTS, fetchWithErrorHandling, type CategoryResponse } from "@/lib/api"
 
-const categoryData: Record<
-  string,
-  {
-    title: string
-    subtitle: string
-    questions: Array<{ id: string; question: string; description: string }>
-  }
-> = {
-  business: {
-    title: "비즈니스",
-    subtitle: "Business",
-    questions: [
-      {
-        id: "strategy",
-        question: "우리 회사의 핵심 비즈니스 전략은 무엇인가요?",
-        description: "장기 비전과 전략적 방향성",
-      },
-      {
-        id: "innovation",
-        question: "디지털 혁신은 어떻게 추진하고 있나요?",
-        description: "디지털 전환과 기술 혁신 계획",
-      },
-      {
-        id: "growth",
-        question: "신규 사업 확장 계획은?",
-        description: "새로운 성장 동력 발굴",
-      },
-      {
-        id: "customer",
-        question: "고객 가치 창출 방안은?",
-        description: "고객 중심 경영과 서비스 혁신",
-      },
-    ],
-  },
-  group: {
-    title: "그룹사",
-    subtitle: "SK Group",
-    questions: [
-      {
-        id: "vision",
-        question: "SK그룹의 비전과 미션은 무엇인가요?",
-        description: "그룹의 핵심 가치와 목표",
-      },
-      {
-        id: "synergy",
-        question: "계열사 간 시너지는 어떻게 창출하나요?",
-        description: "그룹 차원의 협력과 통합",
-      },
-      {
-        id: "culture",
-        question: "SK그룹의 조직 문화는?",
-        description: "기업 문화와 핵심 가치",
-      },
-      {
-        id: "esg",
-        question: "ESG 경영 추진 현황은?",
-        description: "지속가능경영과 사회적 책임",
-      },
-    ],
-  },
-  market: {
-    title: "시장",
-    subtitle: "Market",
-    questions: [
-      {
-        id: "trend",
-        question: "현재 시장 트렌드는 어떻게 변화하고 있나요?",
-        description: "산업 동향과 시장 변화",
-      },
-      {
-        id: "competition",
-        question: "경쟁 환경은 어떻게 분석하고 있나요?",
-        description: "경쟁사 분석과 시장 포지셔닝",
-      },
-      {
-        id: "opportunity",
-        question: "새로운 시장 기회는?",
-        description: "시장과 성장 가능성",
-      },
-      {
-        id: "customer-needs",
-        question: "고객 니즈는 어떻게 변화하고 있나요?",
-        description: "소비자 행동과 수요 변화",
-      },
-      {
-        id: "regulation",
-        question: "규제 환경 변화에 어떻게 대응하나요?",
-        description: "법규 준수와 리스크 관리",
-      },
-      {
-        id: "forecast",
-        question: "시장 전망과 예측은?",
-        description: "미래 시장 예측과 대응 전략",
-      },
-    ],
-  },
-}
+type CategoryData = CategoryResponse
 
-export default function QnAQuestions({ params }: { params: { category: string } }) {
-  const { category } = params
-  const data = categoryData[category]
+export default function QnAQuestions({ params }: { params: Promise<{ category: string }> }) {
+  const { category } = use(params)
+  const [data, setData] = useState<CategoryData | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
 
   const [generationStatus, setGenerationStatus] = useState<Record<string, "pending" | "generating" | "complete">>({})
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(0)
+
+    // Fetch category data from API
+  useEffect(() => {
+    const fetchCategoryData = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const categoryData = await fetchWithErrorHandling<CategoryResponse>(
+          API_ENDPOINTS.category(category)
+        )
+        setData(categoryData)
+
+      } catch (err) {
+        console.error('Error fetching category data:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch category data')
+        
+        // Fallback to hardcoded data if API fails
+        const fallbackData: Record<string, CategoryData> = {
+          business: {
+            title: "비즈니스",
+            subtitle: "Business",
+            questions: [
+              { id: "strategy", question: "우리 회사의 핵심 비즈니스 전략은 무엇인가요?", description: "장기 비전과 전략적 방향성" },
+              { id: "innovation", question: "디지털 혁신은 어떻게 추진하고 있나요?", description: "디지털 전환과 기술 혁신 계획" },
+              { id: "growth", question: "신규 사업 확장 계획은?", description: "새로운 성장 동력 발굴" },
+              { id: "customer", question: "고객 가치 창출 방안은?", description: "고객 중심 경영과 서비스 혁신" },
+            ],
+          },
+          group: {
+            title: "그룹사",
+            subtitle: "SK Group",
+            questions: [
+              { id: "vision", question: "SK그룹의 비전과 미션은 무엇인가요?", description: "그룹의 핵심 가치와 목표" },
+              { id: "synergy", question: "계열사 간 시너지는 어떻게 창출하나요?", description: "그룹 차원의 협력과 통합" },
+              { id: "culture", question: "SK그룹의 조직 문화는?", description: "기업 문화와 핵심 가치" },
+              { id: "esg", question: "ESG 경영 추진 현황은?", description: "지속가능경영과 사회적 책임" },
+            ],
+          },
+          market: {
+            title: "시장",
+            subtitle: "Market",
+            questions: [
+              { id: "trend", question: "현재 시장 트렌드는 어떻게 변화하고 있나요?", description: "산업 동향과 시장 변화" },
+              { id: "competition", question: "경쟁 환경은 어떻게 분석하고 있나요?", description: "경쟁사 분석과 시장 포지셔닝" },
+              { id: "opportunity", question: "새로운 시장 기회는?", description: "시장과 성장 가능성" },
+              { id: "customer-needs", question: "고객 니즈는 어떻게 변화하고 있나요?", description: "소비자 행동과 수요 변화" },
+              { id: "regulation", question: "규제 환경 변화에 어떻게 대응하나요?", description: "법규 준수와 리스크 관리" },
+              { id: "forecast", question: "시장 전망과 예측은?", description: "미래 시장 예측과 대응 전략" },
+            ],
+          },
+        }
+        setData(fallbackData[category] || null)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCategoryData()
+  }, [category])
+
 
   useEffect(() => {
     if (!data) return

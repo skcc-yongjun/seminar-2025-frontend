@@ -1,5 +1,11 @@
 --- 2025-10-24 START ---
 # api 정리 예정
+2차 부분 api를 대략적으로 정리 했습니다.
+자세한 내용은 
+/server/server.js   -> sample 데이터 및 express 관련 파일
+/lib/api.ts         -> api 주소 및 데이터 형식
+를 참고 하세요
+
 
 # Survey 추가
 개발 예정

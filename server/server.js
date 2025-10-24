@@ -167,6 +167,42 @@ const presentationAnalyses = {
   }
 };
 
+// QnA category data (from frontend)
+const categoryData = {
+  business: {
+    title: "비즈니스",
+    subtitle: "Business",
+    questions: [
+      { id: "strategy", question: "우리 회사의 핵심 비즈니스 전략은 무엇인가요?", description: "장기 비전과 전략적 방향성" },
+      { id: "innovation", question: "디지털 혁신은 어떻게 추진하고 있나요?", description: "디지털 전환과 기술 혁신 계획" },
+      { id: "growth", question: "신규 사업 확장 계획은?", description: "새로운 성장 동력 발굴" },
+      { id: "customer", question: "고객 가치 창출 방안은?", description: "고객 중심 경영과 서비스 혁신" },
+    ],
+  },
+  group: {
+    title: "그룹사",
+    subtitle: "SK Group",
+    questions: [
+      { id: "vision", question: "SK그룹의 비전과 미션은 무엇인가요?", description: "그룹의 핵심 가치와 목표" },
+      { id: "synergy", question: "계열사 간 시너지는 어떻게 창출하나요?", description: "그룹 차원의 협력과 통합" },
+      { id: "culture", question: "SK그룹의 조직 문화는?", description: "기업 문화와 핵심 가치" },
+      { id: "esg", question: "ESG 경영 추진 현황은?", description: "지속가능경영과 사회적 책임" },
+    ],
+  },
+  market: {
+    title: "시장",
+    subtitle: "Market",
+    questions: [
+      { id: "trend", question: "현재 시장 트렌드는 어떻게 변화하고 있나요?", description: "산업 동향과 시장 변화" },
+      { id: "competition", question: "경쟁 환경은 어떻게 분석하고 있나요?", description: "경쟁사 분석과 시장 포지셔닝" },
+      { id: "opportunity", question: "새로운 시장 기회는?", description: "시장과 성장 가능성" },
+      { id: "customer-needs", question: "고객 니즈는 어떻게 변화하고 있나요?", description: "소비자 행동과 수요 변화" },
+      { id: "regulation", question: "규제 환경 변화에 어떻게 대응하나요?", description: "법규 준수와 리스크 관리" },
+      { id: "forecast", question: "시장 전망과 예측은?", description: "미래 시장 예측과 대응 전략" },
+    ],
+  },
+};
+
 // GET /presentations endpoint
 app.get('/api/presentations', (req, res) => {
   console.log('GET /presentations requested');
@@ -198,8 +234,128 @@ app.get('/api/presentations/:id/analysis', (req, res) => {
   res.json(analysis);
 });
 
+// Question data for individual questions
+const questionData = {
+  business: {
+    strategy: {
+      id: "Q1",
+      title: "우리 회사의 핵심 비즈니스 전략은 무엇인가요?",
+      answer: "SK그룹의 핵심 비즈니스 전략은 AI와 디지털 기술을 기반으로 한 지속가능한 성장입니다. 반도체, 배터리, 통신 등 핵심 사업에서 기술 리더십을 강화하고, 신사업 발굴을 통해 미래 성장 동력을 확보합니다. 또한 ESG 경영을 통해 사회적 가치를 창출하며, 글로벌 시장에서의 경쟁력을 지속적으로 높여나가고 있습니다.",
+      categoryName: "비즈니스",
+    },
+    innovation: {
+      id: "Q2",
+      title: "디지털 혁신은 어떻게 추진하고 있나요?",
+      answer: "SK그룹은 AI, 빅데이터, 클라우드 등 첨단 기술을 활용한 디지털 전환을 적극 추진하고 있습니다. 전사적 데이터 플랫폼을 구축하여 계열사 간 데이터를 통합하고, AI 기반 의사결정 시스템을 도입하여 업무 효율성을 극대화합니다. 또한 디지털 인재 양성 프로그램을 운영하여 조직 전체의 디지털 역량을 강화하고 있습니다.",
+      categoryName: "비즈니스",
+    },
+    growth: {
+      id: "Q3",
+      title: "신규 사업 확장 계획은?",
+      answer: "SK그룹은 미래 성장 동력 확보를 위해 친환경 에너지, 바이오헬스, AI 등 신산업 분야에 적극 투자하고 있습니다. 특히 수소 경제 생태계 구축, 차세대 배터리 기술 개발, AI 기반 헬스케어 서비스 등에 집중하며, 글로벌 파트너십을 통해 시장 진입을 가속화하고 있습니다.",
+      categoryName: "비즈니스",
+    },
+    customer: {
+      id: "Q4",
+      title: "고객 가치 창출 방안은?",
+      answer: "고객 중심 경영을 핵심 가치로 삼고, 고객 데이터 분석을 통해 맞춤형 서비스를 제공합니다. AI 기반 고객 경험 플랫폼을 구축하여 고객 여정 전반에서 최적의 경험을 제공하며, 지속적인 고객 피드백 수렴을 통해 제품과 서비스를 개선합니다. 고객 만족도 향상이 곧 기업 가치 증대로 이어진다는 믿음으로 혁신을 추진합니다.",
+      categoryName: "비즈니스",
+    },
+  },
+  group: {
+    vision: {
+      id: "Q1",
+      title: "SK그룹의 비전과 미션은 무엇인가요?",
+      answer: "SK그룹의 비전은 '지속가능한 행복'입니다. 경제적 가치와 사회적 가치를 동시에 추구하며, 모든 이해관계자의 행복을 증진시키는 것을 목표로 합니다. AI와 디지털 기술을 활용하여 사회 문제를 해결하고, 탄소중립을 실현하며, 포용적 성장을 이루어 더 나은 미래를 만들어갑니다.",
+      categoryName: "그룹사",
+    },
+    synergy: {
+      id: "Q2",
+      title: "계열사 간 시너지는 어떻게 창출하나요?",
+      answer: "SK그룹은 계열사 간 기술, 인력, 데이터를 공유하여 시너지를 창출합니다. 공동 R&D 프로젝트를 추진하고, 통합 플랫폼을 구축하여 효율성을 높입니다. 반도체-배터리-통신 등 핵심 사업 간 연계를 강화하여 밸류체인 전반의 경쟁력을 향상시키며, 그룹 차원의 전략적 의사결정을 통해 최적의 자원 배분을 실현합니다.",
+      categoryName: "그룹사",
+    },
+    culture: {
+      id: "Q3",
+      title: "SK그룹의 조직 문화는?",
+      answer: "SK그룹은 'SKMS(SK Management System)'를 기반으로 한 독특한 조직 문화를 가지고 있습니다. 구성원의 행복을 최우선으로 하며, 수평적 소통과 자율적 의사결정을 장려합니다. 실패를 두려워하지 않는 도전 정신, 지속적인 학습과 성장, 사회적 책임을 중시하는 문화를 통해 혁신을 추구합니다.",
+      categoryName: "그룹사",
+    },
+    esg: {
+      id: "Q4",
+      title: "ESG 경영 추진 현황은?",
+      answer: "SK그룹은 ESG 경영을 핵심 전략으로 추진하고 있습니다. 2030년까지 탄소 배출량을 대폭 감축하고, 2050년 탄소중립을 목표로 합니다. 재생에너지 투자를 확대하고, 친환경 기술 개발에 집중하며, 사회적 가치 창출을 위한 다양한 프로그램을 운영합니다. 투명한 지배구조를 확립하고, 이해관계자와의 소통을 강화하여 지속가능한 성장을 실현합니다.",
+      categoryName: "그룹사",
+    },
+  },
+  market: {
+    trend: {
+      id: "Q1",
+      title: "현재 시장 트렌드는 어떻게 변화하고 있나요?",
+      answer: "글로벌 시장은 AI, 친환경, 디지털 전환이 주요 트렌드로 자리잡고 있습니다. 특히 생성형 AI의 급속한 발전으로 산업 전반의 패러다임이 변화하고 있으며, 탄소중립 달성을 위한 친환경 기술 수요가 급증하고 있습니다. 또한 메타버스, Web3.0 등 새로운 디지털 생태계가 형성되면서 비즈니스 모델의 혁신이 가속화되고 있습니다.",
+      categoryName: "시장",
+    },
+    competition: {
+      id: "Q2",
+      title: "경쟁 환경은 어떻게 분석하고 있나요?",
+      answer: "글로벌 경쟁이 심화되는 가운데, 기술 혁신 속도와 고객 경험이 핵심 경쟁 요소로 부상하고 있습니다. 주요 경쟁사들의 전략을 면밀히 분석하고, 우리의 강점을 극대화할 수 있는 차별화 전략을 수립합니다. 특히 AI, 반도체, 배터리 등 핵심 기술 분야에서 선도적 위치를 확보하기 위해 지속적인 R&D 투자와 인재 확보에 주력하고 있습니다.",
+      categoryName: "시장",
+    },
+    opportunity: {
+      id: "Q3",
+      title: "새로운 시장 기회는?",
+      answer: "AI 반도체, 전기차 배터리, 수소 에너지, 바이오헬스 등 신산업 분야에서 큰 성장 기회가 있습니다. 특히 글로벌 탄소중립 정책으로 친환경 기술 시장이 급성장하고 있으며, 디지털 헬스케어 수요도 증가하고 있습니다. 신흥 시장에서의 중산층 확대와 디지털화 가속화도 새로운 기회를 제공하고 있습니다.",
+      categoryName: "시장",
+    },
+    "customer-needs": {
+      id: "Q4",
+      title: "고객 니즈는 어떻게 변화하고 있나요?",
+      answer: "고객들은 개인화된 경험, 지속가능성, 편의성을 중시하는 방향으로 변화하고 있습니다. AI 기반 맞춤형 서비스에 대한 기대가 높아지고, 친환경 제품에 대한 선호도가 증가하고 있습니다. 또한 옴니채널 경험과 즉각적인 서비스를 요구하며, 기업의 사회적 책임에 대한 관심도 커지고 있습니다.",
+      categoryName: "시장",
+    },
+    regulation: {
+      id: "Q5",
+      title: "규제 환경 변화에 어떻게 대응하나요?",
+      answer: "글로벌 규제 환경을 면밀히 모니터링하고, 선제적 대응 체계를 구축하고 있습니다. 특히 데이터 프라이버시, AI 윤리, 탄소 배출 규제 등에 대비하여 컴플라이언스 시스템을 강화하고 있습니다. 정부 및 규제 기관과의 협력을 통해 합리적인 규제 방향을 제시하고, 내부 리스크 관리 체계를 지속적으로 개선합니다.",
+      categoryName: "시장",
+    },
+    forecast: {
+      id: "Q6",
+      title: "시장 전망과 예측은?",
+      answer: "향후 5년간 AI, 반도체, 배터리 시장은 연평균 20% 이상 성장할 것으로 전망됩니다. 특히 생성형 AI 시장은 폭발적으로 성장하며, 전기차 보급 확대로 배터리 수요도 급증할 것입니다. 친환경 에너지 전환이 가속화되면서 수소, 태양광 등 신재생 에너지 시장도 크게 확대될 것으로 예상됩니다. 이러한 시장 변화에 선제적으로 대응하여 성장 기회를 선점하겠습니다.",
+      categoryName: "시장",
+    },
+  },
+};
+
+// GET /api/category/:category endpoint
+app.get('/api/category/:category', (req, res) => {
+  const { category } = req.params;
+  const data = categoryData[category];
+  if (!data) {
+    return res.status(404).json({ error: 'Category not found' });
+  }
+  res.json(data);
+});
+
+// GET /api/question/:category/:question endpoint
+app.get('/api/question/:category/:question', (req, res) => {
+  const { category, question } = req.params;
+  const categoryQuestions = questionData[category];
+  if (!categoryQuestions) {
+    return res.status(404).json({ error: 'Category not found' });
+  }
+  const questionDetail = categoryQuestions[question];
+  if (!questionDetail) {
+    return res.status(404).json({ error: 'Question not found' });
+  }
+  res.json(questionDetail);
+});
+
 app.listen(port, () => {
   console.log(`API Server running at http://localhost:${port}`);
   console.log(`Presentations endpoint: http://localhost:${port}/api/presentations`);
   console.log(`Analysis endpoint: http://localhost:${port}/api/presentations/:id/analysis`);
+  console.log(`Category endpoints: http://localhost:${port}/api/category/{business|group|market}`);
+  console.log(`Category Question endpoints: http://localhost:${port}/api/question/:category/:question`);
 });
