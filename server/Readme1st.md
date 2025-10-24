@@ -1,12 +1,17 @@
 --- 2025-10-24 START ---
 # api 정리 예정
 
-# Survey 추가 예정
+# Survey 추가
+개발 예정
+최상단 page.tsx에 해당 메뉴 추가 했음
+(추후 별개로 정리 예정)
 Ipad로 survey
 평가 이미 완료시 재평가 불가
 BE로 DeviceID 송신
 (Ipad DeviceID 확인 여부.... 안되면 ip나 Mac주소)
 특정 url로 분기
+
+
 
 --- 2025-10-24 END ---
 --- 2025-10-23 START ---

@@ -102,6 +102,25 @@ export default function SessionEntry() {
               </div>
             </Link>
           </motion.div>
+          {/* Survey Start */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <Link href="/survey/presentation-001" className="block group">
+              {/* </CHANGE> */}
+              <div className="relative w-full h-24 rounded-xl overflow-hidden border border-sk-red/30 transition-all duration-300 hover:border-sk-red/60 hover:shadow-lg hover:shadow-sk-red/20 active:scale-[0.98]">
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-sk-red/0 via-sk-red/5 to-sk-red/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-sk-red/10 via-sk-red/20 to-sk-red/10 opacity-0 group-active:opacity-100 transition-opacity duration-150" />
+
+                {/* Button content */}
+                <div className="relative h-full flex items-center justify-center px-6 backdrop-blur-sm bg-card/30">
+                  <span className="text-xl font-semibold text-foreground text-center text-balance group-hover:text-sk-red transition-colors duration-300">
+                    Survey
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </motion.div>          
+          {/* Survey End */}
         </div>
       </div>
 
