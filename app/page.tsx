@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight } from "lucide-react"
+import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight, MessageCircleQuestion } from "lucide-react"
 
 export default function SessionEntry() {
   const steps = [
@@ -80,7 +80,7 @@ export default function SessionEntry() {
                 {/* Button content */}
                 <div className="relative h-full flex items-center justify-center px-6 backdrop-blur-sm bg-card/30">
                   <span className="text-xl font-semibold text-foreground text-center text-balance group-hover:text-sk-red transition-colors duration-300">
-                    발표 종료 후 대시보드
+                    [session1] 발표 종료 후 대시보드
                   </span>
                 </div>
               </div>
@@ -96,12 +96,32 @@ export default function SessionEntry() {
                 {/* Button content */}
                 <div className="relative h-full flex items-center justify-center px-6 backdrop-blur-sm">
                   <span className="text-xl font-bold text-sk-red text-center text-balance group-hover:text-white transition-colors duration-300">
-                    전체 종합평가 결과
+                    [session1] 전체 종합평가 결과
                   </span>
                 </div>
               </div>
             </Link>
           </motion.div>
+
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <Link href="/qna" className="block group">
+              <div className="relative w-full h-24 rounded-xl overflow-hidden border border-cyan-500/30 transition-all duration-300 hover:border-cyan-500/60 hover:shadow-lg hover:shadow-cyan-500/20 active:scale-[0.98]">
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/5 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-cyan-500/20 to-cyan-500/10 opacity-0 group-active:opacity-100 transition-opacity duration-150" />
+
+                {/* Button content */}
+                <div className="relative h-full flex items-center justify-center gap-3 px-6 backdrop-blur-sm bg-card/30">
+                  <MessageCircleQuestion className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300" />
+                  <span className="text-xl font-semibold text-foreground text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
+                    [session2] Q&amp;A 세션
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+                    
           {/* Survey Start */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
             <Link href="/survey/presentation-001" className="block group">
