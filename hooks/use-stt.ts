@@ -59,6 +59,11 @@ export function useSTT(
    */
   const connectWebSocket = useCallback((): Promise<WebSocket> => {
     return new Promise((resolve, reject) => {
+      if (!presentationId) {
+        reject(new Error("presentationId가 필요합니다"))
+        return
+      }
+      
       const wsUrl = `${backendUrl}/seminar/api/ws/stt/${presentationId}`
       const ws = new WebSocket(wsUrl)
 
