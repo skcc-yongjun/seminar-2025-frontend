@@ -407,7 +407,7 @@ export default function SinglePresenterView() {
                   transition={{ delay: 0.3 }}
                   className="space-y-4"
                 >
-                  <h2 className="text-4xl font-bold text-white">발표가 완료되었습니다</h2>
+                  <h2 className="text-4xl font-bold text-white">첫번째 발표가 종료되었습니다</h2>
                   <p className="text-xl text-gray-400">AI가 발표 내용을 분석하여 Q&A를 준비하고 있습니다</p>
                   <div className="flex items-center justify-center gap-2 pt-4">
                     <div

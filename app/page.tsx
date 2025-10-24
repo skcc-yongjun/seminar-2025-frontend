@@ -69,6 +69,15 @@ export default function SessionEntry() {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 text-balance">{"SK그룹 CEO Seminar"}</h1>
         </motion.div>
 
+          {/* Session Divider */}
+          <div className="flex items-center my-8">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+            <div className="px-4 py-2 bg-card/50 rounded-full border border-border/50">
+              <span className="text-sm font-medium text-muted-foreground">Session 1</span>
+            </div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+          </div>
+
         <div className="space-y-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Link href="/post-presentation" className="block group">
@@ -102,6 +111,37 @@ export default function SessionEntry() {
               </div>
             </Link>
           </motion.div>
+
+          {/* Survey Start */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <Link href="/survey/presentation-001" className="block group">
+              {/* </CHANGE> */}
+              <div className="relative w-full h-24 rounded-xl overflow-hidden border border-sk-red/30 transition-all duration-300 hover:border-sk-red/60 hover:shadow-lg hover:shadow-sk-red/20 active:scale-[0.98]">
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-sk-red/0 via-sk-red/5 to-sk-red/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-sk-red/10 via-sk-red/20 to-sk-red/10 opacity-0 group-active:opacity-100 transition-opacity duration-150" />
+
+                {/* Button content */}
+                <div className="relative h-full flex items-center justify-center px-6 backdrop-blur-sm bg-card/30">
+                  <span className="text-xl font-semibold text-foreground text-center text-balance group-hover:text-sk-red transition-colors duration-300">
+                    Survey
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </motion.div>          
+          {/* Survey End */}
+
+          {/* Session Divider */}
+          <div className="flex items-center my-8">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+            <div className="px-4 py-2 bg-card/50 rounded-full border border-border/50">
+              <span className="text-sm font-medium text-muted-foreground">Session 2</span>
+            </div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+          </div>
+
+          
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <Link href="/single-presenter" className="block group">
@@ -139,25 +179,6 @@ export default function SessionEntry() {
             </Link>
           </motion.div>
                     
-          {/* Survey Start */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Link href="/survey/presentation-001" className="block group">
-              {/* </CHANGE> */}
-              <div className="relative w-full h-24 rounded-xl overflow-hidden border border-sk-red/30 transition-all duration-300 hover:border-sk-red/60 hover:shadow-lg hover:shadow-sk-red/20 active:scale-[0.98]">
-                {/* Gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-sk-red/0 via-sk-red/5 to-sk-red/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <div className="absolute inset-0 bg-gradient-to-r from-sk-red/10 via-sk-red/20 to-sk-red/10 opacity-0 group-active:opacity-100 transition-opacity duration-150" />
-
-                {/* Button content */}
-                <div className="relative h-full flex items-center justify-center px-6 backdrop-blur-sm bg-card/30">
-                  <span className="text-xl font-semibold text-foreground text-center text-balance group-hover:text-sk-red transition-colors duration-300">
-                    Survey
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </motion.div>          
-          {/* Survey End */}
         </div>
       </div>
 
