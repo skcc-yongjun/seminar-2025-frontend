@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seminar-frontend
+  labels:
+    app: seminar-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seminar-frontend
+  template:
+    metadata:
+      labels:
+        app: seminar-frontend
+    spec:
+      containers:
+        - name: seminar-frontend
+          image: hypernovaprdacr.azurecr.io/seminar-frontend:latest
+          ports:
+            - containerPort: 3000
+          readinessProbe:
+            httpGet:
+              path: /seminar
+              port: 3000
+            initialDelaySeconds: 3
+            periodSeconds: 5
