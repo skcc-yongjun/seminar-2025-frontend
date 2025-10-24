@@ -8,6 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Sample presentations data
+// [Session 1] 발표자 목록 DTO
 const presentations = [
   {
     id: "1",
@@ -36,6 +37,7 @@ const presentations = [
 ];
 
 // Sample presentation analysis data
+// [Session 1] 발표 분석 데이터 DTO (본 건은 목록인데, 실제는 단건으로 나와야 함)
 const presentationAnalyses = {
   "1": {
     id: "1",
@@ -168,6 +170,7 @@ const presentationAnalyses = {
 };
 
 // QnA category data (from frontend)
+// [Session 2] Q&A 카테고리 데이터 DTO, 여기도 카테고리 별로 질문 목록이 나와야 함. (화면이 카테고리별로 분리되어 있음)
 const categoryData = {
   business: {
     title: "비즈니스",
