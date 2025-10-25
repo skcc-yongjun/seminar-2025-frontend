@@ -14,13 +14,13 @@ export default function QnAAnswerClient({
   question: string
 }) {
   const [data, setData] = useState<QuestionResponse | null>(null)
-  const [showAnswer, setShowAnswer] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [displayedText, setDisplayedText] = useState("")
   const [isTyping, setIsTyping] = useState(false)
+  const [isShowingAnswer, setIsShowingAnswer] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const toggleVideo = () => {
@@ -51,6 +51,25 @@ export default function QnAAnswerClient({
     }, speed)
   }
 
+  const toggleQuestionAnswer = () => {
+    const newShowingAnswer = !isShowingAnswer
+    setIsShowingAnswer(newShowingAnswer)
+    
+    // 비디오 일시정지
+    if (videoRef.current) {
+      videoRef.current.pause()
+      setIsPlaying(false)
+    }
+    
+    // 타이핑 효과로 텍스트 변경
+    const textToShow = newShowingAnswer ? data?.answerText : data?.questionText
+    if (textToShow) {
+      setTimeout(() => {
+        typeText(textToShow, 40)
+      }, 300)
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -61,11 +80,11 @@ export default function QnAAnswerClient({
         )
         setData(questionData)
         
-        // 타이핑 효과 시작
+        // 타이핑 효과 시작 (초기에는 질문 텍스트)
         if (questionData.questionText) {
           setTimeout(() => {
-            typeText(questionData.questionText!, 50)
-          }, 500) // 1초 후 시작
+            typeText(questionData.questionText, 50)
+          }, 500) // 0.5초 후 시작
         }
       } catch (error) {
         console.error('Failed to fetch question data:', error)
@@ -155,11 +174,11 @@ export default function QnAAnswerClient({
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
-            {data.questionVideoUrl ? (
+            {(isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl) ? (
               <>
                 <video
                   ref={videoRef}
-                  src={data.questionVideoUrl}
+                  src={isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl}
                   className="w-full h-full object-cover"
                   onEnded={() => setIsPlaying(false)}
                   onPlay={() => setIsPlaying(true)}
@@ -200,7 +219,9 @@ export default function QnAAnswerClient({
           className="w-full max-w-5xl mb-8"
         >
           <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-8">
-            <h3 className="text-lg font-semibold mb-4 text-white">질문 내용</h3>
+            <h3 className="text-lg font-semibold mb-4 text-white">
+              {isShowingAnswer ? "답변 내용" : "질문 내용"}
+            </h3>
             <div className="bg-black/20 rounded-lg p-6 max-h-40 overflow-y-auto">
               <p className="text-gray-300 leading-relaxed text-3xl">
                 {displayedText}
@@ -226,24 +247,15 @@ export default function QnAAnswerClient({
             <span>목록으로</span>
           </Link>
 
-          {/* View Answer Button */}
+          {/* Toggle Question/Answer Button */}
           <button
-            onClick={() => setShowAnswer(!showAnswer)}
+            onClick={toggleQuestionAnswer}
             className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-600/30 w-full sm:w-auto"
           >
-            실시간 생성한 답변 보기
+            {isShowingAnswer ? "질문 보기" : "답변 보기"}
           </button>
         </motion.div>
 
-        {/* Answer Section (shown when button is clicked) */}
-        {showAnswer && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-12 max-w-3xl w-full">
-            <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-8">
-              <h2 className="text-xl font-semibold mb-4">답변 내용</h2>
-              <p className="text-gray-300 leading-relaxed">{data.answer}</p>
-            </div>
-          </motion.div>
-        )}
       </div>
 
       {/* Footer */}
