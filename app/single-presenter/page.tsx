@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Home, CheckCircle2, Mic, MicOff, Volume2, ChevronDown } from "lucide-react"
+import { Home, CheckCircle2, Mic, MicOff, Volume2, ChevronDown, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useSTT } from "@/hooks/use-stt"
 import { Card } from "@/components/ui/card"
@@ -16,9 +16,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { fetchPresentationsWithPresenters, type PresentationWithPresenter } from "@/lib/api"
+import { useSearchParams } from "next/navigation"
 
 
 export default function SinglePresenterView() {
+  const searchParams = useSearchParams()
+  const sessionParam = searchParams.get('session') || "세션1"
   const [phase, setPhase] = useState<"waiting" | "monitoring" | "completion">("monitoring")
   const [isPresentationStarted, setIsPresentationStarted] = useState(false)
   const [liveScores, setLiveScores] = useState({
@@ -29,42 +33,43 @@ export default function SinglePresenterView() {
   })
   const [presentationTime, setPresentationTime] = useState(0)
 
-  // 발표자 목록
-  const presenters = [
-    {
-      id: 1,
-      name: "윤풍영",
-      company: "SK AX",
-      topic: "AI Biz.Model 구축 방향",
-    },
-    {
-      id: 2,
-      name: "김민수",
-      company: "SK Telecom",
-      topic: "5G 네트워크 혁신 전략",
-    },
-    {
-      id: 3,
-      name: "박지은",
-      company: "SK Hynix",
-      topic: "반도체 기술 로드맵",
-    },
-    {
-      id: 4,
-      name: "이준호",
-      company: "SK Energy",
-      topic: "친환경 에너지 전환",
-    },
-    {
-      id: 5,
-      name: "최서연",
-      company: "SK Innovation",
-      topic: "배터리 기술 혁신",
-    },
-  ]
+  // 세션 타입 선택 (URL 파라미터에서 초기값 설정)
+  const [selectedSessionType, setSelectedSessionType] = useState<string>(sessionParam)
 
-  const [selectedPresenterId, setSelectedPresenterId] = useState<number>(1)
-  const presenterInfo = presenters.find(p => p.id === selectedPresenterId) || presenters[0]
+  // API에서 발표자 목록 가져오기
+  const [presenters, setPresenters] = useState<PresentationWithPresenter[]>([])
+  const [isLoadingPresenters, setIsLoadingPresenters] = useState(true)
+  const [presentersError, setPresentersError] = useState<string | null>(null)
+
+  const [selectedPresenterId, setSelectedPresenterId] = useState<string>("")
+  const presenterInfo = presenters.find(p => p.presentation_id === selectedPresenterId) || presenters[0]
+
+  // 발표자 목록 로드 (세션 타입이 변경될 때마다 재로드)
+  useEffect(() => {
+    const loadPresenters = async () => {
+      try {
+        setIsLoadingPresenters(true)
+        setPresentersError(null)
+        const data = await fetchPresentationsWithPresenters(selectedSessionType)
+        console.log(`Loaded presentations for ${selectedSessionType}:`, data)
+        setPresenters(data)
+        
+        // 첫 번째 발표자를 기본으로 선택
+        if (data.length > 0) {
+          setSelectedPresenterId(data[0].presentation_id)
+        } else {
+          setSelectedPresenterId("")
+        }
+      } catch (error) {
+        console.error("Failed to load presentations:", error)
+        setPresentersError("발표자 목록을 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoadingPresenters(false)
+      }
+    }
+
+    loadPresenters()
+  }, [selectedSessionType])
 
   // STT Hook 사용 - 발표 시작 시에만 생성
   // presentationId는 PRESENTATION 테이블의 PK와 일치해야 함
@@ -149,7 +154,7 @@ export default function SinglePresenterView() {
 
   const handleStartPresentation = () => {
     console.log("발표 시작 버튼 클릭")
-    const newPresentationId = `${presenterInfo.name}_${Date.now()}`
+    const newPresentationId = presenterInfo?.presentation_id || `${presenterInfo?.presenter?.name}_${Date.now()}`
     console.log("새로운 presentationId:", newPresentationId)
     setCurrentPresentationId(newPresentationId)
     setIsPresentationStarted(true)
@@ -228,46 +233,116 @@ export default function SinglePresenterView() {
                         </div>
                         <div className="w-px h-4 bg-white/20" />
                         <div className="flex items-center gap-2">
-                          <span className="text-white text-sm font-medium">
-                            {presenterInfo.name} ({presenterInfo.company})
+                          <span className={`text-xs font-bold px-2 py-1 rounded ${
+                            selectedSessionType === "세션1" 
+                              ? "bg-[#E61E2A]/30 text-[#E61E2A]" 
+                              : "bg-cyan-500/30 text-cyan-400"
+                          }`}>
+                            {selectedSessionType}
                           </span>
                           <span className="text-gray-400 text-sm">·</span>
-                          <span className="text-gray-300 text-sm">{presenterInfo.topic}</span>
+                          <span className="text-white text-sm font-medium">
+                            {presenterInfo?.presenter?.name || "발표자 없음"} ({presenterInfo?.presenter?.company || ""})
+                          </span>
+                          <span className="text-gray-400 text-sm">·</span>
+                          <span className="text-gray-300 text-sm">{presenterInfo?.topic || "제목 없음"}</span>
                         </div>
                         <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
                       </div>
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-96 bg-black/90 backdrop-blur-md border-white/10 max-h-[500px] overflow-y-auto">
-                    <DropdownMenuLabel className="text-white font-bold text-base">발표자 선택</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-white font-bold text-base">세션 선택</DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-white/10" />
-                    {presenters.map((presenter) => (
-                      <DropdownMenuItem
-                        key={presenter.id}
+                    
+                    {/* 세션 선택 버튼 */}
+                    <div className="flex gap-2 p-2">
+                      <button
                         onClick={() => {
                           if (!isPresentationStarted) {
-                            setSelectedPresenterId(presenter.id)
+                            setSelectedSessionType("세션1")
                           }
                         }}
                         disabled={isPresentationStarted}
-                        className={`flex flex-col items-start gap-2 p-3 cursor-pointer ${
-                          selectedPresenterId === presenter.id
-                            ? "bg-[#E61E2A]/20 text-white border-l-2 border-[#E61E2A]"
-                            : "text-gray-300 hover:bg-white/10 hover:text-white"
-                        } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : ""}`}
+                        className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                          selectedSessionType === "세션1"
+                            ? "bg-[#E61E2A] text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
                       >
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-2">
-                            {selectedPresenterId === presenter.id && (
-                              <CheckCircle2 className="w-4 h-4 text-[#E61E2A]" />
-                            )}
-                            <span className="font-semibold text-sm">{presenter.name}</span>
-                            <span className="text-xs text-gray-400">({presenter.company})</span>
+                        세션1
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (!isPresentationStarted) {
+                            setSelectedSessionType("세션2")
+                          }
+                        }}
+                        disabled={isPresentationStarted}
+                        className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                          selectedSessionType === "세션2"
+                            ? "bg-cyan-500 text-white"
+                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                      >
+                        세션2
+                      </button>
+                    </div>
+                    
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuLabel className="text-white font-bold text-base">발표자 선택</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    
+                    {isLoadingPresenters ? (
+                      <div className="flex items-center justify-center py-8 gap-2">
+                        <Loader2 className="w-5 h-5 text-[#E61E2A] animate-spin" />
+                        <span className="text-gray-400 text-sm">발표자 목록 로딩 중...</span>
+                      </div>
+                    ) : presentersError ? (
+                      <div className="p-4 text-center">
+                        <p className="text-red-400 text-sm mb-2">⚠️ {presentersError}</p>
+                        <Button
+                          size="sm"
+                          onClick={() => window.location.reload()}
+                          className="bg-[#E61E2A] hover:bg-[#c01820] text-white"
+                        >
+                          다시 시도
+                        </Button>
+                      </div>
+                    ) : presenters.length === 0 ? (
+                      <div className="p-4 text-center text-gray-400 text-sm">
+                        발표자가 없습니다.
+                      </div>
+                    ) : (
+                      presenters.map((presentation) => (
+                        <DropdownMenuItem
+                          key={presentation.presentation_id}
+                          onClick={() => {
+                            if (!isPresentationStarted) {
+                              setSelectedPresenterId(presentation.presentation_id)
+                            }
+                          }}
+                          disabled={isPresentationStarted}
+                          className={`flex flex-col items-start gap-2 p-3 cursor-pointer ${
+                            selectedPresenterId === presentation.presentation_id
+                              ? "bg-[#E61E2A]/20 text-white border-l-2 border-[#E61E2A]"
+                              : "text-gray-300 hover:bg-white/10 hover:text-white"
+                          } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : ""}`}
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <div className="flex items-center gap-2">
+                              {selectedPresenterId === presentation.presentation_id && (
+                                <CheckCircle2 className="w-4 h-4 text-[#E61E2A]" />
+                              )}
+                              <span className="font-semibold text-sm">{presentation.presenter?.name || "발표자 미정"}</span>
+                              <span className="text-xs text-gray-400">({presentation.presenter?.company || "소속 미정"})</span>
+                            </div>
                           </div>
-                        </div>
-                        <span className="text-xs text-gray-400 pl-6">{presenter.topic}</span>
-                      </DropdownMenuItem>
-                    ))}
+                          <span className="text-xs text-gray-400 pl-6">{presentation.topic}</span>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                    
                     <DropdownMenuSeparator className="bg-white/10 my-2" />
                     <DropdownMenuLabel className="text-white text-xs text-gray-400">
                       {isPresentationStarted 

@@ -1,12 +1,12 @@
 // API configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001'
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001"
+
 export const API_ENDPOINTS = {
   presentations: `${API_BASE_URL}/api/presentations`,
+  presenters: `${API_BASE_URL}/api/presenters`,
   presentationAnalysis: (id: string) => `${API_BASE_URL}/api/presentations/${id}/analysis`,
   category: (category: string) => `${API_BASE_URL}/api/category/${category}`,
   question: (category: string, question: string) => `${API_BASE_URL}/api/question/${category}/${question}`,
-  // Add more endpoints as needed
-  // evaluations: `${API_BASE_URL}/api/evaluations`,
 } as const
 
 // API utility functions
@@ -21,11 +21,39 @@ export async function fetchWithErrorHandling<T>(url: string): Promise<T> {
 }
 
 // Types for API responses
-export interface PresentationResponse {
-  id: string
-  title: string
-  presenter: string
+export interface PresenterResponse {
+  presenter_id: string
+  name: string
   company: string
+  created_at: string
+}
+
+export interface PresenterList {
+  total: number
+  items: PresenterResponse[]
+}
+
+export interface PresentationResponse {
+  presentation_id: string
+  session_type: string
+  presenter_id: string
+  topic: string
+  presentation_order: number
+  status: string
+  material_url?: string
+  start_time?: string
+  end_time?: string
+  duration_seconds?: number
+  created_at: string
+}
+
+export interface PresentationList {
+  total: number
+  items: PresentationResponse[]
+}
+
+export interface PresentationWithPresenter extends PresentationResponse {
+  presenter?: PresenterResponse
 }
 
 export interface PresentationAnalysisResponse {
@@ -73,4 +101,38 @@ export interface QuestionResponse {
   title: string
   answer: string
   categoryName: string
+}
+
+// API functions
+export async function fetchPresenters(): Promise<PresenterResponse[]> {
+  const data = await fetchWithErrorHandling<PresenterList>(API_ENDPOINTS.presenters)
+  return data.items
+}
+
+export async function fetchPresentations(sessionType?: string): Promise<PresentationResponse[]> {
+  let url: string = API_ENDPOINTS.presentations
+  
+  // session_type이 제공되면 쿼리 파라미터 추가
+  if (sessionType) {
+    url = `${url}?session_type=${encodeURIComponent(sessionType)}`
+  }
+  
+  const data = await fetchWithErrorHandling<PresentationList>(url)
+  return data.items
+}
+
+export async function fetchPresentationsWithPresenters(sessionType?: string): Promise<PresentationWithPresenter[]> {
+  // 발표 목록과 발표자 목록을 모두 가져와서 조인
+  const [presentations, presenters] = await Promise.all([
+    fetchPresentations(sessionType),
+    fetchPresenters(),
+  ])
+
+  // presenter_id로 조인
+  const presenterMap = new Map(presenters.map(p => [p.presenter_id, p]))
+  
+  return presentations.map(presentation => ({
+    ...presentation,
+    presenter: presenterMap.get(presentation.presenter_id),
+  }))
 }
