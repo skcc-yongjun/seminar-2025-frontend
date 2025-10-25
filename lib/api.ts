@@ -1,12 +1,12 @@
 // API configuration
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3001"
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
 export const API_ENDPOINTS = {
-  presentations: `${API_BASE_URL}/api/presentations`,
-  presenters: `${API_BASE_URL}/api/presenters`,
-  presentationAnalysis: (id: string) => `${API_BASE_URL}/api/presentations/${id}/analysis`,
-  category: (category: string) => `${API_BASE_URL}/api/category/${category}`,
-  question: (category: string, question: string) => `${API_BASE_URL}/api/question/${category}/${question}`,
+  presentations: `${API_BASE_URL}/seminar/api/presentations`,
+  presenters: `${API_BASE_URL}/seminar/api/presenters`,
+  presentationAnalysis: (id: string) => `${API_BASE_URL}/seminar/api/presentations/${id}/analysis`,
+  category: (category: string) => `${API_BASE_URL}/seminar/api/category/${category}`,
+  question: (category: string, question: string) => `${API_BASE_URL}/seminar/api/question/${category}/${question}`,
 } as const
 
 // API utility functions
