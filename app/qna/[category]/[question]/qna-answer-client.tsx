@@ -22,6 +22,7 @@ export default function QnAAnswerClient({
   const [isTyping, setIsTyping] = useState(false)
   const [isShowingAnswer, setIsShowingAnswer] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const textContainerRef = useRef<HTMLDivElement>(null)
 
   const toggleVideo = () => {
     if (videoRef.current) {
@@ -44,6 +45,11 @@ export default function QnAAnswerClient({
       if (index < text.length) {
         setDisplayedText(text.slice(0, index + 1))
         index++
+        
+        // 타이핑 중에 자동 스크롤
+        if (textContainerRef.current) {
+          textContainerRef.current.scrollTop = textContainerRef.current.scrollHeight
+        }
       } else {
         clearInterval(timer)
         setIsTyping(false)
@@ -222,7 +228,10 @@ export default function QnAAnswerClient({
             <h3 className="text-lg font-semibold mb-4 text-white">
               {isShowingAnswer ? "답변 내용" : "질문 내용"}
             </h3>
-            <div className="bg-black/20 rounded-lg p-6 max-h-40 overflow-y-auto">
+            <div 
+              ref={textContainerRef}
+              className="bg-black/20 rounded-lg p-6 max-h-40 overflow-y-auto"
+            >
               <p className="text-gray-300 leading-relaxed text-3xl">
                 {displayedText}
                 {isTyping && <span className="animate-pulse">|</span>}
