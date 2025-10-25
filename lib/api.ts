@@ -6,7 +6,7 @@ export const API_ENDPOINTS = {
   presenters: `${API_BASE_URL}/seminar/api/presenters`,
   presentationAnalysis: (id: string) => `${API_BASE_URL}/seminar/api/presentations/${id}/analysis`,
   category: (category: string) => `${API_BASE_URL}/seminar/api/category/${category}`,
-  question: (category: string, question: string) => `${API_BASE_URL}/seminar/api/question/${category}/${question}`,
+  question: (category: string, question: string) => `${API_BASE_URL}/seminar/api/qna-questions/${question}`,
   qnaKeywords: (sessionType: string) => `${API_BASE_URL}/seminar/api/qna-questions/session/${sessionType}/keywords`,
 } as const
 
@@ -98,10 +98,13 @@ export interface CategoryResponse {
 }
 
 export interface QuestionResponse {
-  id: string
-  title: string
-  answer: string
-  categoryName: string
+  id: string          // question_id
+  title: string       // question_text
+  answer: string      // answer_text
+  categoryName: string // group, business, market
+  questionVideoUrl: string // question_video_url
+  answerVideoUrl: string // answer_video_url
+  video_result?: string // video_result from API
 }
 
 export interface QnAKeywordListResponse {

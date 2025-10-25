@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Home, List, Mic } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Home, List, Play, Pause } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 import { API_ENDPOINTS, fetchWithErrorHandling, type QuestionResponse } from "@/lib/api"
 
 export default function QnAAnswerClient({
@@ -17,6 +17,21 @@ export default function QnAAnswerClient({
   const [showAnswer, setShowAnswer] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  const toggleVideo = () => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        videoRef.current.pause()
+        setIsPlaying(false)
+      } else {
+        videoRef.current.play()
+        setIsPlaying(true)
+      }
+    }
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -89,7 +104,7 @@ export default function QnAAnswerClient({
           transition={{ type: "spring", duration: 0.5 }}
           className="w-16 h-16 rounded-full bg-sk-red flex items-center justify-center text-white font-bold text-xl mb-8 shadow-lg shadow-sk-red/50"
         >
-          {data.id}
+          {data.categoryName}
         </motion.div>
 
         {/* Question Text */}
@@ -102,36 +117,53 @@ export default function QnAAnswerClient({
           {data.title}
         </motion.h1>
 
-        {/* Microphone Icon with Waveform */}
+        {/* Video Player */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
           className="flex flex-col items-center gap-8 mb-12"
         >
-          {/* Microphone */}
-          <div className="w-32 h-32 rounded-full bg-gradient-to-br from-sk-red to-red-700 flex items-center justify-center shadow-2xl shadow-sk-red/30">
-            <Mic className="w-16 h-16 text-white" />
-          </div>
-
-          {/* Audio Waveform */}
-          <div className="flex items-center gap-1 h-16">
-            {[...Array(40)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="w-1 bg-sk-red rounded-full"
-                initial={{ height: 8 }}
-                animate={{
-                  height: [8, Math.random() * 48 + 16, 8],
-                }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Number.POSITIVE_INFINITY,
-                  delay: i * 0.05,
-                  ease: "easeInOut",
-                }}
-              />
-            ))}
+          {/* Video Container */}
+          <div 
+            className="relative w-full max-w-4xl h-[50vh] rounded-2xl overflow-hidden shadow-2xl shadow-sk-red/30 bg-black"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            {data.questionVideoUrl ? (
+              <>
+                <video
+                  ref={videoRef}
+                  src={data.questionVideoUrl}
+                  className="w-full h-full object-cover"
+                  onEnded={() => setIsPlaying(false)}
+                  onPlay={() => setIsPlaying(true)}
+                  onPause={() => setIsPlaying(false)}
+                />
+                {/* Play/Pause Overlay - only show on hover */}
+                {isHovered && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity duration-200">
+                    <button
+                      onClick={toggleVideo}
+                      className="w-20 h-20 rounded-full bg-white/90 hover:bg-white transition-colors flex items-center justify-center shadow-lg"
+                    >
+                      {isPlaying ? (
+                        <Pause className="w-8 h-8 text-black" />
+                      ) : (
+                        <Play className="w-8 h-8 text-black ml-1" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                <div className="text-center text-gray-400">
+                  <Play className="w-16 h-16 mx-auto mb-4" />
+                  <p>비디오를 불러올 수 없습니다</p>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
 
