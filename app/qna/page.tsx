@@ -3,25 +3,71 @@
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { useState, useEffect } from "react"
+import { fetchQnAKeywords } from "@/lib/api"
+
+interface Category {
+  id: string
+  title: string
+  subtitle: string
+}
 
 export default function QnACategories() {
-  const categories = [
-    {
-      id: "business",
-      title: "비즈니스",
-      subtitle: "Business",
-    },
-    {
-      id: "group",
-      title: "그룹사",
-      subtitle: "SK Group",
-    },
-    {
-      id: "market",
-      title: "시장",
-      subtitle: "Market",
-    },
-  ]
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        
+        // 세션1과 세션2의 키워드를 모두 가져오기
+        const [keywords1, keywords2] = await Promise.all([
+          fetchQnAKeywords("세션1"),
+          fetchQnAKeywords("세션2")
+        ])
+        
+        // 두 세션의 키워드를 합치고 중복 제거
+        const allKeywords = Array.from(new Set([...keywords1, ...keywords2]))
+        
+        // 키워드를 카테고리 형식으로 변환
+        const categoryList: Category[] = allKeywords.map((keyword) => ({
+          id: keyword,
+          title: keyword,
+          subtitle: keyword,
+        }))
+        
+        setCategories(categoryList)
+      } catch (err) {
+        console.error('Error fetching keywords:', err)
+        setError(err instanceof Error ? err.message : 'Failed to fetch keywords')
+        
+        // Fallback to hardcoded categories if API fails
+        setCategories([
+          { id: "business", title: "비즈니스", subtitle: "Business" },
+          { id: "group", title: "그룹사", subtitle: "SK Group" },
+          { id: "market", title: "시장", subtitle: "Market" },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    fetchCategories()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen h-screen p-8 md:p-12 bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sk-red mx-auto mb-4"></div>
+          <p className="text-2xl text-muted-foreground">키워드 로딩 중...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen h-screen p-8 md:p-12 bg-background">
@@ -40,6 +86,11 @@ export default function QnACategories() {
             Q&A 카테고리
             <span className="block h-2 w-48 bg-sk-red mt-4" />
           </h1>
+          {error && (
+            <p className="text-yellow-500 mt-4 text-lg">
+              API 호출 실패: 기본 카테고리를 표시합니다
+            </p>
+          )}
         </motion.div>
 
         <div className="flex flex-col items-center justify-center min-h-[60vh]">

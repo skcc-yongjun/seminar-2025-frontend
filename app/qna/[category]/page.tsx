@@ -4,12 +4,23 @@ import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, MessageCircle, Brain, CheckCircle, Sparkles } from "lucide-react"
 import { useState, useEffect, use } from "react"
-import { API_ENDPOINTS, fetchWithErrorHandling, type CategoryResponse } from "@/lib/api"
+import { fetchQnAQuestionsByKeyword, type QnAQuestionResponse } from "@/lib/api"
 
-type CategoryData = CategoryResponse
+interface CategoryData {
+  title: string
+  subtitle: string
+  questions: Array<{
+    id: string
+    question: string
+    description: string
+  }>
+}
 
 export default function QnAQuestions({ params }: { params: Promise<{ category: string }> }) {
-  const { category } = use(params)
+  const { category: rawCategory } = use(params)
+  // URL 디코딩 처리
+  const category = decodeURIComponent(rawCategory)
+  
   const [data, setData] = useState<CategoryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -24,51 +35,33 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
       try {
         setLoading(true)
         setError(null)
-        const categoryData = await fetchWithErrorHandling<CategoryResponse>(
-          API_ENDPOINTS.category(category)
-        )
+        
+        // 백엔드에서 키워드별 질문 조회
+        const qnaQuestions = await fetchQnAQuestionsByKeyword(category)
+        
+        // QnAQuestionResponse를 CategoryData 형식으로 변환
+        const categoryData: CategoryData = {
+          title: category,
+          subtitle: category,
+          questions: qnaQuestions.map((q) => ({
+            id: q.question_id.toString(),
+            question: q.question_text,
+            description: q.timestamp_label || "질문",
+          }))
+        }
+        
         setData(categoryData)
 
       } catch (err) {
         console.error('Error fetching category data:', err)
         setError(err instanceof Error ? err.message : 'Failed to fetch category data')
         
-        // Fallback to hardcoded data if API fails
-        const fallbackData: Record<string, CategoryData> = {
-          business: {
-            title: "비즈니스",
-            subtitle: "Business",
-            questions: [
-              { id: "strategy", question: "우리 회사의 핵심 비즈니스 전략은 무엇인가요?", description: "장기 비전과 전략적 방향성" },
-              { id: "innovation", question: "디지털 혁신은 어떻게 추진하고 있나요?", description: "디지털 전환과 기술 혁신 계획" },
-              { id: "growth", question: "신규 사업 확장 계획은?", description: "새로운 성장 동력 발굴" },
-              { id: "customer", question: "고객 가치 창출 방안은?", description: "고객 중심 경영과 서비스 혁신" },
-            ],
-          },
-          group: {
-            title: "그룹사",
-            subtitle: "SK Group",
-            questions: [
-              { id: "vision", question: "SK그룹의 비전과 미션은 무엇인가요?", description: "그룹의 핵심 가치와 목표" },
-              { id: "synergy", question: "계열사 간 시너지는 어떻게 창출하나요?", description: "그룹 차원의 협력과 통합" },
-              { id: "culture", question: "SK그룹의 조직 문화는?", description: "기업 문화와 핵심 가치" },
-              { id: "esg", question: "ESG 경영 추진 현황은?", description: "지속가능경영과 사회적 책임" },
-            ],
-          },
-          market: {
-            title: "시장",
-            subtitle: "Market",
-            questions: [
-              { id: "trend", question: "현재 시장 트렌드는 어떻게 변화하고 있나요?", description: "산업 동향과 시장 변화" },
-              { id: "competition", question: "경쟁 환경은 어떻게 분석하고 있나요?", description: "경쟁사 분석과 시장 포지셔닝" },
-              { id: "opportunity", question: "새로운 시장 기회는?", description: "시장과 성장 가능성" },
-              { id: "customer-needs", question: "고객 니즈는 어떻게 변화하고 있나요?", description: "소비자 행동과 수요 변화" },
-              { id: "regulation", question: "규제 환경 변화에 어떻게 대응하나요?", description: "법규 준수와 리스크 관리" },
-              { id: "forecast", question: "시장 전망과 예측은?", description: "미래 시장 예측과 대응 전략" },
-            ],
-          },
-        }
-        setData(fallbackData[category] || null)
+        // Fallback to empty data if API fails
+        setData({
+          title: category,
+          subtitle: category,
+          questions: []
+        })
       } finally {
         setLoading(false)
       }
@@ -115,11 +108,25 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
     generateNext()
   }, [data])
 
-  if (!data) {
+  if (loading) {
     return (
       <div className="min-h-screen p-4 md:p-8 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-6">카테고리를 찾을 수 없습니다</h1>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sk-red mx-auto mb-4"></div>
+          <p className="text-2xl text-muted-foreground">질문 목록 로딩 중...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!data || data.questions.length === 0) {
+    return (
+      <div className="min-h-screen p-4 md:p-8 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-foreground mb-6">
+            {error ? "질문을 불러오는데 실패했습니다" : "해당 키워드에 대한 질문이 없습니다"}
+          </h1>
+          {error && <p className="text-red-500 mb-4">{error}</p>}
           <Link href="/qna" className="text-sk-red hover:underline text-xl">
             카테고리 목록으로 돌아가기
           </Link>
