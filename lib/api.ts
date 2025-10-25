@@ -163,6 +163,7 @@ export interface QnAQuestionResponse {
   timestamp_seconds: number | null
   question_text: string
   answer_text: string | null
+  title: string | ""
   created_at: string
 }
 

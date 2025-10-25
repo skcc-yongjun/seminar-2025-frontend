@@ -45,8 +45,8 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
           subtitle: category,
           questions: qnaQuestions.map((q) => ({
             id: q.question_id.toString(),
-            question: q.question_text,
-            description: q.timestamp_label || "질문",
+            question: q.title,
+            description: q.timestamp_label || "질문 Keyword",
           }))
         }
         
