@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, Suspense } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Home, CheckCircle2, Mic, MicOff, Volume2, ChevronDown, Loader2 } from "lucide-react"
@@ -19,8 +19,7 @@ import {
 import { fetchPresentationsWithPresenters, type PresentationWithPresenter } from "@/lib/api"
 import { useSearchParams } from "next/navigation"
 
-
-export default function SinglePresenterView() {
+function SinglePresenterViewContent() {
   const searchParams = useSearchParams()
   const sessionParam = searchParams.get('session') || "세션1"
   const [phase, setPhase] = useState<"waiting" | "monitoring" | "completion">("monitoring")
@@ -601,5 +600,20 @@ export default function SinglePresenterView() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function SinglePresenterView() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a]">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-6 h-6 text-[#E61E2A] animate-spin" />
+          <span className="text-white text-lg">로딩 중...</span>
+        </div>
+      </div>
+    }>
+      <SinglePresenterViewContent />
+    </Suspense>
   )
 }
