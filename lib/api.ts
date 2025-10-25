@@ -7,6 +7,7 @@ export const API_ENDPOINTS = {
   presentationAnalysis: (id: string) => `${API_BASE_URL}/seminar/api/presentations/${id}/analysis`,
   category: (category: string) => `${API_BASE_URL}/seminar/api/category/${category}`,
   question: (category: string, question: string) => `${API_BASE_URL}/seminar/api/question/${category}/${question}`,
+  qnaKeywords: (sessionType: string) => `${API_BASE_URL}/seminar/api/qna-questions/session/${sessionType}/keywords`,
 } as const
 
 // API utility functions
@@ -103,6 +104,11 @@ export interface QuestionResponse {
   categoryName: string
 }
 
+export interface QnAKeywordListResponse {
+  total: number
+  keywords: string[]
+}
+
 // API functions
 export async function fetchPresenters(): Promise<PresenterResponse[]> {
   const data = await fetchWithErrorHandling<PresenterList>(API_ENDPOINTS.presenters)
@@ -135,4 +141,34 @@ export async function fetchPresentationsWithPresenters(sessionType?: string): Pr
     ...presentation,
     presenter: presenterMap.get(presentation.presenter_id),
   }))
+}
+
+export async function fetchQnAKeywords(sessionType: string): Promise<string[]> {
+  const data = await fetchWithErrorHandling<QnAKeywordListResponse>(
+    API_ENDPOINTS.qnaKeywords(sessionType)
+  )
+  return data.keywords
+}
+
+export interface QnAQuestionResponse {
+  question_id: number
+  presentation_id: string
+  keyword: string | null
+  timestamp_label: string | null
+  timestamp_seconds: number | null
+  question_text: string
+  answer_text: string | null
+  created_at: string
+}
+
+export interface QnAQuestionListResponse {
+  total: number
+  items: QnAQuestionResponse[]
+}
+
+export async function fetchQnAQuestionsByKeyword(keyword: string): Promise<QnAQuestionResponse[]> {
+  const data = await fetchWithErrorHandling<QnAQuestionListResponse>(
+    `${API_BASE_URL}/seminar/api/qna-questions/keyword/${encodeURIComponent(keyword)}`
+  )
+  return data.items
 }
