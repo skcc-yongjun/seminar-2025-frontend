@@ -19,6 +19,8 @@ export default function QnAAnswerClient({
   const [error, setError] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
+  const [displayedText, setDisplayedText] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const toggleVideo = () => {
@@ -33,6 +35,22 @@ export default function QnAAnswerClient({
     }
   }
 
+  const typeText = (text: string, speed: number = 50) => {
+    setIsTyping(true)
+    setDisplayedText("")
+    
+    let index = 0
+    const timer = setInterval(() => {
+      if (index < text.length) {
+        setDisplayedText(text.slice(0, index + 1))
+        index++
+      } else {
+        clearInterval(timer)
+        setIsTyping(false)
+      }
+    }, speed)
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -42,6 +60,13 @@ export default function QnAAnswerClient({
           API_ENDPOINTS.question(category, question)
         )
         setData(questionData)
+        
+        // 타이핑 효과 시작
+        if (questionData.questionText) {
+          setTimeout(() => {
+            typeText(questionData.questionText!, 50)
+          }, 500) // 1초 후 시작
+        }
       } catch (error) {
         console.error('Failed to fetch question data:', error)
         setError('질문을 불러오는데 실패했습니다.')
@@ -112,7 +137,7 @@ export default function QnAAnswerClient({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-2xl md:text-3xl font-medium text-center mb-16 max-w-3xl text-balance"
+          className="text-2xl md:text-3xl font-medium text-center mb-8 max-w-3xl text-balance"
         >
           {data.title}
         </motion.h1>
@@ -122,7 +147,7 @@ export default function QnAAnswerClient({
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className="flex flex-col items-center gap-8 mb-12"
+          className="flex flex-col items-center gap-4 mb-8"
         >
           {/* Video Container */}
           <div 
@@ -167,17 +192,35 @@ export default function QnAAnswerClient({
           </div>
         </motion.div>
 
+        {/* Question Text Display */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="w-full max-w-5xl mb-8"
+        >
+          <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-8">
+            <h3 className="text-lg font-semibold mb-4 text-white">질문 내용</h3>
+            <div className="bg-black/20 rounded-lg p-6 max-h-40 overflow-y-auto">
+              <p className="text-gray-300 leading-relaxed text-3xl">
+                {displayedText}
+                {isTyping && <span className="animate-pulse">|</span>}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Buttons */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="flex flex-col items-center gap-4"
+          className="flex flex-col sm:flex-row items-center gap-4"
         >
           {/* Back to List Button */}
           <Link
             href={`/qna/${category}`}
-            className="px-6 py-3 rounded-lg border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2"
+            className="px-6 py-3 rounded-lg border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
           >
             <List className="w-5 h-5" />
             <span>목록으로</span>
@@ -186,7 +229,7 @@ export default function QnAAnswerClient({
           {/* View Answer Button */}
           <button
             onClick={() => setShowAnswer(!showAnswer)}
-            className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-600/30"
+            className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-600/30 w-full sm:w-auto"
           >
             실시간 생성한 답변 보기
           </button>

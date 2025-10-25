@@ -105,6 +105,7 @@ export interface QuestionResponse {
   questionVideoUrl: string // question_video_url
   answerVideoUrl: string // answer_video_url
   video_result?: string // video_result from API
+  questionText?: string // questionText from API
 }
 
 export interface QnAKeywordListResponse {
