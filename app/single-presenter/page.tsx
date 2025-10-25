@@ -3,11 +3,19 @@
 import { useState, useEffect, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Home, CheckCircle2, Mic, MicOff, Volume2 } from "lucide-react"
+import { Home, CheckCircle2, Mic, MicOff, Volume2, ChevronDown } from "lucide-react"
 import Link from "next/link"
 import { useSTT } from "@/hooks/use-stt"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 
 export default function SinglePresenterView() {
@@ -21,11 +29,42 @@ export default function SinglePresenterView() {
   })
   const [presentationTime, setPresentationTime] = useState(0)
 
-  const presenterInfo = {
-    name: "윤풍영", // Corrected presenter name from 윤홍영 to 윤풍영
-    company: "SK AX",
-    topic: "AI Biz.Model 구축 방향",
-  }
+  // 발표자 목록
+  const presenters = [
+    {
+      id: 1,
+      name: "윤풍영",
+      company: "SK AX",
+      topic: "AI Biz.Model 구축 방향",
+    },
+    {
+      id: 2,
+      name: "김민수",
+      company: "SK Telecom",
+      topic: "5G 네트워크 혁신 전략",
+    },
+    {
+      id: 3,
+      name: "박지은",
+      company: "SK Hynix",
+      topic: "반도체 기술 로드맵",
+    },
+    {
+      id: 4,
+      name: "이준호",
+      company: "SK Energy",
+      topic: "친환경 에너지 전환",
+    },
+    {
+      id: 5,
+      name: "최서연",
+      company: "SK Innovation",
+      topic: "배터리 기술 혁신",
+    },
+  ]
+
+  const [selectedPresenterId, setSelectedPresenterId] = useState<number>(1)
+  const presenterInfo = presenters.find(p => p.id === selectedPresenterId) || presenters[0]
 
   // STT Hook 사용 - 발표 시작 시에만 생성
   // presentationId는 PRESENTATION 테이블의 PK와 일치해야 함
@@ -170,37 +209,73 @@ export default function SinglePresenterView() {
                 animate={{ opacity: 1, y: 0 }}
                 className="absolute top-8 left-0 right-0 flex justify-center px-4"
               >
-                <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10">
-                  <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                      {isPresentationStarted ? (
-                        <>
-                          <div className="w-2 h-2 bg-[#E61E2A] rounded-full animate-pulse" />
-                          <span className="text-white font-semibold text-sm">발표 진행 중</span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                          <span className="text-gray-400 font-semibold text-sm">발표 대기 중</span>
-                        </>
-                      )}
-                    </div>
-                    {isPresentationStarted && (
-                      <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 hover:bg-black/60 hover:border-white/20 transition-all duration-200">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          {isPresentationStarted ? (
+                            <>
+                              <div className="w-2 h-2 bg-[#E61E2A] rounded-full animate-pulse" />
+                              <span className="text-white font-semibold text-sm">발표 진행 중</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                              <span className="text-gray-400 font-semibold text-sm">발표 대기 중</span>
+                            </>
+                          )}
+                        </div>
                         <div className="w-px h-4 bg-white/20" />
-                        <span className="text-gray-400 text-sm">{formatTime(presentationTime)}</span>
-                      </>
-                    )}
-                    <div className="w-px h-4 bg-white/20" />
-                    <div className="flex items-center gap-2">
-                      <span className="text-white text-sm font-medium">
-                        {presenterInfo.name} ({presenterInfo.company})
-                      </span>
-                      <span className="text-gray-400 text-sm">·</span>
-                      <span className="text-gray-300 text-sm">{presenterInfo.topic}</span>
-                    </div>
-                  </div>
-                </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white text-sm font-medium">
+                            {presenterInfo.name} ({presenterInfo.company})
+                          </span>
+                          <span className="text-gray-400 text-sm">·</span>
+                          <span className="text-gray-300 text-sm">{presenterInfo.topic}</span>
+                        </div>
+                        <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-96 bg-black/90 backdrop-blur-md border-white/10 max-h-[500px] overflow-y-auto">
+                    <DropdownMenuLabel className="text-white font-bold text-base">발표자 선택</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-white/10" />
+                    {presenters.map((presenter) => (
+                      <DropdownMenuItem
+                        key={presenter.id}
+                        onClick={() => {
+                          if (!isPresentationStarted) {
+                            setSelectedPresenterId(presenter.id)
+                          }
+                        }}
+                        disabled={isPresentationStarted}
+                        className={`flex flex-col items-start gap-2 p-3 cursor-pointer ${
+                          selectedPresenterId === presenter.id
+                            ? "bg-[#E61E2A]/20 text-white border-l-2 border-[#E61E2A]"
+                            : "text-gray-300 hover:bg-white/10 hover:text-white"
+                        } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            {selectedPresenterId === presenter.id && (
+                              <CheckCircle2 className="w-4 h-4 text-[#E61E2A]" />
+                            )}
+                            <span className="font-semibold text-sm">{presenter.name}</span>
+                            <span className="text-xs text-gray-400">({presenter.company})</span>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-400 pl-6">{presenter.topic}</span>
+                      </DropdownMenuItem>
+                    ))}
+                    <DropdownMenuSeparator className="bg-white/10 my-2" />
+                    <DropdownMenuLabel className="text-white text-xs text-gray-400">
+                      {isPresentationStarted 
+                        ? "⚠️ 발표 진행 중에는 발표자를 변경할 수 없습니다" 
+                        : "💡 발표자를 선택하세요"}
+                    </DropdownMenuLabel>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </motion.div>
 
               <div className="relative flex items-center justify-center">
