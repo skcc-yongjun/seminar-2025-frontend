@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowLeft, Plus, Edit, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -16,95 +16,230 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState } from "react"
-
-interface Presentation {
-  id: number
-  session: string
-  speaker: string
-  topic: string
-  order: number
-  status: string
-}
+import { useState, useEffect } from "react"
+import {
+  fetchPresentations,
+  fetchPresenters,
+  createPresentation,
+  updatePresentation,
+  deletePresentation,
+  resetPresentationToInProgress,
+  type PresentationResponse,
+  type PresenterResponse,
+} from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 export default function PresentationsPage() {
-  const [presentations, setPresentations] = useState<Presentation[]>([
-    {
-      id: 1,
-      session: "Session 1",
-      speaker: "김철수",
-      topic: "AI 기술의 미래",
-      order: 1,
-      status: "완료",
-    },
-    {
-      id: 2,
-      session: "Session 1",
-      speaker: "이영희",
-      topic: "반도체 산업 전망",
-      order: 2,
-      status: "진행중",
-    },
-    {
-      id: 3,
-      session: "Session 2",
-      speaker: "박민수",
-      topic: "친환경 에너지",
-      order: 1,
-      status: "대기",
-    },
-  ])
+  // 상태 관리
+  const [presentations, setPresentations] = useState<PresentationResponse[]>([])
+  const [presenters, setPresenters] = useState<PresenterResponse[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [editingPresentation, setEditingPresentation] = useState<Presentation | null>(null)
+  const [editingPresentation, setEditingPresentation] = useState<PresentationResponse | null>(null)
   const [formData, setFormData] = useState({
-    session: "",
-    speaker: "",
+    session_type: "세션1",
+    presenter_id: "",
     topic: "",
-    order: 1,
+    presentation_order: 1,
     status: "대기",
   })
+  const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
 
+  /**
+   * 초기 데이터 로드
+   * 발표 목록과 발표자 목록을 동시에 조회
+   */
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  /**
+   * 발표 및 발표자 데이터 로드
+   */
+  const loadData = async () => {
+    try {
+      setIsLoading(true)
+      const [presentationsData, presentersData] = await Promise.all([
+        fetchPresentations(),
+        fetchPresenters(),
+      ])
+      setPresentations(presentationsData)
+      setPresenters(presentersData)
+    } catch (error) {
+      console.error("데이터 조회 실패:", error)
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "데이터를 불러오는데 실패했습니다.",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /**
+   * 발표 추가 다이얼로그 열기
+   */
   const handleAdd = () => {
     setEditingPresentation(null)
-    setFormData({ session: "", speaker: "", topic: "", order: 1, status: "대기" })
+    setFormData({
+      session_type: "세션1",
+      presenter_id: "",
+      topic: "",
+      presentation_order: 1,
+      status: "대기",
+    })
     setIsDialogOpen(true)
   }
 
-  const handleEdit = (presentation: Presentation) => {
+  /**
+   * 발표 수정 다이얼로그 열기
+   * @param presentation 수정할 발표
+   */
+  const handleEdit = (presentation: PresentationResponse) => {
     setEditingPresentation(presentation)
     setFormData({
-      session: presentation.session,
-      speaker: presentation.speaker,
+      session_type: presentation.session_type,
+      presenter_id: presentation.presenter_id,
       topic: presentation.topic,
-      order: presentation.order,
+      presentation_order: presentation.presentation_order,
       status: presentation.status,
     })
     setIsDialogOpen(true)
   }
 
-  const handleDelete = (id: number) => {
-    if (window.confirm("정말 삭제하시겠습니까?")) {
-      setPresentations(presentations.filter((p) => p.id !== id))
-    }
-  }
-
-  const handleSave = () => {
-    if (!formData.session || !formData.speaker || !formData.topic) {
-      alert("모든 필드를 입력해주세요.")
+  /**
+   * 발표 삭제
+   * @param presentationId 발표 ID
+   */
+  const handleDelete = async (presentationId: string) => {
+    if (!window.confirm("정말 삭제하시겠습니까?")) {
       return
     }
 
-    if (editingPresentation) {
-      setPresentations(presentations.map((p) => (p.id === editingPresentation.id ? { ...p, ...formData } : p)))
-    } else {
-      const newPresentation: Presentation = {
-        id: Math.max(...presentations.map((p) => p.id), 0) + 1,
-        ...formData,
-      }
-      setPresentations([...presentations, newPresentation])
+    try {
+      await deletePresentation(presentationId)
+      toast({
+        title: "성공",
+        description: "발표가 삭제되었습니다.",
+      })
+      // 목록 다시 로드
+      await loadData()
+    } catch (error) {
+      console.error("발표 삭제 실패:", error)
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "발표 삭제에 실패했습니다.",
+      })
+    }
+  }
+
+  /**
+   * 발표 상태를 "진행중"으로 초기화
+   * @param presentationId 발표 ID
+   */
+  const handleResetToInProgress = async (presentationId: string) => {
+    if (!window.confirm("이 발표의 상태를 '진행중'으로 초기화하시겠습니까?")) {
+      return
     }
 
-    setIsDialogOpen(false)
+    try {
+      await resetPresentationToInProgress(presentationId)
+      toast({
+        title: "성공",
+        description: "발표 상태가 '진행중'으로 초기화되었습니다.",
+      })
+      // 목록 다시 로드
+      await loadData()
+    } catch (error) {
+      console.error("발표 상태 초기화 실패:", error)
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "발표 상태 초기화에 실패했습니다.",
+      })
+    }
+  }
+
+  /**
+   * 발표 저장 (생성 또는 수정)
+   */
+  const handleSave = async () => {
+    // 입력값 검증
+    if (!formData.session_type || !formData.presenter_id || !formData.topic) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "세션, 발표자, 주제는 필수 입력 항목입니다.",
+      })
+      return
+    }
+
+    try {
+      setIsSaving(true)
+
+      if (editingPresentation) {
+        // 기존 발표 수정
+        await updatePresentation(editingPresentation.presentation_id, {
+          topic: formData.topic,
+          presentation_order: formData.presentation_order,
+          status: formData.status,
+        })
+        toast({
+          title: "성공",
+          description: "발표 정보가 수정되었습니다.",
+        })
+      } else {
+        // 새 발표 생성
+        await createPresentation({
+          session_type: formData.session_type,
+          presenter_id: formData.presenter_id,
+          topic: formData.topic,
+          presentation_order: formData.presentation_order,
+          status: formData.status,
+        })
+        toast({
+          title: "성공",
+          description: "새 발표가 추가되었습니다.",
+        })
+      }
+
+      // 다이얼로그 닫기 및 폼 초기화
+      setIsDialogOpen(false)
+      setFormData({
+        session_type: "세션1",
+        presenter_id: "",
+        topic: "",
+        presentation_order: 1,
+        status: "대기",
+      })
+
+      // 목록 다시 로드
+      await loadData()
+    } catch (error) {
+      console.error("발표 저장 실패:", error)
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: editingPresentation
+          ? "발표 수정에 실패했습니다."
+          : "발표 추가에 실패했습니다.",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  /**
+   * 발표자 ID로 발표자 이름 찾기
+   * @param presenterId 발표자 ID
+   * @returns 발표자 이름
+   */
+  const getPresenterName = (presenterId: string): string => {
+    const presenter = presenters.find((p) => p.presenter_id === presenterId)
+    return presenter ? presenter.name : presenterId
   }
 
   const getStatusColor = (status: string) => {
@@ -150,51 +285,89 @@ export default function PresentationsPage() {
           </div>
         </motion.div>
 
-        <div className="space-y-3">
-          {presentations.map((presentation, index) => (
-            <motion.div
-              key={presentation.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 * index }}
-            >
-              <div className="corporate-card rounded-xl p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Badge variant="outline" className="border-sk-red/30 text-sk-red">
-                        {presentation.session}
-                      </Badge>
-                      <Badge variant="outline" className={getStatusColor(presentation.status)}>
-                        {presentation.status}
-                      </Badge>
-                      <span className="text-sm text-muted-foreground">순서: {presentation.order}</span>
+        {/* 로딩 상태 표시 */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-sk-red" />
+          </div>
+        ) : presentations.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">등록된 발표가 없습니다.</p>
+            <Button onClick={handleAdd} className="mt-4 bg-sk-red hover:bg-sk-red/90">
+              <Plus className="w-4 h-4 mr-2" />
+              첫 발표 추가하기
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {presentations.map((presentation, index) => (
+              <motion.div
+                key={presentation.presentation_id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 * index }}
+              >
+                <div className="corporate-card rounded-xl p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Badge variant="outline" className="border-sk-red/30 text-sk-red">
+                          {presentation.session_type}
+                        </Badge>
+                        <Badge variant="outline" className={getStatusColor(presentation.status)}>
+                          {presentation.status}
+                        </Badge>
+                        <span className="text-sm text-muted-foreground">
+                          순서: {presentation.presentation_order}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground mb-2">{presentation.topic}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        발표자: {getPresenterName(presentation.presenter_id)}
+                      </p>
+                      <p className="text-xs text-muted-foreground/60 mt-1">
+                        ID: {presentation.presentation_id}
+                      </p>
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-2">{presentation.topic}</h3>
-                    <p className="text-sm text-muted-foreground">발표자: {presentation.speaker}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleEdit(presentation)} variant="outline" size="sm">
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      onClick={() => handleDelete(presentation.id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive hover:text-destructive bg-transparent"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => handleResetToInProgress(presentation.presentation_id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-500 hover:text-blue-600 border-blue-500/30 hover:border-blue-500/50"
+                        disabled={isSaving}
+                        title="상태를 '진행중'으로 초기화"
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={() => handleEdit(presentation)}
+                        variant="outline"
+                        size="sm"
+                        disabled={isSaving}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        onClick={() => handleDelete(presentation.presentation_id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-destructive hover:text-destructive bg-transparent"
+                        disabled={isSaving}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md bg-background">
           <DialogHeader>
             <DialogTitle>{editingPresentation ? "발표 수정" : "발표 추가"}</DialogTitle>
             <DialogDescription>발표 정보를 입력해주세요.</DialogDescription>
@@ -202,24 +375,38 @@ export default function PresentationsPage() {
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="session">세션</Label>
-              <Select value={formData.session} onValueChange={(value) => setFormData({ ...formData, session: value })}>
-                <SelectTrigger>
+              <Select
+                value={formData.session_type}
+                onValueChange={(value) => setFormData({ ...formData, session_type: value })}
+                disabled={!!editingPresentation}
+              >
+                <SelectTrigger className="bg-background">
                   <SelectValue placeholder="세션 선택" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Session 1">Session 1</SelectItem>
-                  <SelectItem value="Session 2">Session 2</SelectItem>
+                <SelectContent className="bg-background">
+                  <SelectItem value="세션1">세션1</SelectItem>
+                  <SelectItem value="세션2">세션2</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="speaker">발표자</Label>
-              <Input
-                id="speaker"
-                value={formData.speaker}
-                onChange={(e) => setFormData({ ...formData, speaker: e.target.value })}
-                placeholder="발표자 이름"
-              />
+              <Label htmlFor="presenter">발표자</Label>
+              <Select
+                value={formData.presenter_id || undefined}
+                onValueChange={(value) => setFormData({ ...formData, presenter_id: value })}
+                disabled={!!editingPresentation}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="발표자 선택" />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {presenters.map((presenter) => (
+                    <SelectItem key={presenter.presenter_id} value={presenter.presenter_id}>
+                      {presenter.name} ({presenter.company})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="topic">주제</Label>
@@ -228,6 +415,7 @@ export default function PresentationsPage() {
                 value={formData.topic}
                 onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
                 placeholder="발표 주제"
+                disabled={isSaving}
               />
             </div>
             <div className="space-y-2">
@@ -235,20 +423,28 @@ export default function PresentationsPage() {
               <Input
                 id="order"
                 type="number"
-                value={formData.order}
-                onChange={(e) => setFormData({ ...formData, order: Number.parseInt(e.target.value) || 1 })}
+                value={formData.presentation_order}
+                onChange={(e) =>
+                  setFormData({ ...formData, presentation_order: Number.parseInt(e.target.value) || 1 })
+                }
                 min="1"
+                disabled={isSaving}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="status">상태</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
+              <Select
+                value={formData.status}
+                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                disabled={isSaving}
+              >
+                <SelectTrigger className="bg-background">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background">
                   <SelectItem value="대기">대기</SelectItem>
                   <SelectItem value="진행중">진행중</SelectItem>
+                  <SelectItem value="QnA">QnA</SelectItem>
                   <SelectItem value="평가">평가</SelectItem>
                   <SelectItem value="완료">완료</SelectItem>
                 </SelectContent>
@@ -256,11 +452,18 @@ export default function PresentationsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
               취소
             </Button>
-            <Button onClick={handleSave} className="bg-sk-red hover:bg-sk-red/90">
-              저장
+            <Button onClick={handleSave} className="bg-sk-red hover:bg-sk-red/90" disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  저장 중...
+                </>
+              ) : (
+                "저장"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
