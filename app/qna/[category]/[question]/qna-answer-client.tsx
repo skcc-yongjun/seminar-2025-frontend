@@ -197,101 +197,105 @@ export default function QnAAnswerClient({
           />
         </motion.div>
 
-        {/* Video Player */}
+        {/* Video and Text Container */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 }}
-          className="flex flex-col items-center gap-4 mb-8"
+          className="w-full max-w-7xl mb-8"
         >
-          {/* Video Container */}
-          <div 
-            className="relative w-full max-w-4xl h-[50vh] rounded-2xl overflow-hidden shadow-2xl shadow-sk-red/30 bg-black"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            {(isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl) ? (
-              <>
-                {/* 비디오 로딩 중일 때 */}
-                {isVideoLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
-                    <div className="text-center text-white">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sk-red mx-auto mb-4"></div>
-                      <p className="text-lg">동영상 로딩 중...</p>
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Video Player */}
+            <div className="flex-1">
+              <div 
+                className="relative w-full h-[60vh] rounded-2xl overflow-hidden shadow-2xl shadow-sk-red/30 bg-black"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                {(isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl) ? (
+                  <>
+                    {/* 비디오 로딩 중일 때 */}
+                    {isVideoLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                        <div className="text-center text-white">
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sk-red mx-auto mb-4"></div>
+                          <p className="text-lg">동영상 로딩 중...</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <video
+                      ref={videoRef}
+                      src={isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl}
+                      className="w-full h-full object-cover"
+                      onLoadStart={() => setIsVideoLoading(true)}
+                      onCanPlay={() => setIsVideoLoading(false)}
+                      onEnded={() => setIsPlaying(false)}
+                      onPlay={() => {
+                        setIsPlaying(true)
+                        // 동영상 재생 시 자막 타이핑 시작
+                        if (!hasStartedTyping && data) {
+                          const textToShow = isShowingAnswer ? data.answerText : data.questionText
+                          if (textToShow) {
+                            setHasStartedTyping(true)
+                            setTimeout(() => {
+                              typeText(textToShow, 70)
+                            }, 300)
+                          }
+                        }
+                      }}
+                      onPause={() => setIsPlaying(false)}
+                    />
+                    
+                    {/* Play/Pause Overlay - only show on hover and when not loading */}
+                    {isHovered && !isVideoLoading && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity duration-200">
+                        <button
+                          onClick={toggleVideo}
+                          className="w-20 h-20 rounded-full bg-white/90 hover:bg-white transition-colors flex items-center justify-center shadow-lg"
+                        >
+                          {isPlaying ? (
+                            <Pause className="w-8 h-8 text-black" />
+                          ) : (
+                            <Play className="w-8 h-8 text-black ml-1" />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                    <div className="text-center text-gray-400">
+                      <Play className="w-16 h-16 mx-auto mb-4" />
+                      <p>비디오를 불러올 수 없습니다</p>
                     </div>
                   </div>
                 )}
-                
-                <video
-                  ref={videoRef}
-                  src={isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl}
-                  className="w-full h-full object-cover"
-                  onLoadStart={() => setIsVideoLoading(true)}
-                  onCanPlay={() => setIsVideoLoading(false)}
-                  onEnded={() => setIsPlaying(false)}
-                  onPlay={() => {
-                    setIsPlaying(true)
-                    // 동영상 재생 시 자막 타이핑 시작
-                    if (!hasStartedTyping && data) {
-                      const textToShow = isShowingAnswer ? data.answerText : data.questionText
-                      if (textToShow) {
-                        setHasStartedTyping(true)
-                        setTimeout(() => {
-                          typeText(textToShow, 70)
-                        }, 300)
-                      }
-                    }
-                  }}
-                  onPause={() => setIsPlaying(false)}
-                />
-                
-                {/* Play/Pause Overlay - only show on hover and when not loading */}
-                {isHovered && !isVideoLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity duration-200">
-                    <button
-                      onClick={toggleVideo}
-                      className="w-20 h-20 rounded-full bg-white/90 hover:bg-white transition-colors flex items-center justify-center shadow-lg"
-                    >
-                      {isPlaying ? (
-                        <Pause className="w-8 h-8 text-black" />
-                      ) : (
-                        <Play className="w-8 h-8 text-black ml-1" />
-                      )}
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                <div className="text-center text-gray-400">
-                  <Play className="w-16 h-16 mx-auto mb-4" />
-                  <p>비디오를 불러올 수 없습니다</p>
+              </div>
+            </div>
+
+            {/* Text Display */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex-1"
+            >
+              <div className="h-[60vh] rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 flex flex-col">
+                <h3 className="text-lg font-semibold mb-4 text-white">
+                  {isShowingAnswer ? "답변 내용" : "질문 내용"}
+                </h3>
+                <div 
+                  ref={textContainerRef}
+                  className="bg-black/20 rounded-lg p-6 flex-1 overflow-y-auto"
+                >
+                  <p className="text-gray-300 leading-relaxed text-4xl">
+                    {displayedText}
+                    {isTyping && <span className="animate-pulse">|</span>}
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Question Text Display */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="w-full max-w-5xl mb-8"
-        >
-          <div className="rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm p-8">
-            <h3 className="text-lg font-semibold mb-4 text-white">
-              {isShowingAnswer ? "답변 내용" : "질문 내용"}
-            </h3>
-            <div 
-              ref={textContainerRef}
-              className="bg-black/20 rounded-lg p-6 max-h-40 overflow-y-auto"
-            >
-              <p className="text-gray-300 leading-relaxed text-3xl">
-                {displayedText}
-                {isTyping && <span className="animate-pulse">|</span>}
-              </p>
-            </div>
+            </motion.div>
           </div>
         </motion.div>
 
