@@ -21,6 +21,8 @@ export default function QnAAnswerClient({
   const [displayedText, setDisplayedText] = useState("")
   const [isTyping, setIsTyping] = useState(false)
   const [isShowingAnswer, setIsShowingAnswer] = useState(false)
+  const [isVideoLoading, setIsVideoLoading] = useState(true)
+  const [hasStartedTyping, setHasStartedTyping] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const textContainerRef = useRef<HTMLDivElement>(null)
 
@@ -32,6 +34,17 @@ export default function QnAAnswerClient({
       } else {
         videoRef.current.play()
         setIsPlaying(true)
+        
+        // 동영상 재생 시 자막 타이핑 시작
+        if (!hasStartedTyping && data) {
+          const textToShow = isShowingAnswer ? data.answerText : data.questionText
+          if (textToShow) {
+            setHasStartedTyping(true)
+            setTimeout(() => {
+              typeText(textToShow, 70)
+            }, 300)
+          }
+        }
       }
     }
   }
@@ -67,13 +80,13 @@ export default function QnAAnswerClient({
       setIsPlaying(false)
     }
     
-    // 타이핑 효과로 텍스트 변경
-    const textToShow = newShowingAnswer ? data?.answerText : data?.questionText
-    if (textToShow) {
-      setTimeout(() => {
-        typeText(textToShow, 40)
-      }, 300)
-    }
+    // 새로운 비디오 로딩 시작
+    setIsVideoLoading(true)
+    
+    // 타이핑 상태 초기화 (새로운 텍스트로 전환)
+    setHasStartedTyping(false)
+    setDisplayedText("")
+    setIsTyping(false)
   }
 
   useEffect(() => {
@@ -86,12 +99,13 @@ export default function QnAAnswerClient({
         )
         setData(questionData)
         
-        // 타이핑 효과 시작 (초기에는 질문 텍스트)
-        if (questionData.questionText) {
-          setTimeout(() => {
-            typeText(questionData.questionText, 50)
-          }, 500) // 0.5초 후 시작
-        }
+        // 비디오 로딩 상태 초기화
+        setIsVideoLoading(true)
+        
+        // 타이핑 상태 초기화
+        setHasStartedTyping(false)
+        setDisplayedText("")
+        setIsTyping(false)
       } catch (error) {
         console.error('Failed to fetch question data:', error)
         setError('질문을 불러오는데 실패했습니다.')
@@ -182,16 +196,41 @@ export default function QnAAnswerClient({
           >
             {(isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl) ? (
               <>
+                {/* 비디오 로딩 중일 때 */}
+                {isVideoLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                    <div className="text-center text-white">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sk-red mx-auto mb-4"></div>
+                      <p className="text-lg">동영상 로딩 중...</p>
+                    </div>
+                  </div>
+                )}
+                
                 <video
                   ref={videoRef}
                   src={isShowingAnswer ? data.answerVideoUrl : data.questionVideoUrl}
                   className="w-full h-full object-cover"
+                  onLoadStart={() => setIsVideoLoading(true)}
+                  onCanPlay={() => setIsVideoLoading(false)}
                   onEnded={() => setIsPlaying(false)}
-                  onPlay={() => setIsPlaying(true)}
+                  onPlay={() => {
+                    setIsPlaying(true)
+                    // 동영상 재생 시 자막 타이핑 시작
+                    if (!hasStartedTyping && data) {
+                      const textToShow = isShowingAnswer ? data.answerText : data.questionText
+                      if (textToShow) {
+                        setHasStartedTyping(true)
+                        setTimeout(() => {
+                          typeText(textToShow, 70)
+                        }, 300)
+                      }
+                    }
+                  }}
                   onPause={() => setIsPlaying(false)}
                 />
-                {/* Play/Pause Overlay - only show on hover */}
-                {isHovered && (
+                
+                {/* Play/Pause Overlay - only show on hover and when not loading */}
+                {isHovered && !isVideoLoading && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-opacity duration-200">
                     <button
                       onClick={toggleVideo}
