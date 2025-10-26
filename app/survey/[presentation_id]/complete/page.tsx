@@ -5,31 +5,61 @@ import { motion } from "framer-motion"
 import { CheckCircle2, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { fetchPresentations } from "@/lib/api"
 
 export default function CompletePage({ params }: { params: { presentation_id: string } }) {
   const [presenter, setPresenter] = useState({ name: "", topic: "" })
-  const [nextPresentationId, setNextPresentationId] = useState("")
+  const [nextPresentationId, setNextPresentationId] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const submissionKey = `survey_submitted_${params.presentation_id}`
-    const submissionData = localStorage.getItem(submissionKey)
+    async function loadNextPresentation() {
+      try {
+        // localStorage에서 제출 데이터 로드
+        const submissionKey = `survey_submitted_${params.presentation_id}`
+        const submissionData = localStorage.getItem(submissionKey)
 
-    if (submissionData) {
-      const data = JSON.parse(submissionData)
-      setPresenter({
-        name: data.presenterName || "발표자",
-        topic: data.presenterTopic || "발표 주제",
-      })
+        if (submissionData) {
+          const data = JSON.parse(submissionData)
+          setPresenter({
+            name: data.presenterName || "발표자",
+            topic: data.presenterTopic || "발표 주제",
+          })
+        }
+
+        // 세션1의 모든 발표 조회
+        const presentations = await fetchPresentations("세션1")
+        
+        if (presentations.length === 0) {
+          setIsLoading(false)
+          return
+        }
+
+        // presentation_order 기준으로 오름차순 정렬
+        const sortedPresentations = [...presentations].sort(
+          (a, b) => a.presentation_order - b.presentation_order
+        )
+
+        // 현재 발표의 인덱스 찾기
+        const currentIndex = sortedPresentations.findIndex(
+          (p) => p.presentation_id === params.presentation_id
+        )
+
+        // 다음 발표가 있으면 설정
+        if (currentIndex !== -1 && currentIndex < sortedPresentations.length - 1) {
+          setNextPresentationId(sortedPresentations[currentIndex + 1].presentation_id)
+        } else {
+          setNextPresentationId(null) // 마지막 발표
+        }
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error("다음 발표 조회 실패:", error)
+        setIsLoading(false)
+      }
     }
 
-    const currentId = params.presentation_id
-    const match = currentId.match(/(\d+)$/)
-    if (match) {
-      const currentNumber = Number.parseInt(match[1])
-      const nextNumber = currentNumber + 1
-      const nextId = currentId.replace(/\d+$/, String(nextNumber).padStart(match[1].length, "0"))
-      setNextPresentationId(nextId)
-    }
+    loadNextPresentation()
   }, [params.presentation_id])
 
   return (
@@ -53,8 +83,14 @@ export default function CompletePage({ params }: { params: { presentation_id: st
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <h1 className="text-3xl font-bold text-foreground mb-3">평가 제출 완료</h1>
-            <p className="text-muted-foreground mb-2">소중한 평가를 제출해주셔서 감사합니다.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-3">
+              {!isLoading && nextPresentationId === null ? "평가가 모두 종료되었습니다" : "평가 제출 완료"}
+            </h1>
+            <p className="text-muted-foreground mb-2">
+              {!isLoading && nextPresentationId === null 
+                ? "모든 발표에 대한 평가를 완료하셨습니다. 감사합니다!" 
+                : "소중한 평가를 제출해주셔서 감사합니다."}
+            </p>
             {presenter.name && (
               <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                 <p className="text-sm text-muted-foreground mb-1">평가 완료</p>
@@ -63,8 +99,13 @@ export default function CompletePage({ params }: { params: { presentation_id: st
               </div>
             )}
 
-            <div className="mt-8">
-              {nextPresentationId && (
+            <div className="mt-8 space-y-3">
+              {isLoading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-sm text-muted-foreground mt-2">다음 발표 확인 중...</p>
+                </div>
+              ) : nextPresentationId ? (
                 <Link href={`/survey/${nextPresentationId}`} className="block">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -90,6 +131,22 @@ export default function CompletePage({ params }: { params: { presentation_id: st
                         whileHover={{ x: "0%" }}
                         transition={{ duration: 0.3 }}
                       />
+                    </Button>
+                  </motion.div>
+                </Link>
+              ) : (
+                <Link href="/" className="block">
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="w-full h-14 text-lg font-semibold"
+                    >
+                      홈으로 돌아가기
                     </Button>
                   </motion.div>
                 </Link>
