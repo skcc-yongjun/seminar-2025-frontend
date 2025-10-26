@@ -43,11 +43,16 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
       // 백엔드에서 키워드별 질문 조회
       const qnaQuestions = await fetchQnAQuestionsByKeyword(category)
       
+      // created_at desc로 정렬 후 최근 4개만 선택
+      const sortedQuestions = qnaQuestions
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 4)
+      
       // QnAQuestionResponse를 CategoryData 형식으로 변환
       const categoryData: CategoryData = {
         title: category,
         subtitle: category,
-        questions: qnaQuestions.map((q) => ({
+        questions: sortedQuestions.map((q) => ({
           id: q.question_id.toString(),
           question: q.title,
           description: q.timestamp_label || "질문 Keyword",
@@ -57,8 +62,8 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
       
       setData(categoryData)
       
-      // video_created가 false인 질문이 있는지 확인
-      const hasIncompleteVideos = qnaQuestions.some(q => !q.video_created)
+      // video_created가 false인 질문이 있는지 확인 (최근 4개 질문에 대해서만)
+      const hasIncompleteVideos = sortedQuestions.some(q => !q.video_created)
       
       if (hasIncompleteVideos) {
         console.log('일부 비디오가 아직 생성되지 않았습니다. 5초 후 재시도합니다.')

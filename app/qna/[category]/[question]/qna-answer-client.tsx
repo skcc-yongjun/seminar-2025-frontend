@@ -161,25 +161,41 @@ export default function QnAAnswerClient({
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-200px)] px-4">
-        {/* Question Badge */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="w-16 h-16 rounded-full bg-sk-red flex items-center justify-center text-white font-bold text-xl mb-8 shadow-lg shadow-sk-red/50"
-        >
-          {data.categoryName}
-        </motion.div>
-
         {/* Question Text */}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-2xl md:text-3xl font-medium text-center mb-8 max-w-3xl text-balance"
+          transition={{ delay: 0.2, duration: 0.8, ease: "easeOut" }}
+          className="relative mb-8 max-w-4xl"
         >
-          {data.title}
-        </motion.h1>
+          {/* Background Glow Effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-sk-red/20 via-blue-500/20 to-sk-red/20 blur-xl rounded-2xl opacity-30"></div>
+          
+          {/* Text Container */}
+          <motion.h1
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
+            className="relative text-2xl md:text-3xl lg:text-4xl font-semibold text-center text-balance leading-tight select-none"
+            style={{
+              background: "linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            {data.title}
+          </motion.h1>
+          
+          {/* Decorative Line */}
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: "100%" }}
+            transition={{ delay: 0.8, duration: 1.2, ease: "easeOut" }}
+            className="h-0.5 bg-gradient-to-r from-transparent via-sk-red to-transparent mt-4 mx-auto"
+            style={{ maxWidth: "200px" }}
+          />
+        </motion.div>
 
         {/* Video Player */}
         <motion.div
