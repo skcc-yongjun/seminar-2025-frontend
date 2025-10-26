@@ -13,6 +13,7 @@ interface CategoryData {
     id: string
     question: string
     description: string
+    video_created: boolean
   }>
 }
 
@@ -24,36 +25,51 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
   const [data, setData] = useState<CategoryData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
+  // video_created 상태를 기반으로 상태 결정
+  const getQuestionStatus = (question: { video_created: boolean }) => {
+    return question.video_created ? "complete" : "generating"
+  }
 
-  const [generationStatus, setGenerationStatus] = useState<Record<string, "pending" | "generating" | "complete">>({})
-  const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(0)
-
-    // Fetch category data from API
-  useEffect(() => {
-    const fetchCategoryData = async () => {
-      try {
+  // 데이터 가져오기 함수 (초기 로드용)
+  const fetchCategoryData = async (isInitialLoad = false) => {
+    try {
+      if (isInitialLoad) {
         setLoading(true)
         setError(null)
-        
-        // 백엔드에서 키워드별 질문 조회
-        const qnaQuestions = await fetchQnAQuestionsByKeyword(category)
-        
-        // QnAQuestionResponse를 CategoryData 형식으로 변환
-        const categoryData: CategoryData = {
-          title: category,
-          subtitle: category,
-          questions: qnaQuestions.map((q) => ({
-            id: q.question_id.toString(),
-            question: q.title,
-            description: q.timestamp_label || "질문 Keyword",
-          }))
-        }
-        
-        setData(categoryData)
+      }
+      
+      // 백엔드에서 키워드별 질문 조회
+      const qnaQuestions = await fetchQnAQuestionsByKeyword(category)
+      
+      // QnAQuestionResponse를 CategoryData 형식으로 변환
+      const categoryData: CategoryData = {
+        title: category,
+        subtitle: category,
+        questions: qnaQuestions.map((q) => ({
+          id: q.question_id.toString(),
+          question: q.title,
+          description: q.timestamp_label || "질문 Keyword",
+          video_created: q.video_created, // video_created 상태 추가
+        }))
+      }
+      
+      setData(categoryData)
+      
+      // video_created가 false인 질문이 있는지 확인
+      const hasIncompleteVideos = qnaQuestions.some(q => !q.video_created)
+      
+      if (hasIncompleteVideos) {
+        console.log('일부 비디오가 아직 생성되지 않았습니다. 5초 후 재시도합니다.')
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1)
+        }, 5000)
+      }
 
-      } catch (err) {
-        console.error('Error fetching category data:', err)
+    } catch (err) {
+      console.error('Error fetching category data:', err)
+      if (isInitialLoad) {
         setError(err instanceof Error ? err.message : 'Failed to fetch category data')
         
         // Fallback to empty data if API fails
@@ -62,51 +78,27 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
           subtitle: category,
           questions: []
         })
-      } finally {
+      }
+    } finally {
+      if (isInitialLoad) {
         setLoading(false)
       }
     }
+  }
 
-    fetchCategoryData()
+  // 초기 데이터 로드
+  useEffect(() => {
+    fetchCategoryData(true)
   }, [category])
 
-
+  // 재시도 로직
   useEffect(() => {
-    if (!data) return
-
-    // Initialize all questions as pending
-    const initialStatus: Record<string, "pending" | "generating" | "complete"> = {}
-    data.questions.forEach((q) => {
-      initialStatus[q.id] = "pending"
-    })
-    setGenerationStatus(initialStatus)
-
-    // Start sequential generation
-    let index = 0
-    const generateNext = () => {
-      if (index >= data.questions.length) return
-
-      const questionId = data.questions[index].id
-
-      // Set to generating
-      setGenerationStatus((prev) => ({ ...prev, [questionId]: "generating" }))
-      setCurrentGeneratingIndex(index)
-
-      // Simulate generation time (2-3 seconds per question)
-      setTimeout(
-        () => {
-          setGenerationStatus((prev) => ({ ...prev, [questionId]: "complete" }))
-          index++
-          if (index < data.questions.length) {
-            setTimeout(generateNext, 500) // Small delay before next generation
-          }
-        },
-        2000 + Math.random() * 1000,
-      )
+    if (retryCount > 0) {
+      fetchCategoryData(false) // 재시도 시에는 로딩 상태 없이
     }
+  }, [retryCount])
 
-    generateNext()
-  }, [data])
+
 
   if (loading) {
     return (
@@ -163,16 +155,23 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
               <p className="text-sk-red/70 mt-3 text-2xl">{data.subtitle}</p>
             </div>
           </div>
-          {Object.values(generationStatus).some(status => status !== "complete") && (
-            <p className="text-muted-foreground text-xl">AI 아바타가 순차적으로 생성되고 있습니다...</p>
+          {data && data.questions.some(q => !q.video_created) && (
+            <div className="flex items-center gap-3">
+              <p className="text-muted-foreground text-xl">일부 질문의 AI 아바타가 생성 중입니다...</p>
+              {retryCount > 0 && (
+                <span className="text-sm text-sk-red/70">
+                  (자동 새로고침 {retryCount}회)
+                </span>
+              )}
+            </div>
           )}
         </motion.div>
 
         {/* Questions List */}
         <div className={`flex-1 grid grid-cols-2 gap-12`}>
           {data.questions.map((question, index) => {
-            const status = generationStatus[question.id] || "pending"
-            const isClickable = status === "complete"
+            const status = getQuestionStatus(question)
+            const isClickable = question.video_created
 
             return (
               <motion.div
@@ -243,70 +242,59 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
                           </h3>
                         </div>
                         <div className="flex justify-end items-end mt-4">
-                          {status === "generating" ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-sk-red font-medium">
-                                AI 이미지 생성중
-                              </span>
-                              <div className="flex items-center gap-1">
-                                <Sparkles className="w-3 h-3 text-sk-red animate-pulse" />
-                                <div className="flex gap-0.5">
-                                  <motion.div
-                                    className="w-1 h-1 bg-sk-red rounded-full"
-                                    animate={{ opacity: [0.3, 1, 0.3] }}
-                                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: 0 }}
-                                  />
-                                  <motion.div
-                                    className="w-1 h-1 bg-sk-red rounded-full"
-                                    animate={{ opacity: [0.3, 1, 0.3] }}
-                                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: 0.2 }}
-                                  />
-                                  <motion.div
-                                    className="w-1 h-1 bg-sk-red rounded-full"
-                                    animate={{ opacity: [0.3, 1, 0.3] }}
-                                    transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: 0.4 }}
-                                  />
-                                </div>
-                              </div>
-                              <div className="rounded-full bg-sk-red/10 flex items-center justify-center w-8 h-8">
-                                <AnimatePresence mode="wait">
-                                  <motion.div
-                                    key="generating"
-                                    initial={{ scale: 0.8, opacity: 0 }}
-                                    animate={{
-                                      scale: [0.8, 1.1, 0.8],
-                                      opacity: 1,
-                                      rotate: [0, 5, -5, 0],
-                                    }}
-                                    exit={{ scale: 0.8, opacity: 0 }}
-                                    transition={{
-                                      scale: {
-                                        duration: 1.5,
-                                        repeat: Number.POSITIVE_INFINITY,
-                                        ease: "easeInOut",
-                                      },
-                                      rotate: {
-                                        duration: 2,
-                                        repeat: Number.POSITIVE_INFINITY,
-                                        ease: "easeInOut",
-                                      },
-                                    }}
-                                  >
-                                    <Brain className="text-sk-red w-4 h-4" />
-                                  </motion.div>
-                                </AnimatePresence>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-sk-red font-medium">
+                              AI 이미지 생성중
+                            </span>
+                            <div className="flex items-center gap-1">
+                              <Sparkles className="w-3 h-3 text-sk-red animate-pulse" />
+                              <div className="flex gap-0.5">
+                                <motion.div
+                                  className="w-1 h-1 bg-sk-red rounded-full"
+                                  animate={{ opacity: [0.3, 1, 0.3] }}
+                                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: 0 }}
+                                />
+                                <motion.div
+                                  className="w-1 h-1 bg-sk-red rounded-full"
+                                  animate={{ opacity: [0.3, 1, 0.3] }}
+                                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: 0.2 }}
+                                />
+                                <motion.div
+                                  className="w-1 h-1 bg-sk-red rounded-full"
+                                  animate={{ opacity: [0.3, 1, 0.3] }}
+                                  transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, delay: 0.4 }}
+                                />
                               </div>
                             </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs text-muted-foreground font-medium">
-                                대기중
-                              </span>
-                              <div className="rounded-full bg-muted-foreground/10 flex items-center justify-center w-8 h-8">
-                                <Brain className="text-muted-foreground w-4 h-4" />
-                              </div>
+                            <div className="rounded-full bg-sk-red/10 flex items-center justify-center w-8 h-8">
+                              <AnimatePresence mode="wait">
+                                <motion.div
+                                  key="generating"
+                                  initial={{ scale: 0.8, opacity: 0 }}
+                                  animate={{
+                                    scale: [0.8, 1.1, 0.8],
+                                    opacity: 1,
+                                    rotate: [0, 5, -5, 0],
+                                  }}
+                                  exit={{ scale: 0.8, opacity: 0 }}
+                                  transition={{
+                                    scale: {
+                                      duration: 1.5,
+                                      repeat: Number.POSITIVE_INFINITY,
+                                      ease: "easeInOut",
+                                    },
+                                    rotate: {
+                                      duration: 2,
+                                      repeat: Number.POSITIVE_INFINITY,
+                                      ease: "easeInOut",
+                                    },
+                                  }}
+                                >
+                                  <Brain className="text-sk-red w-4 h-4" />
+                                </motion.div>
+                              </AnimatePresence>
                             </div>
-                          )}
+                          </div>
                         </div>
                       </div>
                     </div>

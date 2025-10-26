@@ -165,6 +165,7 @@ export interface QnAQuestionResponse {
   answer_text: string | null
   title: string | ""
   created_at: string
+  video_created: boolean
 }
 
 export interface QnAQuestionListResponse {
