@@ -250,7 +250,7 @@ export default function QnAAnswerClient({
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-              className="text-[200px] font-bold text-sky-400 select-none"
+              className="text-[160px] font-bold text-sky-400 select-none"
               style={{
                 lineHeight: 0.8,
               }}
@@ -263,7 +263,7 @@ export default function QnAAnswerClient({
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-              className="text-5xl lg:text-6xl font-semibold text-amber-400 leading-tight select-none"
+              className="text-4xl lg:text-5xl font-semibold text-amber-400 leading-tight select-none"
             >
               {data.title}
             </motion.div>
@@ -293,7 +293,7 @@ export default function QnAAnswerClient({
                   transformOrigin: 'left center'
                 }}
               >
-                <p className="text-gray-300 leading-relaxed text-6xl">
+                <p className="text-gray-300 leading-relaxed text-5xl">
                   {displayedText.split(/\r\n|\r|\n/).map((line, index) => (
                     <span key={index}>
                       {line}
@@ -306,43 +306,43 @@ export default function QnAAnswerClient({
             </motion.div>
           </div>
 
-          {/* Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center gap-4"
-          >
-            {/* Back to List Button */}
-            <Link
-              href="/qna"
-              className="px-6 py-3 rounded-lg border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
-            >
-              <List className="w-5 h-5" />
-              <span>목록으로</span>
-            </Link>
-
-            {/* Toggle Question/Answer Button */}
-            <button
-              onClick={toggleQuestionAnswer}
-              className="px-8 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-600/30 w-full sm:w-auto"
-            >
-              {isShowingAnswer ? "질문 보기" : "답변 보기"}
-            </button>
-          </motion.div>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 flex items-center justify-between border-t border-white/10 bg-slate-900/80 backdrop-blur-sm">
-        <div className="text-xs text-gray-500">© 2025 SK Group. All rights reserved.</div>
-        <Link
-          href="/"
-          className="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2 text-sm"
-        >
-          <Home className="w-4 h-4" />
-          <span>홈으로</span>
-        </Link>
+      <div className="fixed bottom-0 left-0 right-0 p-6 border-t border-white/10 bg-slate-900/80 backdrop-blur-sm">
+        <div className="flex items-center justify-between">
+          <div className="text-xs text-gray-500">© 2025 SK Group. All rights reserved.</div>
+          
+          {/* Navigation Buttons */}
+          <div className="flex items-center gap-4">
+            {/* Toggle Question/Answer Button */}
+            <button
+              onClick={toggleQuestionAnswer}
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold shadow-lg shadow-blue-600/30 flex items-center gap-2 text-sm"
+            >
+              {isShowingAnswer ? "질문 보기" : "답변 보기"}
+            </button>
+
+            {/* Back to List Button */}
+            <Link
+              href="/qna"
+              className="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2 text-sm"
+            >
+              <List className="w-4 h-4" />
+              <span>목록으로</span>
+            </Link>
+
+            {/* Home Button */}
+            <Link
+              href="/"
+              className="px-4 py-2 rounded-lg border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2 text-sm"
+            >
+              <Home className="w-4 h-4" />
+              <span>홈으로</span>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
