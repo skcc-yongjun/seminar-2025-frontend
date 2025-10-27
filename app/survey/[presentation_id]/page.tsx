@@ -114,13 +114,13 @@ export default function SurveyPage({ params }: { params: { presentation_id: stri
     },
     {
       id: 2,
-      category: "성과 지속 가능성",
+      category: "지속가능성",
       question: "해당 과제가 일시적이 아닌 지속적인 성과를 창출할 수 있는 과제로 구성되었는가?",
     },
     {
       id: 3,
-      category: "공유/확산 가치",
-      question: "타 계열사 및 조직에 공유하고 확산할 수 있는 가치가 있는가?",
+      category: "혁신성",
+      question: "타 계열사 및 조직에 공유하고 확산할 수 있는 혁신적 가치가 있는가?",
     },
   ]
 
