@@ -613,3 +613,60 @@ export async function toggleQnAQuestionSelect(questionId: number): Promise<QnAQu
   
   return response.json()
 }
+
+// Human Evaluation Score API Types
+export interface HumanEvaluationScoreItem {
+  category: string
+  score: number
+}
+
+export interface HumanEvaluationScoreBatchCreate {
+  device_id: string
+  scores: HumanEvaluationScoreItem[]
+}
+
+export interface HumanEvaluationScoreResponse {
+  score_id: number
+  presentation_id: string
+  device_id: string
+  category: string
+  score: number
+  score_type: string
+  evaluated_at: string
+  created_at: string
+}
+
+export interface HumanEvaluationScoreBatchResponse {
+  presentation_id: string
+  saved_count: number
+  scores: HumanEvaluationScoreResponse[]
+}
+
+/**
+ * 사람 평가 점수 배치 제출
+ * @param presentationId 발표 ID
+ * @param data 평가 점수 데이터 (device_id, scores)
+ * @returns 저장된 평가 점수 정보
+ */
+export async function submitHumanEvaluationScores(
+  presentationId: string,
+  data: HumanEvaluationScoreBatchCreate
+): Promise<HumanEvaluationScoreBatchResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/human-evaluation-scores/batch/${presentationId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`평가 제출 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
