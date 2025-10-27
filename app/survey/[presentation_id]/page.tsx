@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from "react"
 import { motion } from "framer-motion"
-import { Star, ChevronLeft, Tablet, AlertCircle, XCircle, Clock } from "lucide-react"
+import { Star, ChevronLeft, Tablet, AlertCircle, XCircle, Clock, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -111,6 +111,7 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
   const [presentation, setPresentation] = useState<PresentationWithPresenter | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [navigating, setNavigating] = useState(false)
   const [errorScreen, setErrorScreen] = useState<{
     type: 'validation' | 'already_submitted' | 'waiting' | 'closed' | null
     message: string
@@ -360,6 +361,74 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
     }
   }
 
+  // 다음 평가 가능한 발표로 이동하는 핸들러
+  const handleGoToNextAvailablePresentation = async () => {
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+    console.log("🔀 [Navigate] 다음 평가 가능한 발표 찾는 중...")
+    console.log("  • 현재 발표 ID:", presentation_id)
+    
+    setNavigating(true)
+    
+    try {
+      // 세션1의 모든 발표 가져오기
+      const presentations = await fetchPresentationsWithPresenters("세션1")
+      console.log("  • 조회된 발표 수:", presentations.length)
+      
+      // presentation_order 기준으로 정렬
+      const sortedPresentations = [...presentations].sort(
+        (a, b) => a.presentation_order - b.presentation_order
+      )
+      
+      console.log("  • 발표 목록:")
+      sortedPresentations.forEach(p => {
+        const key = `survey_submitted_${p.presentation_id}`
+        const isSubmitted = !!localStorage.getItem(key)
+        console.log(`    - [${p.presentation_order}] ${p.presentation_id} (${p.status}): ${isSubmitted ? '✅ 제출됨' : '❌ 미제출'}`)
+      })
+      
+      // 1순위: 미제출 발표 중에서 '진행중' 또는 '평가' 상태인 발표 찾기
+      let targetPresentation = sortedPresentations.find(p => {
+        const key = `survey_submitted_${p.presentation_id}`
+        const isNotSubmitted = !localStorage.getItem(key)
+        const isAvailableStatus = p.status === '진행중' || p.status === '평가'
+        return isNotSubmitted && isAvailableStatus
+      })
+      
+      // 2순위: 없으면 미제출 발표 중에서 '대기중' 상태인 발표 찾기 (order 순)
+      if (!targetPresentation) {
+        targetPresentation = sortedPresentations.find(p => {
+          const key = `survey_submitted_${p.presentation_id}`
+          const isNotSubmitted = !localStorage.getItem(key)
+          const isWaitingStatus = p.status === '대기'
+          return isNotSubmitted && isWaitingStatus
+        })
+      }
+      
+      if (targetPresentation) {
+        // 평가 가능한 발표가 있으면 해당 발표로 바로 이동
+        console.log(`✅ [Found] 이동할 발표 발견: ${targetPresentation.presentation_id} (${targetPresentation.status})`)
+        console.log(`🔀 [Redirect] 이동 중...`)
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        router.push(`/survey/${targetPresentation.presentation_id}`)
+      } else {
+        // 미제출 발표가 없으면 - 모두 완료
+        console.log(`✅ [Complete] 모든 평가 완료`)
+        const lastPresentation = sortedPresentations[sortedPresentations.length - 1]
+        console.log(`🔀 [Redirect] Complete 페이지로 이동: ${lastPresentation.presentation_id}`)
+        console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        router.push(`/survey/${lastPresentation.presentation_id}/complete`)
+      }
+    } catch (error) {
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+      console.error("❌ [Error] 발표 목록 조회 실패:", error)
+      console.error("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+      alert("평가 가능한 발표를 찾을 수 없습니다. 홈으로 이동합니다.")
+      router.push("/")
+    } finally {
+      setNavigating(false)
+    }
+  }
+
   // 에러 화면 (Complete 페이지 스타일)
   if (errorScreen.type) {
     const getErrorIcon = () => {
@@ -369,6 +438,9 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
       if (errorScreen.type === 'waiting') {
         return <Clock className="h-16 w-16 text-blue-500" />
       }
+      if (errorScreen.type === 'closed') {
+        return <ArrowRight className="h-16 w-16 text-blue-500" />
+      }
       return <XCircle className="h-16 w-16 text-red-500" />
     }
 
@@ -377,6 +449,9 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
         return 'orange'
       }
       if (errorScreen.type === 'waiting') {
+        return 'blue'
+      }
+      if (errorScreen.type === 'closed') {
         return 'blue'
       }
       return 'red'
@@ -445,8 +520,8 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
 
               {errorScreen.type === 'closed' && (
                 <p className="text-muted-foreground mb-6">
-                  평가 기간이 종료되었습니다.<br />
-                  감사합니다.
+                  이 발표의 평가가 종료되었습니다.<br />
+                  다른 평가 가능한 발표로 이동합니다.
                 </p>
               )}
 
@@ -472,6 +547,22 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
                     className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     평가화면으로 돌아가기
+                  </Button>
+                ) : errorScreen.type === 'closed' ? (
+                  <Button
+                    onClick={handleGoToNextAvailablePresentation}
+                    disabled={navigating}
+                    size="lg"
+                    className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    {navigating ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                        이동 중...
+                      </span>
+                    ) : (
+                      "현재 진행가능한 평가로 가기"
+                    )}
                   </Button>
                 ) : (
                   <Link href="/" className="block">
