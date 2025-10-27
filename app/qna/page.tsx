@@ -112,6 +112,7 @@ export default function QnACategories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showBrainTooltip, setShowBrainTooltip] = useState(false)
 
   useEffect(() => {
     const run = async () => {
@@ -582,15 +583,58 @@ export default function QnACategories() {
 
               {/* 브레인 아이콘 */}
               <g transform={`translate(${cx}, ${cy})`}>
-                <foreignObject x={-56} y={-56} width={112} height={112}>
-                  <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 border-blue-500/30 flex items-center justify-center shadow-2xl">
-                    <Brain className="w-12 h-12 md:w-16 md:h-16 text-blue-500" strokeWidth={1.5} />
+                <foreignObject x={-80} y={-80} width={160} height={160}>
+                  <div className="w-full h-full flex items-center justify-center">
+                    <motion.div 
+                      className="relative w-32 h-32 rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 border-blue-500/30 flex items-center justify-center shadow-2xl cursor-pointer group"
+                    whileHover={{ 
+                      scale: 1.05,
+                      y: -2,
+                      boxShadow: "0 8px 16px rgba(59, 130, 246, 0.3)"
+                    }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 300, 
+                      damping: 20 
+                    }}
+                    onMouseEnter={() => setShowBrainTooltip(true)}
+                    onMouseLeave={() => setShowBrainTooltip(false)}
+                  >
+                    <Brain 
+                      className="w-12 h-12 md:w-16 md:h-16 text-blue-500 group-hover:text-blue-400 transition-colors duration-200" 
+                      strokeWidth={1.5} 
+                    />
+                    </motion.div>
                   </div>
                 </foreignObject>
               </g>
             </g>
           </svg>
         </div>
+
+        {/* 브레인 툴팁 - SVG 외부에 위치 */}
+        {showBrainTooltip && (
+          <motion.div
+            className="fixed z-50 pointer-events-none"
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%) translateY(-120px)'
+            }}
+            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.8 }}
+            transition={{ duration: 0.2 }}
+          >
+            <div className="px-6 py-3 bg-slate-800/95 backdrop-blur-sm border border-blue-500/30 rounded-lg shadow-xl">
+              <div className="text-lg font-semibold text-white whitespace-nowrap">
+                AI에게 질문하시겠습니까?
+              </div>
+              {/* 화살표 */}
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-800/95"></div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   )
