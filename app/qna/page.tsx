@@ -180,7 +180,7 @@ export default function QnACategories() {
     return (
       <div className="min-h-screen p-8 md:p-12 bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-sk-red mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-2xl text-muted-foreground">키워드 로딩 중...</p>
         </div>
       </div>
@@ -191,8 +191,8 @@ export default function QnACategories() {
     <div className="min-h-screen p-8 md:p-12 bg-background relative overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-sk-red/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
@@ -208,7 +208,7 @@ export default function QnACategories() {
 
           <h1 className="text-4xl md:text-5xl font-bold text-foreground">
             Q&A 카테고리
-            <span className="block h-1 w-32 bg-sk-red mt-2" />
+            <span className="block h-1 w-32 bg-blue-500 mt-2" />
           </h1>
           {error && <p className="text-yellow-500 mt-4">API 호출 실패: 기본 카테고리를 표시합니다</p>}
         </motion.div>
@@ -223,12 +223,12 @@ export default function QnACategories() {
           >
             <defs>
               <radialGradient id="segFill" cx="50%" cy="50%" r="70%">
-                <stop offset="0%" stopColor="rgba(234,0,44,0.10)" />
+                <stop offset="0%" stopColor="rgba(59,130,246,0.10)" />
                 <stop offset="100%" stopColor="rgba(71,85,105,0.35)" />
               </radialGradient>
               <linearGradient id="segStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(234,0,44,0.6)" />
-                <stop offset="100%" stopColor="rgba(59,130,246,0.6)" />
+                <stop offset="0%" stopColor="rgba(59,130,246,0.6)" />
+                <stop offset="100%" stopColor="rgba(37,99,235,0.6)" />
               </linearGradient>
             </defs>
 
@@ -254,7 +254,7 @@ export default function QnACategories() {
                       fill="url(#segFill)"
                       stroke="url(#segStroke)"
                       strokeWidth={2}
-                      style={{ filter: "drop-shadow(0 0 12px rgba(234,0,44,0.15))" }}
+                      style={{ filter: "drop-shadow(0 0 12px rgba(59,130,246,0.15))" }}
                       whileHover={{ scale: 1.02 }}
                     />
 
@@ -262,8 +262,8 @@ export default function QnACategories() {
                     <g transform={`translate(${midPos.x}, ${midPos.y})`}>
                       <foreignObject x={-120} y={-42} width={240} height={84}>
                         <div className="flex flex-col items-center justify-center text-center select-none">
-                          <div className="px-4 py-1 rounded-full bg-sk-red/10 border border-sk-red/30 backdrop-blur-sm inline-flex items-center gap-2">
-                            <Icon className="w-4 h-4 text-sk-red" strokeWidth={1.5} />
+                          <div className="px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 backdrop-blur-sm inline-flex items-center gap-2">
+                            <Icon className="w-4 h-4 text-blue-500" strokeWidth={1.5} />
                             <span className="text-base md:text-lg font-semibold text-foreground">
                               {c.title}
                             </span>
@@ -287,7 +287,7 @@ export default function QnACategories() {
                 cy={cy}
                 r={rInner - 36}
                 fill="none"
-                stroke="rgba(234,0,44,0.25)"
+                stroke="rgba(59,130,246,0.25)"
                 strokeDasharray="4,8"
                 animate={{ rotate: 360 }}
                 style={{ originX: cx, originY: cy }}
@@ -298,7 +298,7 @@ export default function QnACategories() {
                 cy={cy}
                 r={rInner - 64}
                 fill="none"
-                stroke="rgba(59,130,246,0.25)"
+                stroke="rgba(37,99,235,0.25)"
                 strokeDasharray="2,10"
                 animate={{ rotate: -360 }}
                 style={{ originX: cx, originY: cy }}
@@ -308,17 +308,17 @@ export default function QnACategories() {
               {/* 중앙 배경 */}
               <defs>
                 <radialGradient id="brainBg" cx="50%" cy="50%" r="60%">
-                  <stop offset="0%" stopColor="rgba(234,0,44,0.35)" />
+                  <stop offset="0%" stopColor="rgba(59,130,246,0.35)" />
                   <stop offset="100%" stopColor="rgba(0,0,0,0.7)" />
                 </radialGradient>
               </defs>
-              <circle cx={cx} cy={cy} r={rInner - 80} fill="url(#brainBg)" stroke="rgba(234,0,44,0.35)" strokeWidth={2} />
+              <circle cx={cx} cy={cy} r={rInner - 80} fill="url(#brainBg)" stroke="rgba(59,130,246,0.35)" strokeWidth={2} />
 
               {/* 브레인 아이콘 */}
               <g transform={`translate(${cx}, ${cy})`}>
                 <foreignObject x={-56} y={-56} width={112} height={112}>
-                  <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 border-sk-red/30 flex items-center justify-center shadow-2xl">
-                    <Brain className="w-12 h-12 md:w-16 md:h-16 text-sk-red" strokeWidth={1.5} />
+                  <div className="relative w-full h-full rounded-full bg-gradient-to-br from-slate-900 via-slate-950 to-black border-2 border-blue-500/30 flex items-center justify-center shadow-2xl">
+                    <Brain className="w-12 h-12 md:w-16 md:h-16 text-blue-500" strokeWidth={1.5} />
                   </div>
                 </foreignObject>
               </g>
