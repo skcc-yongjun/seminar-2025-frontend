@@ -7,6 +7,14 @@ import { Home, Sparkles, Brain } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { 
+  fetchEvaluatorCount, 
+  fetchPresentation, 
+  fetchPresentationsWithPresenters, 
+  fetchPresentationAnalysisComments,
+  PresentationWithPresenter,
+  PresentationAnalysisCommentResponse
+} from "@/lib/api"
 
 function TypewriterText({ text, delay = 50, onComplete }: { text: string; delay?: number; onComplete?: () => void }) {
   const [displayedText, setDisplayedText] = useState("")
@@ -30,56 +38,16 @@ function TypewriterText({ text, delay = 50, onComplete }: { text: string; delay?
   return <span>{displayedText}</span>
 }
 
-const presentations = [
-  {
-    id: "1",
-    title: "Global Top-tier 대비 O/I 경쟁력 분석 및 개선방안",
-    presenter: "윤풍영",
-    company: "SK AX",
-  },
-  {
-    id: "2",
-    title: "AI Biz.Model 구축 방향",
-    presenter: "김민수",
-    company: "SK Telecom",
-  },
-  {
-    id: "3",
-    title: "5G 기반 AI 서비스 전략",
-    presenter: "이지은",
-    company: "SK Hynix",
-  },
-  {
-    id: "4",
-    title: "AI 기반 에너지 최적화",
-    presenter: "박준호",
-    company: "SK E&S",
-  },
-]
+interface StrengthItem {
+  text: string
+  voiceAnalysis: string | null
+  presentationMaterial: string | null
+}
 
-interface PresentationAnalysis {
-  id: string
-  title: string
-  presenter: string
-  company: string
-  strengths: { text: string; voiceAnalysis: string | null; presentationMaterial: string | null }[]
-  improvements: { text: string; voiceAnalysis: string | null; presentationMaterial: string | null }[]
-  summary: string
-  aiScores: {
-    "[O/I 수준 진단]": number
-    "[과제 목표 수준]": number
-    "[성과 지속 가능성]": number
-    "[Process/System]": number
-    "[본원적 경쟁력 연계]": number
-    "[혁신성]": number
-    "[실행 가능성]": number
-    "[기대 효과]": number
-  }
-  onSiteScores: {
-    "[전략적 중요도]": number
-    "[실행 가능성]": number
-    "[발표 완성도]": number
-  }
+interface ImprovementItem {
+  text: string
+  voiceAnalysis: string | null
+  presentationMaterial: string | null
 }
 
 export default function PostPresentationPage() {
@@ -87,52 +55,15 @@ export default function PostPresentationPage() {
   const searchParams = useSearchParams()
   const presentationIdFromQuery = searchParams.get("presentationId")
 
-  const [selectedPresentationId, setSelectedPresentationId] = useState("1")
-  const selectedPresentation = presentations.find((p) => p.id === selectedPresentationId) || presentations[0]
+  const [presentations, setPresentations] = useState<PresentationWithPresenter[]>([])
+  const [selectedPresentationId, setSelectedPresentationId] = useState<string>("")
+  const selectedPresentation = presentations.find((p) => p.presentation_id === selectedPresentationId)
 
-  const [presentation] = useState<PresentationAnalysis>({
-    id: "1",
-    title: "Global Top-tier 대비 O/I 경쟁력 분석 및 개선방안",
-    presenter: "윤풍영",
-    company: "SK AX",
-    strengths: [
-      {
-        text: "책임 명료. 핵·비핵 구분이 단호하고, 철수 기준이 수익성 중심이다.",
-        voiceAnalysis: "08:12",
-        presentationMaterial: null,
-      },
-      {
-        text: "인과 명확. MPRS 구조가 연결되고 실행 책임이 드러난다.",
-        voiceAnalysis: null,
-        presentationMaterial: "p.12",
-      },
-    ],
-    improvements: [
-      {
-        text: "루트코즈 피상. 장애요인 나열로 끝나며 발목 원인 분석이 없다.",
-        voiceAnalysis: "18:44",
-        presentationMaterial: null,
-      },
-      { text: "목표 저강도. 2027 목표가 낮고 재무 연계가 끊겼다.", voiceAnalysis: null, presentationMaterial: "p.7" },
-    ],
-    summary:
-      "논리는 충분하나 결단이 약하다. 성과-재무 인과가 끊겨 도전이 보이지 않는다. 리스크를 감수하는 목표 전환 없이는 그룹 내 리더십을 확보하기 어렵다.",
-    aiScores: {
-      "[O/I 수준 진단]": 8.5,
-      "[과제 목표 수준]": 5.5,
-      "[성과 지속 가능성]": 7.0,
-      "[Process/System]": 5.0,
-      "[본원적 경쟁력 연계]": 8.2,
-      "[혁신성]": 7.5,
-      "[실행 가능성]": 6.8,
-      "[기대 효과]": 7.8,
-    },
-    onSiteScores: {
-      "[전략적 중요도]": 8.0,
-      "[실행 가능성]": 6.5,
-      "[발표 완성도]": 7.5,
-    },
-  })
+  // 실제 API에서 가져온 데이터
+  const [strengths, setStrengths] = useState<StrengthItem[]>([])
+  const [improvements, setImprovements] = useState<ImprovementItem[]>([])
+  const [summary, setSummary] = useState<string>("")
+  const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false)
 
   const [isAnalyzingImplication, setIsAnalyzingImplication] = useState(false)
 
@@ -159,47 +90,112 @@ export default function PostPresentationPage() {
   const [completedWeaknessItems, setCompletedWeaknessItems] = useState<number[]>([])
   const [completedSummary, setCompletedSummary] = useState(false)
 
+  // 평가 완료 상태 polling을 위한 state
+  const [evaluatorCount, setEvaluatorCount] = useState<number>(0)
+  const [totalEvaluatorCount, setTotalEvaluatorCount] = useState<number>(0)
+  const [presentationStatus, setPresentationStatus] = useState<string>("")
+  const [isEvaluationComplete, setIsEvaluationComplete] = useState<boolean>(false)
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 발표 목록 로딩
+  const [isLoadingPresentations, setIsLoadingPresentations] = useState(true)
+
+  // 분석 데이터 로딩
+  const loadAnalysisData = async (presentationId: string) => {
+    if (!presentationId) return
+    
+    setIsLoadingAnalysis(true)
+    try {
+      const comments = await fetchPresentationAnalysisComments(presentationId)
+      
+      // 강점 추출
+      const strengthComments = comments.filter(c => c.type === '강점')
+      const strengthItems: StrengthItem[] = strengthComments.map(c => ({
+        text: c.comment,
+        voiceAnalysis: c.source_type === '발표' ? c.source : null,
+        presentationMaterial: c.source_type === '자료' ? c.source : null,
+      }))
+      setStrengths(strengthItems)
+
+      // 약점 추출
+      const weaknessComments = comments.filter(c => c.type === '약점')
+      const improvementItems: ImprovementItem[] = weaknessComments.map(c => ({
+        text: c.comment,
+        voiceAnalysis: c.source_type === '발표' ? c.source : null,
+        presentationMaterial: c.source_type === '자료' ? c.source : null,
+      }))
+      setImprovements(improvementItems)
+
+      // 총평 추출 (여러 개 있을 수 있으므로 하나로 합침)
+      const summaryComments = comments.filter(c => c.type === '총평')
+      const combinedSummary = summaryComments.map(c => c.comment).join('\n\n')
+      setSummary(combinedSummary || "")
+
+    } catch (error) {
+      console.error("분석 데이터 로딩 실패:", error)
+      // 에러 발생 시 빈 데이터
+      setStrengths([])
+      setImprovements([])
+      setSummary("")
+    } finally {
+      setIsLoadingAnalysis(false)
+    }
+  }
+
   const handleImplicationAnalysis = () => {
     if (isImplicationAnalysisComplete) {
       router.push(`/post-presentation/evaluations?presentationId=${selectedPresentationId}`)
       return
     }
 
+    // 초기 상태 설정 - 총평은 나중에 표시
     setShowAnalysis(true)
     setShowStrengths(true)
     setShowWeaknesses(true)
+    setShowSummary(false)  // 명시적으로 false로 초기화
 
-    setTimeout(() => {
-      setAnalyzingLine("책임 명료. 핵·비핵 구분이 단호하고, 철수 기준이 수익성 중심이다.")
-      setVisibleStrengthItems([0])
-    }, 800)
+    // 실제 데이터 기반으로 애니메이션 - 강점과 약점을 병행으로 표시
+    const animateItems = () => {
+      let currentTime = 800
+      const maxItems = Math.max(strengths.length, improvements.length)
+      
+      // 강점과 약점을 병행으로 표시
+      for (let i = 0; i < maxItems; i++) {
+        // 강점 표시
+        if (i < strengths.length) {
+          setTimeout(() => {
+            setAnalyzingLine(strengths[i].text)
+            setVisibleStrengthItems(prev => [...prev, i])
+          }, currentTime)
+        }
+        
+        // 약점 표시 (강점과 동시에 또는 강점이 없으면)
+        if (i < improvements.length) {
+          setTimeout(() => {
+            setAnalyzingLine(improvements[i].text)
+            setVisibleWeaknessItems(prev => [...prev, i])
+          }, currentTime + (i < strengths.length ? 700 : 0)) // 강점과 0.7초 간격
+        }
+        
+        currentTime += 1400
+      }
 
-    setTimeout(() => {
-      setAnalyzingLine("루트코즈 피상. 장애요인 나열로 끝나며 발목 원인 분석이 없다.")
-      setVisibleWeaknessItems([0])
-    }, 2200)
-
-    setTimeout(() => {
-      setAnalyzingLine("인과 명확. MPRS 구조가 연결되고 실행 책임이 드러난다.")
-      setVisibleStrengthItems([0, 1])
-    }, 3600)
-
-    setTimeout(() => {
-      setAnalyzingLine("목표 저강도. 2027 목표가 낮고 재무 연계가 끊겼다.")
-      setVisibleWeaknessItems([0, 1])
-    }, 5000)
-
-    setTimeout(() => {
-      setAnalyzingLine("총평 작성 중...")
-      setShowSummary(true)
-
+      // 모든 강점/약점 표시 후 총평 표시 (마지막 아이템의 타이핑 시간 고려하여 추가 대기)
+      // 마지막 아이템의 타이핑 애니메이션이 완료될 때까지 충분히 대기
       setTimeout(() => {
-        setAnalyzingLine("")
-        setIsAnalyzingImplication(false)
-        setIsImplicationAnalysisComplete(true)
-        setShowScores(true)
-      }, 2000)
-    }, 6400)
+        setAnalyzingLine("총평 작성 중...")
+        setShowSummary(true)  // 이제 총평 표시
+
+        setTimeout(() => {
+          setAnalyzingLine("")
+          setIsAnalyzingImplication(false)
+          setIsImplicationAnalysisComplete(true)
+          setShowScores(true)
+        }, 2000)
+      }, currentTime + 2500)  // 2500ms 추가하여 마지막 아이템의 타이핑 완료 대기
+    }
+
+    animateItems()
   }
 
   const handleRevealResults = () => {
@@ -207,26 +203,179 @@ export default function PostPresentationPage() {
     handleImplicationAnalysis()
   }
 
+
+  // 발표 목록 로딩
   useEffect(() => {
-    if (presentationIdFromQuery) {
-      setLoadingStage("revealed")
-      handleImplicationAnalysis()
+    const loadPresentations = async () => {
+      try {
+        // 세션1 발표만 가져오기
+        const data = await fetchPresentationsWithPresenters('세션1')
+        
+        // presentation_order 기준 정렬 (오름차순)
+        const sortedData = data.sort((a, b) => a.presentation_order - b.presentation_order)
+        setPresentations(sortedData)
+        
+        // 첫 번째 발표를 기본 선택 (가장 낮은 order)
+        if (sortedData.length > 0) {
+          const initialId = presentationIdFromQuery || sortedData[0].presentation_id
+          setSelectedPresentationId(initialId)
+        }
+      } catch (error) {
+        console.error("발표 목록 로딩 실패:", error)
+      } finally {
+        setIsLoadingPresentations(false)
+      }
+    }
+
+    loadPresentations()
+  }, [presentationIdFromQuery])
+
+  // 선택된 발표가 변경되면 분석 데이터 로딩 및 전체 초기화
+  useEffect(() => {
+    if (selectedPresentationId) {
+      console.log('🎯 [발표 변경] 발표 ID:', selectedPresentationId, 'fromQuery:', presentationIdFromQuery)
+      
+      // 분석 데이터 로딩
+      loadAnalysisData(selectedPresentationId)
+      
+      // 전체 상태 초기화
+      setIsImplicationAnalysisComplete(false)
+      setShowAnalysis(false)
+      setShowStrengths(false)
+      setShowWeaknesses(false)
+      setShowSummary(false)
+      setVisibleStrengthItems([])
+      setVisibleWeaknessItems([])
+      setCompletedStrengthItems([])
+      setCompletedWeaknessItems([])
+      setCompletedSummary(false)
+      setIsEvaluationComplete(false)
+      setAnalyzingLine("")
+      
+      // 항상 analyzing부터 시작 (정상적인 플로우)
+      console.log('🔄 [상태] analyzing으로 초기화')
+      setLoadingStage("analyzing")
+    }
+  }, [selectedPresentationId])
+
+  // loadingStage에 따른 애니메이션 타이머 설정
+  useEffect(() => {
+    if (loadingStage === "analyzing") {
+      // analyzing → ready (3초 후)
+      console.log('⏱️ [타이머] analyzing 상태 시작')
+      const timer = setTimeout(() => {
+        console.log('⏱️ [타이머] ready 상태로 전환')
+        setLoadingStage("ready")
+      }, 3000)
+
+      return () => {
+        clearTimeout(timer)
+      }
+    } else if (loadingStage === "ready") {
+      // ready → button (2.5초 후)
+      console.log('⏱️ [타이머] ready 상태 시작')
+      const timer = setTimeout(() => {
+        console.log('⏱️ [타이머] button 상태로 전환')
+        setLoadingStage("button")
+      }, 2500)
+
+      return () => {
+        clearTimeout(timer)
+      }
+    }
+  }, [loadingStage])
+
+  // revealed 상태가 되면 애니메이션 시작
+  useEffect(() => {
+    if (loadingStage !== "revealed") {
       return
     }
 
-    const timer1 = setTimeout(() => {
-      setLoadingStage("ready")
-    }, 3000)
-
-    const timer2 = setTimeout(() => {
-      setLoadingStage("button")
-    }, 5500)
-
-    return () => {
-      clearTimeout(timer1)
-      clearTimeout(timer2)
+    // 데이터가 로딩 중이면 대기
+    if (isLoadingAnalysis) {
+      console.log('⏳ [애니메이션] 데이터 로딩 중...')
+      return
     }
-  }, [presentationIdFromQuery])
+
+    // 데이터가 없으면 경고
+    if (strengths.length === 0 && improvements.length === 0 && !summary) {
+      console.warn('⚠️ [애니메이션] 분석 데이터가 없습니다')
+      return
+    }
+
+    // 분석 시작
+    console.log('🎬 [애니메이션] 분석 시작', { 
+      strengths: strengths.length, 
+      improvements: improvements.length, 
+      hasSummary: !!summary 
+    })
+    handleImplicationAnalysis()
+  }, [loadingStage, isLoadingAnalysis, strengths, improvements, summary])
+
+  // 평가 완료 상태 polling
+  useEffect(() => {
+    // AI 분석이 완료되고 결과가 표시된 후에만 polling 시작
+    if (!isImplicationAnalysisComplete || !selectedPresentationId) {
+      return
+    }
+
+    console.log('🔍 [Polling] 시작:', selectedPresentationId)
+
+    const checkEvaluationStatus = async () => {
+      try {
+        console.log('🔄 [Polling] 평가 상태 확인 중...')
+        
+        // 평가 인원 수 조회
+        const countData = await fetchEvaluatorCount(selectedPresentationId)
+        setEvaluatorCount(countData.evaluator_count)
+        setTotalEvaluatorCount(countData.total_evaluator_count)
+
+        // 발표 상태 조회
+        const presentation = await fetchPresentation(selectedPresentationId)
+        setPresentationStatus(presentation.status)
+
+        console.log(`📊 [Polling] 평가 인원: ${countData.evaluator_count}/${countData.total_evaluator_count}, 상태: ${presentation.status}`)
+
+        // 평가 완료 조건: 전체 인원 완료 OR 발표 상태가 '완료'
+        const isComplete = 
+          countData.evaluator_count >= countData.total_evaluator_count || 
+          presentation.status === '완료'
+
+        if (isComplete) {
+          console.log('✅ [Polling] 평가 완료! Polling 중지')
+          console.log(`   - 평가 인원: ${countData.evaluator_count}/${countData.total_evaluator_count}`)
+          console.log(`   - 발표 상태: ${presentation.status}`)
+          setIsEvaluationComplete(true)
+          // polling 중지
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current)
+            pollingIntervalRef.current = null
+          }
+        } else {
+          console.log(`⏳ [Polling] 평가 진행 중... (${countData.evaluator_count}/${countData.total_evaluator_count}, 상태: ${presentation.status})`)
+          setIsEvaluationComplete(false)
+        }
+      } catch (error) {
+        console.error("❌ [Polling] 평가 상태 조회 실패:", error)
+      }
+    }
+
+    // 즉시 한번 실행
+    checkEvaluationStatus()
+
+    // 3초마다 polling 시작
+    pollingIntervalRef.current = setInterval(checkEvaluationStatus, 3000)
+    console.log('⏰ [Polling] Interval 설정됨 (3초마다)')
+
+    // cleanup
+    return () => {
+      console.log('🛑 [Polling] Cleanup - Interval 정리')
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current)
+        pollingIntervalRef.current = null
+      }
+    }
+  }, [isImplicationAnalysisComplete, selectedPresentationId])
 
   return (
     <div className="min-h-screen p-4 md:p-6 relative overflow-x-hidden">
@@ -250,35 +399,43 @@ export default function PostPresentationPage() {
 
           <div className="flex-1 flex justify-center">
             <div className="text-center">
-              <Select value={selectedPresentationId} onValueChange={setSelectedPresentationId}>
-                <SelectTrigger className="w-auto border-0 bg-transparent hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-2 gap-2 mb-1">
-                  <SelectValue>
-                    <h1 className="text-xl md:text-2xl font-semibold text-balance text-foreground">
-                      {selectedPresentation.title}
-                    </h1>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="bg-card/95 backdrop-blur-md border-border">
-                  {presentations.map((presentation) => (
-                    <SelectItem
-                      key={presentation.id}
-                      value={presentation.id}
-                      className="text-foreground focus:bg-muted focus:text-foreground cursor-pointer"
-                    >
-                      <div className="flex flex-col items-start gap-1 py-1">
-                        <span className="font-semibold">{presentation.title}</span>
-                        <span className="text-sm text-muted-foreground">
-                          {presentation.presenter} · {presentation.company}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-                <Sparkles className="w-3 h-3 text-sk-red" />
-                AI 기반 종합 분석 시스템
-              </p>
+              {isLoadingPresentations ? (
+                <h1 className="text-xl md:text-2xl font-semibold text-balance text-foreground">
+                  로딩 중...
+                </h1>
+              ) : (
+                <>
+                  <Select value={selectedPresentationId} onValueChange={setSelectedPresentationId}>
+                    <SelectTrigger className="w-auto border-0 bg-transparent hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-2 gap-2 mb-1">
+                      <SelectValue>
+                        <h1 className="text-xl md:text-2xl font-semibold text-balance text-foreground">
+                          {selectedPresentation?.topic || "발표를 선택하세요"}
+                        </h1>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent className="bg-card/95 backdrop-blur-md border-border">
+                      {presentations.map((presentation) => (
+                        <SelectItem
+                          key={presentation.presentation_id}
+                          value={presentation.presentation_id}
+                          className="text-foreground focus:bg-muted focus:text-foreground cursor-pointer"
+                        >
+                          <div className="flex flex-col items-start gap-1 py-1">
+                            <span className="font-semibold">{presentation.topic}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {presentation.presenter?.name || "발표자"} · {presentation.presenter?.company || "회사"}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
+                    <Sparkles className="w-3 h-3 text-sk-red" />
+                    AI 기반 종합 분석 시스템
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
@@ -427,8 +584,13 @@ export default function PostPresentationPage() {
                   </div>
                   <div className="w-5/6">
                     <div className="border-2 border-border/60 rounded-xl p-7 min-h-[140px] bg-muted/10">
-                      <ul className="space-y-5">
-                        {presentation.strengths.map((strength, idx) => (
+                      {isLoadingAnalysis ? (
+                        <p className="text-muted-foreground">로딩 중...</p>
+                      ) : strengths.length === 0 ? (
+                        <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
+                      ) : (
+                        <ul className="space-y-5">
+                        {strengths.map((strength, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleStrengthItems.includes(idx) && (
                               <motion.li
@@ -475,6 +637,7 @@ export default function PostPresentationPage() {
                           </AnimatePresence>
                         ))}
                       </ul>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -486,8 +649,13 @@ export default function PostPresentationPage() {
                   </div>
                   <div className="w-5/6">
                     <div className="border-2 border-sk-red/40 rounded-xl p-7 min-h-[140px] bg-muted/10">
-                      <ul className="space-y-5">
-                        {presentation.improvements.map((improvement, idx) => (
+                      {isLoadingAnalysis ? (
+                        <p className="text-muted-foreground">로딩 중...</p>
+                      ) : improvements.length === 0 ? (
+                        <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
+                      ) : (
+                        <ul className="space-y-5">
+                        {improvements.map((improvement, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleWeaknessItems.includes(idx) && (
                               <motion.li
@@ -534,6 +702,7 @@ export default function PostPresentationPage() {
                           </AnimatePresence>
                         ))}
                       </ul>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -545,22 +714,28 @@ export default function PostPresentationPage() {
                   </div>
                   <div className="w-5/6">
                     <div className="border-2 border-sk-red/40 rounded-xl p-7 min-h-[120px] bg-sk-red/10">
-                      <AnimatePresence>
-                        {showSummary && (
-                          <motion.p
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ duration: 0.3 }}
-                            className="text-lg font-medium text-foreground leading-relaxed"
-                          >
-                            <TypewriterText
-                              text={presentation.summary}
-                              delay={50}
-                              onComplete={() => setCompletedSummary(true)}
-                            />
-                          </motion.p>
-                        )}
-                      </AnimatePresence>
+                      {isLoadingAnalysis ? (
+                        <p className="text-muted-foreground">로딩 중...</p>
+                      ) : !summary ? (
+                        <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
+                      ) : (
+                        <AnimatePresence>
+                          {showSummary && (
+                            <motion.p
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              transition={{ duration: 0.3 }}
+                              className="text-lg font-medium text-foreground leading-relaxed"
+                            >
+                              <TypewriterText
+                                text={summary}
+                                delay={50}
+                                onComplete={() => setCompletedSummary(true)}
+                              />
+                            </motion.p>
+                          )}
+                        </AnimatePresence>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -573,13 +748,32 @@ export default function PostPresentationPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="mt-6 flex justify-center"
+              className="mt-6 flex flex-col items-center gap-4"
             >
+              {!isEvaluationComplete && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-3 text-lg font-semibold text-muted-foreground"
+                >
+                  <Brain className="w-5 h-5 animate-pulse text-sk-red" />
+                  <span className="animate-pulse">
+                    평가집계중... ({evaluatorCount}/{totalEvaluatorCount})
+                  </span>
+                </motion.div>
+              )}
+              
               <Button
                 onClick={() => router.push(`/post-presentation/evaluations?presentationId=${selectedPresentationId}`)}
-                className="bg-sk-red hover:bg-sk-red/90 text-white px-6 py-3 text-base font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all gap-2"
+                disabled={!isEvaluationComplete}
+                className={`px-6 py-3 text-base font-semibold rounded-lg shadow-lg transition-all gap-2 ${
+                  isEvaluationComplete
+                    ? "bg-sk-red hover:bg-sk-red/90 text-white hover:shadow-xl"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
               >
-                평가 결과 보기
+                <Sparkles className="w-4 h-4" />
+                결과 확인하기
               </Button>
             </motion.div>
           )}

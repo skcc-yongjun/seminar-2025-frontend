@@ -642,6 +642,13 @@ export interface HumanEvaluationScoreBatchResponse {
   scores: HumanEvaluationScoreResponse[]
 }
 
+export interface EvaluatorCountResponse {
+  presentation_id: string
+  evaluator_count: number
+  total_evaluator_count: number
+  score_type: string
+}
+
 /**
  * 사람 평가 점수 배치 제출
  * @param presentationId 발표 ID
@@ -666,6 +673,146 @@ export async function submitHumanEvaluationScores(
   if (!response.ok) {
     const errorText = await response.text()
     throw new Error(`평가 제출 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 평가 완료 인원 수 조회
+ * @param presentationId 발표 ID
+ * @param scoreType 점수 타입 (기본값: '최종')
+ * @returns 평가 완료 인원 수 정보
+ */
+export async function fetchEvaluatorCount(
+  presentationId: string,
+  scoreType: string = '최종'
+): Promise<EvaluatorCountResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/human-evaluation-scores/presentation/${presentationId}/evaluator-count?score_type=${encodeURIComponent(scoreType)}`
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`평가 인원 수 조회 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 발표 정보 조회 (단일)
+ * @param presentationId 발표 ID
+ * @returns 발표 정보
+ */
+export async function fetchPresentation(presentationId: string): Promise<PresentationResponse> {
+  const response = await fetch(`${API_ENDPOINTS.presentations}/${presentationId}`)
+  
+  if (!response.ok) {
+    throw new Error(`발표 조회 실패: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+// Presentation Analysis Comment API Types
+export interface PresentationAnalysisCommentResponse {
+  comment_id: number
+  presentation_id: string
+  type: string // '강점' | '약점' | '총평'
+  comment: string
+  source_type: string // '발표' | '자료'
+  source: string | null
+  created_at: string
+}
+
+export interface PresentationAnalysisCommentList {
+  total: number
+  items: PresentationAnalysisCommentResponse[]
+}
+
+/**
+ * 발표 분석 코멘트 조회
+ * @param presentationId 발표 ID
+ * @returns 분석 코멘트 목록 (강점, 약점, 총평)
+ */
+export async function fetchPresentationAnalysisComments(
+  presentationId: string
+): Promise<PresentationAnalysisCommentResponse[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentation-analysis-comments?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`분석 코멘트 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as PresentationAnalysisCommentList
+  return data.items
+}
+
+// AI Evaluation Score API Types
+export interface AIEvaluationScoreResponse {
+  score_id: number
+  presentation_id: string
+  category: string
+  score: number | string  // Decimal은 문자열로 반환될 수 있음
+  score_type: string
+  evaluated_at: string
+  created_at: string
+}
+
+export interface AIEvaluationScoreList {
+  total: number
+  items: AIEvaluationScoreResponse[]
+}
+
+/**
+ * AI 평가 점수 조회
+ * @param presentationId 발표 ID
+ * @returns AI 평가 점수 목록
+ */
+export async function fetchAIEvaluationScores(
+  presentationId: string
+): Promise<AIEvaluationScoreResponse[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/ai-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`AI 평가 점수 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as AIEvaluationScoreList
+  return data.items
+}
+
+// Human Evaluation Score Average API Types
+export interface HumanEvaluationScoreStats {
+  presentation_id: string
+  category: string
+  avg_score: number | string  // Decimal은 문자열로 반환될 수 있음
+  min_score: number | string
+  max_score: number | string
+  score_count: number
+}
+
+/**
+ * 사람 평가 평균 점수 조회
+ * @param presentationId 발표 ID
+ * @param scoreType 점수 타입 (기본값: '최종')
+ * @returns 카테고리별 평균 점수
+ */
+export async function fetchHumanEvaluationAverageScores(
+  presentationId: string,
+  scoreType: string = '최종'
+): Promise<HumanEvaluationScoreStats[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/human-evaluation-scores/presentation/${presentationId}/average?score_type=${encodeURIComponent(scoreType)}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`사람 평가 평균 점수 조회 실패: ${response.status}`)
   }
   
   return response.json()
