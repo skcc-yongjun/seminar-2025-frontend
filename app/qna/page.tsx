@@ -176,7 +176,7 @@ export default function QnACategories() {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-8 md:p-12 bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-slate-980 text-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-2xl text-muted-foreground">키워드 로딩 중...</p>
@@ -186,17 +186,17 @@ export default function QnACategories() {
   }
 
   return (
-    <div className="min-h-screen p-8 md:p-12 bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-slate-980 text-white relative overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
         {/* 동적 배경 그라디언트 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-purple-500/10 animate-pulse" />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/5 via-transparent to-purple-500/5 animate-pulse" />
         </div>
         
         {/* 움직이는 배경 요소들 */}
         <motion.div 
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/3 rounded-full blur-3xl"
           animate={{
             x: [0, 30, -20, 0],
             y: [0, -20, 30, 0],
@@ -209,7 +209,7 @@ export default function QnACategories() {
           }}
         />
         <motion.div 
-          className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"
+          className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-purple-500/3 rounded-full blur-3xl"
           animate={{
             x: [0, -40, 20, 0],
             y: [0, 25, -15, 0],
@@ -222,7 +222,7 @@ export default function QnACategories() {
           }}
         />
         <motion.div 
-          className="absolute top-1/2 right-1/4 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl"
+          className="absolute top-1/2 right-1/4 w-64 h-64 bg-cyan-500/3 rounded-full blur-3xl"
           animate={{
             x: [0, 20, -30, 0],
             y: [0, -30, 20, 0],
@@ -237,7 +237,7 @@ export default function QnACategories() {
         
         {/* 노이즈 텍스처 */}
         <div 
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-5"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
             backgroundSize: '200px 200px'
@@ -245,7 +245,7 @@ export default function QnACategories() {
         />
       </div>
 
-      <div className="max-w-7xl mx-auto relative z-10">
+      <div className="max-w-7xl mx-auto relative z-10 p-8 md:p-12">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Link
