@@ -365,8 +365,22 @@ export default function PresentationsPage() {
           </div>
         )}
       </div>
-
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <style>{`
+          /* Dialog 오버레이 불투명하게 */
+          [data-slot="dialog-overlay"] {
+            background-color: rgba(0, 0, 0, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+          }
+          
+          /* Dialog 콘텐츠 크기 확대 및 배경색 수정 */
+          [data-slot="dialog-content"] {
+            width: 1400px !important;
+            max-width: 90vw !important;
+            max-height: 85vh !important;
+            background-color: hsl(var(--background)) !important;
+          }
+        `}</style>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
         <DialogContent className="max-w-md bg-background">
           <DialogHeader>
             <DialogTitle>{editingPresentation ? "발표 수정" : "발표 추가"}</DialogTitle>
