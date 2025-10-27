@@ -155,7 +155,7 @@ export default function QnACategories() {
     const h = 640
     const cx = w / 2
     const cy = h / 2 + 10
-    const rOuter = Math.min(w, h) * 0.38 // 바깥 반경
+    const rOuter = Math.min(w, h) * 0.456 // 바깥 반경 (0.38 * 1.2)
     const rInner = rOuter * 0.4 // 안쪽 반경 (0.5 * 0.8 = 0.4)
     return { width: w, height: h, cx, cy, rOuter, rInner }
   }, [])
@@ -163,7 +163,7 @@ export default function QnACategories() {
   // 각 세그먼트의 시작/끝 각도 계산(3시, 7시, 11시 배치 - 반시계방향 270도 회전)
   const arcs = useMemo(() => {
     const positions = [270, 30, 150] // 3시(270도), 7시(30도), 11시(150도)
-    const slice = 72 // 각 버튼당 72도
+    const slice = 85 // 각 버튼당 85도
     const gap = 6 // 세그먼트 사이 간격(도)
     
     return categories.slice(0, 3).map((c, i) => {
@@ -220,20 +220,41 @@ export default function QnACategories() {
             height="auto"
           >
             <defs>
-              <radialGradient id="segFill" cx="50%" cy="50%" r="70%">
-                <stop offset="0%" stopColor="rgba(59,130,246,0.10)" />
-                <stop offset="100%" stopColor="rgba(71,85,105,0.35)" />
+              {/* 첫 번째 버튼 - #50589C */}
+              <radialGradient id="segFill1" cx="50%" cy="50%" r="70%">
+                <stop offset="0%" stopColor="rgba(80,88,156,0.3)" />
+                <stop offset="100%" stopColor="rgba(80,88,156,0.6)" />
               </radialGradient>
-              <linearGradient id="segStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="rgba(59,130,246,0.6)" />
-                <stop offset="100%" stopColor="rgba(37,99,235,0.6)" />
+              <linearGradient id="segStroke1" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(80,88,156,0.9)" />
+                <stop offset="100%" stopColor="rgba(80,88,156,0.7)" />
+              </linearGradient>
+              
+              {/* 두 번째 버튼 - #636CCB */}
+              <radialGradient id="segFill2" cx="50%" cy="50%" r="70%">
+                <stop offset="0%" stopColor="rgba(99,108,203,0.3)" />
+                <stop offset="100%" stopColor="rgba(99,108,203,0.6)" />
+              </radialGradient>
+              <linearGradient id="segStroke2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(99,108,203,0.9)" />
+                <stop offset="100%" stopColor="rgba(99,108,203,0.7)" />
+              </linearGradient>
+              
+              {/* 세 번째 버튼 - #6E8CFB */}
+              <radialGradient id="segFill3" cx="50%" cy="50%" r="70%">
+                <stop offset="0%" stopColor="rgba(110,140,251,0.3)" />
+                <stop offset="100%" stopColor="rgba(110,140,251,0.6)" />
+              </radialGradient>
+              <linearGradient id="segStroke3" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="rgba(110,140,251,0.9)" />
+                <stop offset="100%" stopColor="rgba(110,140,251,0.7)" />
               </linearGradient>
             </defs>
 
             {/* 장식용 바깥/안쪽 원형 점선 */}
             <g>
-              <circle cx={cx} cy={cy} r={rOuter + 26} fill="none" stroke="url(#segStroke)" strokeDasharray="6,8" opacity={0.25} />
-              <circle cx={cx} cy={cy} r={rInner - 26} fill="none" stroke="url(#segStroke)" strokeDasharray="4,10" opacity={0.2} />
+              <circle cx={cx} cy={cy} r={rOuter + 26} fill="none" stroke="url(#segStroke1)" strokeDasharray="6,8" opacity={0.25} />
+              <circle cx={cx} cy={cy} r={rInner - 26} fill="none" stroke="url(#segStroke1)" strokeDasharray="4,10" opacity={0.2} />
             </g>
 
             {/* 도넛 세그먼트들 */}
@@ -241,6 +262,14 @@ export default function QnACategories() {
               const d = donutArcPath(cx, cy, rOuter, rInner, start, end)
               const midPos = arcCenter(cx, cy, (rOuter + rInner) / 2, start, end)
               const Icon = c.icon
+              const colorIndex = idx + 1
+              const colors = [
+                { fill: "url(#segFill1)", stroke: "url(#segStroke1)", shadow: "rgba(80,88,156,0.4)" },
+                { fill: "url(#segFill2)", stroke: "url(#segStroke2)", shadow: "rgba(99,108,203,0.4)" },
+                { fill: "url(#segFill3)", stroke: "url(#segStroke3)", shadow: "rgba(110,140,251,0.4)" }
+              ]
+              const currentColor = colors[idx] || colors[0]
+              
               return (
                 <Link key={c.id} href={`/qna/${c.id}`}> {/* 전체 세그먼트 클릭 */}
                   <g cursor="pointer">
@@ -249,10 +278,10 @@ export default function QnACategories() {
                       initial={{ pathLength: 0, opacity: 0 }}
                       animate={{ pathLength: 1, opacity: 1 }}
                       transition={{ delay: 0.15 * idx + 0.2, duration: 0.8 }}
-                      fill="url(#segFill)"
-                      stroke="url(#segStroke)"
+                      fill={currentColor.fill}
+                      stroke={currentColor.stroke}
                       strokeWidth={2}
-                      style={{ filter: "drop-shadow(0 0 12px rgba(59,130,246,0.15))" }}
+                      style={{ filter: `drop-shadow(0 0 12px ${currentColor.shadow})` }}
                       whileHover={{ scale: 1.02 }}
                     />
 
@@ -260,8 +289,19 @@ export default function QnACategories() {
                     <g transform={`translate(${midPos.x}, ${midPos.y})`}>
                       <foreignObject x={-120} y={-42} width={240} height={84}>
                         <div className="flex flex-col items-center justify-center text-center select-none">
-                          <div className="px-4 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 backdrop-blur-sm inline-flex items-center gap-2">
-                            <Icon className="w-4 h-4 text-blue-500" strokeWidth={1.5} />
+                          <div 
+                            className="px-4 py-1 rounded-full backdrop-blur-sm inline-flex items-center gap-2"
+                            style={{
+                              background: `linear-gradient(135deg, ${currentColor.shadow.replace('0.4)', '0.25)')}, ${currentColor.shadow.replace('0.4)', '0.1)')})`,
+                              border: `1px solid ${currentColor.shadow.replace('0.4)', '0.6)')}`,
+                              boxShadow: `0 4px 12px ${currentColor.shadow.replace('0.4)', '0.5)')}`
+                            }}
+                          >
+                            <Icon 
+                              className="w-4 h-4" 
+                              strokeWidth={1.5}
+                              style={{ color: currentColor.shadow.replace('0.4)', '0.9)') }}
+                            />
                             <span className="text-base md:text-lg font-semibold text-foreground">
                               {c.title}
                             </span>
