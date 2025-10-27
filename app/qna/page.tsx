@@ -189,8 +189,60 @@ export default function QnACategories() {
     <div className="min-h-screen p-8 md:p-12 bg-background relative overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/3 left-1/3 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/3 right-1/3 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl" />
+        {/* 동적 배경 그라디언트 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+          <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-purple-500/10 animate-pulse" />
+        </div>
+        
+        {/* 움직이는 배경 요소들 */}
+        <motion.div 
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, 30, -20, 0],
+            y: [0, -20, 30, 0],
+            scale: [1, 1.1, 0.9, 1]
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute bottom-1/3 right-1/3 w-80 h-80 bg-purple-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, -40, 20, 0],
+            y: [0, 25, -15, 0],
+            scale: [1, 0.8, 1.2, 1]
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        <motion.div 
+          className="absolute top-1/2 right-1/4 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl"
+          animate={{
+            x: [0, 20, -30, 0],
+            y: [0, -30, 20, 0],
+            scale: [1, 1.3, 0.7, 1]
+          }}
+          transition={{
+            duration: 30,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* 노이즈 텍스처 */}
+        <div 
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            backgroundSize: '200px 200px'
+          }}
+        />
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
@@ -257,6 +309,172 @@ export default function QnACategories() {
               <circle cx={cx} cy={cy} r={rInner - 26} fill="none" stroke="url(#segStroke1)" strokeDasharray="4,10" opacity={0.2} />
             </g>
 
+            {/* 태양계 스타일 회전 궤도들 */}
+            <g>
+              {/* 첫 번째 궤도 - 가장 안쪽 */}
+              <motion.circle
+                cx={cx}
+                cy={cy}
+                r={rInner - 100}
+                fill="none"
+                stroke="rgba(80,88,156,0.8)"
+                strokeWidth="2"
+                strokeDasharray="3,6"
+                animate={{ rotate: 360 }}
+                style={{ originX: cx, originY: cy }}
+                transition={{ duration: 2.7, repeat: Infinity, ease: "linear" }}
+              />
+              
+              {/* 두 번째 궤도 */}
+              <motion.circle
+                cx={cx}
+                cy={cy}
+                r={rInner - 60}
+                fill="none"
+                stroke="rgba(99,108,203,0.7)"
+                strokeWidth="2"
+                strokeDasharray="4,8"
+                animate={{ rotate: -360 }}
+                style={{ originX: cx, originY: cy }}
+                transition={{ duration: 3.3, repeat: Infinity, ease: "linear" }}
+              />
+              
+              {/* 세 번째 궤도 - 도넛 바깥쪽 */}
+              <motion.circle
+                cx={cx}
+                cy={cy}
+                r={rOuter + 40}
+                fill="none"
+                stroke="rgba(110,140,251,0.6)"
+                strokeWidth="2"
+                strokeDasharray="5,10"
+                animate={{ rotate: 360 }}
+                style={{ originX: cx, originY: cy }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+              />
+              
+              {/* 네 번째 궤도 - 가장 바깥쪽 */}
+              <motion.circle
+                cx={cx}
+                cy={cy}
+                r={rOuter + 80}
+                fill="none"
+                stroke="rgba(80,88,156,0.5)"
+                strokeWidth="2"
+                strokeDasharray="6,12"
+                animate={{ rotate: -360 }}
+                style={{ originX: cx, originY: cy }}
+                transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+              />
+              
+              {/* 다섯 번째 궤도 - 최외곽 */}
+              <motion.circle
+                cx={cx}
+                cy={cy}
+                r={rOuter + 120}
+                fill="none"
+                stroke="rgba(99,108,203,0.4)"
+                strokeWidth="2"
+                strokeDasharray="8,16"
+                animate={{ rotate: 360 }}
+                style={{ originX: cx, originY: cy }}
+                transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+              />
+            </g>
+
+            {/* 궤도상의 작은 점들 (행성들) */}
+            <g>
+              {/* 첫 번째 궤도의 점들 */}
+              {[...Array(6)].map((_, i) => (
+                <motion.circle
+                  key={`orbit1-${i}`}
+                  cx={cx + (rInner - 100) * Math.cos((i * 60) * Math.PI / 180)}
+                  cy={cy + (rInner - 100) * Math.sin((i * 60) * Math.PI / 180)}
+                  r="3"
+                  fill="rgba(80,88,156,0.9)"
+                  animate={{
+                    rotate: 360,
+                    cx: cx + (rInner - 100) * Math.cos((i * 60) * Math.PI / 180),
+                    cy: cy + (rInner - 100) * Math.sin((i * 60) * Math.PI / 180)
+                  }}
+                  style={{ originX: cx, originY: cy }}
+                  transition={{ duration: 2.7, repeat: Infinity, ease: "linear" }}
+                />
+              ))}
+              
+              {/* 두 번째 궤도의 점들 */}
+              {[...Array(4)].map((_, i) => (
+                <motion.circle
+                  key={`orbit2-${i}`}
+                  cx={cx + (rInner - 60) * Math.cos((i * 90) * Math.PI / 180)}
+                  cy={cy + (rInner - 60) * Math.sin((i * 90) * Math.PI / 180)}
+                  r="2.5"
+                  fill="rgba(99,108,203,0.8)"
+                  animate={{
+                    rotate: -360,
+                    cx: cx + (rInner - 60) * Math.cos((i * 90) * Math.PI / 180),
+                    cy: cy + (rInner - 60) * Math.sin((i * 90) * Math.PI / 180)
+                  }}
+                  style={{ originX: cx, originY: cy }}
+                  transition={{ duration: 3.3, repeat: Infinity, ease: "linear" }}
+                />
+              ))}
+              
+              {/* 세 번째 궤도의 점들 */}
+              {[...Array(8)].map((_, i) => (
+                <motion.circle
+                  key={`orbit3-${i}`}
+                  cx={cx + (rOuter + 40) * Math.cos((i * 45) * Math.PI / 180)}
+                  cy={cy + (rOuter + 40) * Math.sin((i * 45) * Math.PI / 180)}
+                  r="2"
+                  fill="rgba(110,140,251,0.7)"
+                  animate={{
+                    rotate: 360,
+                    cx: cx + (rOuter + 40) * Math.cos((i * 45) * Math.PI / 180),
+                    cy: cy + (rOuter + 40) * Math.sin((i * 45) * Math.PI / 180)
+                  }}
+                  style={{ originX: cx, originY: cy }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                />
+              ))}
+              
+              {/* 네 번째 궤도의 점들 */}
+              {[...Array(6)].map((_, i) => (
+                <motion.circle
+                  key={`orbit4-${i}`}
+                  cx={cx + (rOuter + 80) * Math.cos((i * 60) * Math.PI / 180)}
+                  cy={cy + (rOuter + 80) * Math.sin((i * 60) * Math.PI / 180)}
+                  r="1.5"
+                  fill="rgba(80,88,156,0.6)"
+                  animate={{
+                    rotate: -360,
+                    cx: cx + (rOuter + 80) * Math.cos((i * 60) * Math.PI / 180),
+                    cy: cy + (rOuter + 80) * Math.sin((i * 60) * Math.PI / 180)
+                  }}
+                  style={{ originX: cx, originY: cy }}
+                  transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
+                />
+              ))}
+              
+              {/* 다섯 번째 궤도의 점들 */}
+              {[...Array(10)].map((_, i) => (
+                <motion.circle
+                  key={`orbit5-${i}`}
+                  cx={cx + (rOuter + 120) * Math.cos((i * 36) * Math.PI / 180)}
+                  cy={cy + (rOuter + 120) * Math.sin((i * 36) * Math.PI / 180)}
+                  r="1"
+                  fill="rgba(99,108,203,0.5)"
+                  animate={{
+                    rotate: 360,
+                    cx: cx + (rOuter + 120) * Math.cos((i * 36) * Math.PI / 180),
+                    cy: cy + (rOuter + 120) * Math.sin((i * 36) * Math.PI / 180)
+                  }}
+                  style={{ originX: cx, originY: cy }}
+                  transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+                />
+              ))}
+            </g>
+
             {/* 도넛 세그먼트들 */}
             {arcs.map(({ c, start, end }, idx) => {
               const d = donutArcPath(cx, cy, rOuter, rInner, start, end)
@@ -277,12 +495,22 @@ export default function QnACategories() {
                       d={d}
                       initial={{ pathLength: 0, opacity: 0 }}
                       animate={{ pathLength: 1, opacity: 1 }}
-                      transition={{ delay: 0.15 * idx + 0.2, duration: 0.8 }}
+                      transition={{ 
+                        delay: 0.15 * idx + 0.2, 
+                        duration: 0.8,
+                        type: "spring", 
+                        stiffness: 300, 
+                        damping: 20 
+                      }}
                       fill={currentColor.fill}
                       stroke={currentColor.stroke}
                       strokeWidth={2}
                       style={{ filter: `drop-shadow(0 0 12px ${currentColor.shadow})` }}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ 
+                        scale: 1.05,
+                        y: -8,
+                        filter: `drop-shadow(0 8px 20px ${currentColor.shadow})`
+                      }}
                     />
 
                     {/* 타이틀 (한/영) */}
