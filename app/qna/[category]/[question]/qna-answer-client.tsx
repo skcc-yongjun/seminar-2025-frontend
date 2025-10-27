@@ -122,7 +122,7 @@ export default function QnAAnswerClient({
 
   if (loading) {
     return (
-      <div className="min-h-screen p-4 md:p-8 flex items-center justify-center bg-black">
+      <div className="min-h-screen p-4 md:p-8 flex items-center justify-center bg-slate-900">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sk-red mx-auto mb-4"></div>
           <p className="text-white">질문을 불러오는 중...</p>
@@ -133,7 +133,7 @@ export default function QnAAnswerClient({
 
   if (error || !data) {
     return (
-      <div className="min-h-screen p-4 md:p-8 flex items-center justify-center bg-black">
+      <div className="min-h-screen p-4 md:p-8 flex items-center justify-center bg-slate-900">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">
             {error || "질문을 찾을 수 없습니다"}
@@ -147,7 +147,7 @@ export default function QnAAnswerClient({
   }
 
   return (
-    <div className="min-h-screen bg-black text-white relative overflow-hidden">
+    <div className="min-h-screen bg-slate-980 text-white relative overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -170,7 +170,7 @@ export default function QnAAnswerClient({
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.4 }}
-            className="relative w-full h-full rounded-2xl overflow-hidden shadow-2xl shadow-sk-red/30 bg-black"
+            className="relative w-full h-full rounded-2xl overflow-hidden bg-slate-900"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
           >
@@ -250,7 +250,7 @@ export default function QnAAnswerClient({
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-              className="text-[200px] font-bold text-sk-red select-none"
+              className="text-[200px] font-bold text-sky-400 select-none"
               style={{
                 lineHeight: 0.8,
               }}
@@ -263,13 +263,7 @@ export default function QnAAnswerClient({
               initial={{ scale: 0.95 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.4, duration: 0.6, ease: "easeOut" }}
-              className="text-5xl lg:text-6xl font-semibold text-white leading-tight select-none"
-              style={{
-                background: "linear-gradient(135deg, #ffffff 0%, #f0f0f0 50%, #ffffff 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
+              className="text-5xl lg:text-6xl font-semibold text-amber-400 leading-tight select-none"
             >
               {data.title}
             </motion.div>
@@ -286,13 +280,26 @@ export default function QnAAnswerClient({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
               className="relative z-10"
+              style={{
+                perspective: '1200px',
+                transformStyle: 'preserve-3d'
+              }}
             >
               <div 
                 ref={textContainerRef}
-                className="bg-black/20 rounded-lg p-8 backdrop-blur-sm min-h-[300px] overflow-y-auto"
+                className="rounded-lg p-8 min-h-[300px] overflow-y-auto"
+                style={{
+                  transform: 'rotateY(15deg) translateZ(0)',
+                  transformOrigin: 'left center'
+                }}
               >
-                <p className="text-gray-300 leading-relaxed text-5xl">
-                  {displayedText}
+                <p className="text-gray-300 leading-relaxed text-6xl">
+                  {displayedText.split(/\r\n|\r|\n/).map((line, index) => (
+                    <span key={index}>
+                      {line}
+                      {index < displayedText.split(/\r\n|\r|\n/).length - 1 && <br />}
+                    </span>
+                  ))}
                   {isTyping && <span className="animate-pulse">|</span>}
                 </p>
               </div>
@@ -308,7 +315,7 @@ export default function QnAAnswerClient({
           >
             {/* Back to List Button */}
             <Link
-              href={`/qna/${category}`}
+              href="/qna"
               className="px-6 py-3 rounded-lg border border-white/20 hover:border-white/40 transition-colors flex items-center gap-2 w-full sm:w-auto justify-center"
             >
               <List className="w-5 h-5" />
@@ -327,7 +334,7 @@ export default function QnAAnswerClient({
       </div>
 
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 flex items-center justify-between border-t border-white/10 bg-black/80 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 right-0 p-6 flex items-center justify-between border-t border-white/10 bg-slate-900/80 backdrop-blur-sm">
         <div className="text-xs text-gray-500">© 2025 SK Group. All rights reserved.</div>
         <Link
           href="/"
