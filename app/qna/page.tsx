@@ -156,22 +156,20 @@ export default function QnACategories() {
     const cx = w / 2
     const cy = h / 2 + 10
     const rOuter = Math.min(w, h) * 0.38 // 바깥 반경
-    const rInner = rOuter * 0.64 // 안쪽 반경
+    const rInner = rOuter * 0.4 // 안쪽 반경 (0.5 * 0.8 = 0.4)
     return { width: w, height: h, cx, cy, rOuter, rInner }
   }, [])
 
-  // 각 세그먼트의 시작/끝 각도 계산(위쪽을 270deg로 맞춰 시각 밸런스)
+  // 각 세그먼트의 시작/끝 각도 계산(3시, 7시, 11시 배치 - 반시계방향 270도 회전)
   const arcs = useMemo(() => {
-    const n = Math.max(categories.length, 1)
+    const positions = [270, 30, 150] // 3시(270도), 7시(30도), 11시(150도)
+    const slice = 72 // 각 버튼당 72도
     const gap = 6 // 세그먼트 사이 간격(도)
-    const slice = 360 / n
-    return categories.map((c, i) => {
-      // 시작/끝 각도 (위= -90deg 기준을 SVG 좌표(우=0deg)로 변환: -90 -> 270)
-      const startBase = -90 + i * slice + gap / 2
-      const endBase = -90 + (i + 1) * slice - gap / 2
-      // SVG의 시계방향(우=0)로 맞추기 위해 90도 더한 값 사용
-      const start = startBase + 90
-      const end = endBase + 90
+    
+    return categories.slice(0, 3).map((c, i) => {
+      const centerAngle = positions[i]
+      const start = centerAngle - slice / 2 + gap / 2
+      const end = centerAngle + slice / 2 - gap / 2
       return { c, start, end }
     })
   }, [categories])
