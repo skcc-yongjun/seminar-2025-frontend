@@ -8,36 +8,76 @@ app.use(cors());
 app.use(express.json());
 
 // Sample presentations data
-// [Session 1] 발표자 목록 DTO
+// Updated to match PresentationResponse interface
 const presentations = [
   {
-    id: "1",
-    title: "Global Top-tier 대비 O/I 경쟁력 분석 및 개선방안",
-    presenter: "윤풍영",
-    company: "SK AX"
+    presentation_id: "1",
+    session_type: "session1",
+    presenter_id: "presenter1",
+    topic: "Global Top-tier 대비 O/I 경쟁력 분석 및 개선방안",
+    presentation_order: 1,
+    status: "completed",
+    created_at: "2025-01-01T09:00:00Z"
   },
   {
-    id: "2",
-    title: "AI Biz.Model 구축 방향",
-    presenter: "김민수",
-    company: "SK Telecom"
+    presentation_id: "2",
+    session_type: "session1",
+    presenter_id: "presenter2",
+    topic: "AI Biz.Model 구축 방향",
+    presentation_order: 2,
+    status: "completed",
+    created_at: "2025-01-01T10:00:00Z"
   },
   {
-    id: "3",
-    title: "5G 기반 AI 서비스 전략",
-    presenter: "이지은",
-    company: "SK Hynix"
+    presentation_id: "3",
+    session_type: "session1",
+    presenter_id: "presenter3",
+    topic: "5G 기반 AI 서비스 전략",
+    presentation_order: 3,
+    status: "completed",
+    created_at: "2025-01-01T11:00:00Z"
   },
   {
-    id: "4",
-    title: "AI 기반 에너지 최적화",
-    presenter: "박준호",
-    company: "SK E&S"
+    presentation_id: "4",
+    session_type: "session1",
+    presenter_id: "presenter4",
+    topic: "AI 기반 에너지 최적화",
+    presentation_order: 4,
+    status: "completed",
+    created_at: "2025-01-01T12:00:00Z"
+  }
+];
+
+// Sample presenter data to match PresenterResponse interface
+const presenters = [
+  {
+    presenter_id: "presenter1",
+    name: "윤풍영",
+    company: "SK AX",
+    created_at: "2025-01-01T08:00:00Z"
+  },
+  {
+    presenter_id: "presenter2",
+    name: "김민수",
+    company: "SK Telecom",
+    created_at: "2025-01-01T08:00:00Z"
+  },
+  {
+    presenter_id: "presenter3",
+    name: "이지은",
+    company: "SK Hynix",
+    created_at: "2025-01-01T08:00:00Z"
+  },
+  {
+    presenter_id: "presenter4",
+    name: "박준호",
+    company: "SK E&S",
+    created_at: "2025-01-01T08:00:00Z"
   }
 ];
 
 // Sample presentation analysis data
-// [Session 1] 발표 분석 데이터 DTO (본 건은 목록인데, 실제는 단건으로 나와야 함)
+// Updated to use new presentation IDs and structure
 const presentationAnalyses = {
   "1": {
     id: "1",
@@ -206,16 +246,28 @@ const categoryData = {
   },
 };
 
-// GET /presentations endpoint
-app.get('/api/presentations', (req, res) => {
-  console.log('GET /presentations requested');
-  res.json(presentations);
+// GET /seminar/api/presentations endpoint
+app.get('/seminar/api/presentations', (req, res) => {
+  console.log('GET /seminar/api/presentations requested');
+  res.json({
+    total: presentations.length,
+    items: presentations
+  });
 });
 
-// GET /presentations/:id endpoint
-app.get('/api/presentations/:id', (req, res) => {
+// GET /seminar/api/presenters endpoint
+app.get('/seminar/api/presenters', (req, res) => {
+  console.log('GET /seminar/api/presenters requested');
+  res.json({
+    total: presenters.length,
+    items: presenters
+  });
+});
+
+// GET /seminar/api/presentations/:id endpoint
+app.get('/seminar/api/presentations/:id', (req, res) => {
   const id = req.params.id;
-  const presentation = presentations.find(p => p.id === id);
+  const presentation = presentations.find(p => p.presentation_id === id);
   
   if (!presentation) {
     return res.status(404).json({ error: 'Presentation not found' });
@@ -224,8 +276,8 @@ app.get('/api/presentations/:id', (req, res) => {
   res.json(presentation);
 });
 
-// GET /presentations/:id/analysis endpoint
-app.get('/api/presentations/:id/analysis', (req, res) => {
+// GET /seminar/api/presentations/:id/analysis endpoint
+app.get('/seminar/api/presentations/:id/analysis', (req, res) => {
   const id = req.params.id;
   const analysis = presentationAnalyses[id];
   
@@ -233,7 +285,7 @@ app.get('/api/presentations/:id/analysis', (req, res) => {
     return res.status(404).json({ error: 'Presentation analysis not found' });
   }
   
-  console.log(`GET /presentations/${id}/analysis requested`);
+  console.log(`GET /seminar/api/presentations/${id}/analysis requested`);
   res.json(analysis);
 });
 
@@ -331,8 +383,8 @@ const questionData = {
   },
 };
 
-// GET /api/category/:category endpoint
-app.get('/api/category/:category', (req, res) => {
+// GET /seminar/api/category/:category endpoint
+app.get('/seminar/api/category/:category', (req, res) => {
   const { category } = req.params;
   const data = categoryData[category];
   if (!data) {
@@ -341,8 +393,8 @@ app.get('/api/category/:category', (req, res) => {
   res.json(data);
 });
 
-// GET /api/question/:category/:question endpoint
-app.get('/api/question/:category/:question', (req, res) => {
+// GET /seminar/api/question/:category/:question endpoint
+app.get('/seminar/api/question/:category/:question', (req, res) => {
   const { category, question } = req.params;
   const categoryQuestions = questionData[category];
   if (!categoryQuestions) {
@@ -357,8 +409,8 @@ app.get('/api/question/:category/:question', (req, res) => {
 
 app.listen(port, () => {
   console.log(`API Server running at http://localhost:${port}`);
-  console.log(`Presentations endpoint: http://localhost:${port}/api/presentations`);
-  console.log(`Analysis endpoint: http://localhost:${port}/api/presentations/:id/analysis`);
-  console.log(`Category endpoints: http://localhost:${port}/api/category/{business|group|market}`);
-  console.log(`Category Question endpoints: http://localhost:${port}/api/question/:category/:question`);
+  console.log(`Presentations endpoint: http://localhost:${port}/seminar/api/presentations`);
+  console.log(`Analysis endpoint: http://localhost:${port}/seminar/api/presentations/:id/analysis`);
+  console.log(`Category endpoints: http://localhost:${port}/seminar/api/category/{business|group|market}`);
+  console.log(`Category Question endpoints: http://localhost:${port}/seminar/api/question/:category/:question`);
 });

@@ -86,28 +86,10 @@ function EvaluationsContent() {
     },
   })
 
-  const [isInitialLoadingAI, setIsInitialLoadingAI] = useState(true)
-  const [isInitialLoadingOnsite, setIsInitialLoadingOnsite] = useState(true)
-  const [isAnalyzingAI, setIsAnalyzingAI] = useState(false)
-  const [isAnalyzingOnsite, setIsAnalyzingOnsite] = useState(false)
-  const [showAIScores, setShowAIScores] = useState(false)
-  const [showOnsiteScores, setShowOnsiteScores] = useState(false)
+  const [showAIScores, setShowAIScores] = useState(true)
+  const [showOnsiteScores, setShowOnsiteScores] = useState(true)
   const [animatedAIScores, setAnimatedAIScores] = useState<Record<string, number>>({})
   const [animatedOnsiteScores, setAnimatedOnsiteScores] = useState<Record<string, number>>({})
-  const [evaluationCount, setEvaluationCount] = useState(0)
-  const [totalEvaluators] = useState(60)
-  const [isEvaluationComplete, setIsEvaluationComplete] = useState(false)
-  const [isAIEvaluationComplete, setIsAIEvaluationComplete] = useState(false)
-
-  const handleAIAnalysis = () => {
-    setIsAnalyzingAI(false)
-    setShowAIScores(true)
-  }
-
-  const handleOnsiteAnalysis = () => {
-    setIsAnalyzingOnsite(false)
-    setShowOnsiteScores(true)
-  }
 
   useEffect(() => {
     if (showAIScores) {
@@ -115,7 +97,7 @@ function EvaluationsContent() {
       scores.forEach((key) => {
         const targetValue = presentation.aiScores[key as keyof typeof presentation.aiScores]
         let currentValue = 0
-        const increment = targetValue / 30
+        const increment = targetValue / 50
 
         const interval = setInterval(() => {
           currentValue += increment
@@ -124,7 +106,7 @@ function EvaluationsContent() {
             clearInterval(interval)
           }
           setAnimatedAIScores((prev) => ({ ...prev, [key]: currentValue }))
-        }, 20)
+        }, 50)
       })
     } else {
       setAnimatedAIScores({})
@@ -137,7 +119,7 @@ function EvaluationsContent() {
       scores.forEach((key) => {
         const targetValue = presentation.onSiteScores[key as keyof typeof presentation.onSiteScores]
         let currentValue = 0
-        const increment = targetValue / 30
+        const increment = targetValue / 50
 
         const interval = setInterval(() => {
           currentValue += increment
@@ -146,40 +128,12 @@ function EvaluationsContent() {
             clearInterval(interval)
           }
           setAnimatedOnsiteScores((prev) => ({ ...prev, [key]: currentValue }))
-        }, 20)
+        }, 50)
       })
     } else {
       setAnimatedOnsiteScores({})
     }
   }, [showOnsiteScores, presentation.onSiteScores])
-
-  useEffect(() => {
-    if (isInitialLoadingAI && !showAIScores) {
-      const timer = setTimeout(() => {
-        setIsAIEvaluationComplete(true)
-      }, 3000)
-
-      return () => clearTimeout(timer)
-    }
-  }, [isInitialLoadingAI, showAIScores])
-
-  useEffect(() => {
-    if (isInitialLoadingOnsite && !showOnsiteScores) {
-      const interval = setInterval(() => {
-        setEvaluationCount((prev) => {
-          const next = prev + Math.floor(Math.random() * 3) + 1
-          if (next >= totalEvaluators) {
-            clearInterval(interval)
-            setIsEvaluationComplete(true)
-            return totalEvaluators
-          }
-          return next
-        })
-      }, 1000)
-
-      return () => clearInterval(interval)
-    }
-  }, [isInitialLoadingOnsite, showOnsiteScores, totalEvaluators])
 
   return (
     <div className="min-h-screen p-4 md:p-6 relative overflow-x-hidden">
@@ -267,240 +221,115 @@ function EvaluationsContent() {
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-4 min-h-[500px]">
               <div className="flex items-center justify-between border-b-2 border-sk-red/30 pb-2">
-                <h3 className="text-base font-semibold text-foreground">AI 평가</h3>
-                <Button
-                  onClick={() => {
-                    setIsInitialLoadingAI(false)
-                    handleAIAnalysis()
-                  }}
-                  disabled={isAnalyzingAI}
-                  size="sm"
-                  className="gap-2 bg-sk-red hover:bg-sk-red/90 text-white"
-                >
-                  {isAnalyzingAI ? (
-                    <>
-                      <Brain className="w-3 h-3 animate-pulse" />
-                      분석 중
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3 h-3" />
-                      결과 확인
-                    </>
-                  )}
-                </Button>
+                <h3 className="text-xl font-semibold text-foreground">AI 평가</h3>
               </div>
               <div className="relative min-h-[450px]">
-                {isInitialLoadingAI || !showAIScores ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                    <div className="relative">
-                      <Brain className="w-12 h-12 text-sk-red animate-pulse" />
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: [0.5, 0.8, 0.5],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: "easeInOut",
-                        }}
-                        className="absolute inset-0 flex items-center justify-center"
-                      >
-                        <Sparkles className="w-6 h-6 text-sk-red/60" />
-                      </motion.div>
-                    </div>
-                    <div className="text-center space-y-1">
-                      <p className="text-sm font-medium text-foreground">
-                        {isAnalyzingAI
-                          ? "AI가 평가를 분석하고 있습니다"
-                          : isAIEvaluationComplete
-                            ? "AI 평가가 완료되었습니다"
-                            : "AI 평가를 집계중입니다"}
-                      </p>
-                      <motion.p
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                        className="text-xs text-muted-foreground"
-                      >
-                        {isAIEvaluationComplete ? "결과 확인 버튼을 눌러주세요" : "잠시만 기다려주세요..."}
-                      </motion.p>
-                    </div>
-                  </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="space-y-3"
-                  >
-                    {Object.entries(presentation.aiScores).map(([key, value]) => (
-                      <motion.div
-                        key={key}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="space-y-1"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-muted-foreground">{key}</div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-5"
+                >
+                  {Object.entries(presentation.aiScores).map(([key, value]) => (
+                    <motion.div
+                      key={key}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="flex items-center gap-4"
+                    >
+                      <div className="text-base font-bold text-foreground min-w-[180px] shrink-0">{key}</div>
+                      <div className="flex-1 h-10 bg-muted/30 rounded-sm overflow-hidden relative">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(value / 10) * 100}%` }}
+                          transition={{
+                            duration: 2.5,
+                            ease: "easeOut",
+                          }}
+                          className="h-full bg-sk-red/70 rounded-sm relative overflow-hidden"
+                        >
                           <motion.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                            className="text-sm font-semibold text-sk-red"
-                          >
-                            {animatedAIScores[key]?.toFixed(1) || "0.0"}
-                          </motion.div>
-                        </div>
-                        <div className="h-6 bg-muted/30 rounded-sm overflow-hidden relative">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(value / 10) * 100}%` }}
-                            transition={{
-                              duration: 0.8,
-                              ease: "easeOut",
+                            animate={{
+                              x: ["-100%", "100%"],
                             }}
-                            className="h-full bg-sk-red/70 rounded-sm relative overflow-hidden"
-                          >
-                            <motion.div
-                              animate={{
-                                x: ["-100%", "100%"],
-                              }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: 2,
-                                ease: "linear",
-                              }}
-                              className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                            />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
+                            transition={{
+                              duration: 1.5,
+                              repeat: 2,
+                              ease: "linear",
+                            }}
+                            className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          />
+                        </motion.div>
+                      </div>
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-xl font-bold text-foreground min-w-[50px] text-right"
+                      >
+                        {animatedAIScores[key]?.toFixed(1) || "0.0"}
+                      </motion.span>
+                    </motion.div>
+                  ))}
+                </motion.div>
               </div>
             </div>
 
             <div className="space-y-4 min-h-[500px]">
               <div className="flex items-center justify-between border-b-2 border-sk-red/30 pb-2">
-                <h3 className="text-base font-semibold text-foreground">경영진 평가</h3>
-                <Button
-                  onClick={() => {
-                    setIsInitialLoadingOnsite(false)
-                    handleOnsiteAnalysis()
-                  }}
-                  disabled={isAnalyzingOnsite}
-                  size="sm"
-                  className="gap-2 bg-sk-red hover:bg-sk-red/90 text-white"
-                >
-                  {isAnalyzingOnsite ? (
-                    <>
-                      <Brain className="w-3 h-3 animate-pulse" />
-                      분석 중
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3 h-3" />
-                      결과 확인
-                    </>
-                  )}
-                </Button>
+                <h3 className="text-xl font-semibold text-foreground">경영진 평가</h3>
               </div>
               <div className="relative min-h-[450px]">
-                {isInitialLoadingOnsite || !showOnsiteScores ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
-                    <div className="relative">
-                      <Brain className="w-12 h-12 text-sk-red animate-pulse" />
-                      <motion.div
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          rotate: [0, 5, -5, 0],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Number.POSITIVE_INFINITY,
-                          ease: "easeInOut",
-                        }}
-                        className="absolute inset-0 flex items-center justify-center"
-                      >
-                        <Sparkles className="w-6 h-6 text-sk-red/60" />
-                      </motion.div>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-sm font-medium text-foreground">
-                        {isEvaluationComplete ? "경영진 평가가 완료되었습니다" : "경영진 평가를 집계중입니다"}
-                      </p>
-                      <motion.p
-                        animate={{ scale: [1, 1.05, 1] }}
-                        transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY }}
-                        className="text-2xl font-bold text-sk-red"
-                      >
-                        {evaluationCount}/{totalEvaluators}명
-                      </motion.p>
-                      <motion.p
-                        animate={{ opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-                        className="text-xs text-muted-foreground"
-                      >
-                        {isEvaluationComplete ? "결과 확인 버튼을 눌러주세요" : "실시간으로 집계중입니다..."}
-                      </motion.p>
-                    </div>
-                  </div>
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="space-y-3"
-                  >
-                    {Object.entries(presentation.onSiteScores).map(([key, value]) => (
-                      <motion.div
-                        key={key}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="space-y-1"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-muted-foreground">{key}</div>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-5"
+                >
+                  {Object.entries(presentation.onSiteScores).map(([key, value]) => (
+                    <motion.div
+                      key={key}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5 }}
+                      className="flex items-center gap-4"
+                    >
+                      <div className="text-base font-bold text-foreground min-w-[180px] shrink-0">{key}</div>
+                      <div className="flex-1 h-10 bg-muted/30 rounded-sm overflow-hidden relative">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(value / 10) * 100}%` }}
+                          transition={{
+                            duration: 2.5,
+                            ease: "easeOut",
+                          }}
+                          className="h-full bg-sk-red/70 rounded-sm relative overflow-hidden"
+                        >
                           <motion.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ duration: 0.5 }}
-                            className="text-sm font-semibold text-sk-red"
-                          >
-                            {animatedOnsiteScores[key]?.toFixed(1) || "0.0"}
-                          </motion.div>
-                        </div>
-                        <div className="h-6 bg-muted/30 rounded-sm overflow-hidden relative">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(value / 10) * 100}%` }}
-                            transition={{
-                              duration: 0.8,
-                              ease: "easeOut",
+                            animate={{
+                              x: ["-100%", "100%"],
                             }}
-                            className="h-full bg-sk-red/70 rounded-sm relative overflow-hidden"
-                          >
-                            <motion.div
-                              animate={{
-                                x: ["-100%", "100%"],
-                              }}
-                              transition={{
-                                duration: 1.5,
-                                repeat: 2,
-                                ease: "linear",
-                              }}
-                              className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                            />
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
+                            transition={{
+                              duration: 1.5,
+                              repeat: 2,
+                              ease: "linear",
+                            }}
+                            className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          />
+                        </motion.div>
+                      </div>
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="text-xl font-bold text-foreground min-w-[50px] text-right"
+                      >
+                        {animatedOnsiteScores[key]?.toFixed(1) || "0.0"}
+                      </motion.span>
+                    </motion.div>
+                  ))}
+                </motion.div>
               </div>
             </div>
           </div>
