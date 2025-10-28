@@ -1,3 +1,30 @@
+// 프롬프트 테스트(질문 생성만, DB 저장 없음)
+export interface PromptTestRequest {
+  presentation_id: string;
+  prompt_override?: string;
+  count?: number;
+}
+
+export interface PromptTestResponse {
+  presentation_id: string;
+  questions: any[];
+  image_count: number;
+  transcript_count: number;
+}
+
+export async function postPromptTest(data: PromptTestRequest): Promise<PromptTestResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/prompts/test`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error(`프롬프트 테스트 실패: ${response.status}`);
+  }
+  return response.json();
+}
 // API configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
