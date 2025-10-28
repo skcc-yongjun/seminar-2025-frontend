@@ -32,58 +32,72 @@ export async function postPromptTest(data: PromptTestRequest): Promise<PromptTes
 }
 
 // 프롬프트 테스트 스트리밍
-export async function* postPromptTestStream(data: PromptTestRequest): AsyncGenerator<string, void, unknown> {
-  const response = await fetch(`${API_BASE_URL}/seminar/api/prompts/test/stream`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error(`프롬프트 테스트 스트리밍 실패: ${response.status}`);
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) {
-    throw new Error('Response body is not readable');
-  }
-
-  const decoder = new TextDecoder();
-  let buffer = '';
-
+export async function* postPromptTestStream(data: PromptTestRequest, timeoutMs: number = 300000): AsyncGenerator<string, void, unknown> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  
   try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+    const response = await fetch(`${API_BASE_URL}/seminar/api/prompts/test/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+      signal: controller.signal,
+    });
 
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+    clearTimeout(timeoutId)
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.error) {
-              throw new Error(parsed.error);
+    if (!response.ok) {
+      throw new Error(`프롬프트 테스트 스트리밍 실패: ${response.status}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.error) {
+                throw new Error(parsed.error);
+              }
+              if (parsed.done) {
+                return;
+              }
+              if (parsed.chunk) {
+                yield parsed.chunk;
+              }
+            } catch (e) {
+              console.error('Failed to parse SSE data:', e);
             }
-            if (parsed.done) {
-              return;
-            }
-            if (parsed.chunk) {
-              yield parsed.chunk;
-            }
-          } catch (e) {
-            console.error('Failed to parse SSE data:', e);
           }
         }
       }
+    } finally {
+      reader.releaseLock();
     }
-  } finally {
-    reader.releaseLock();
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Stream request timeout after ${timeoutMs}ms`)
+    }
+    throw error
   }
 }
 // API configuration
@@ -99,14 +113,26 @@ export const API_ENDPOINTS = {
 } as const
 
 // API utility functions
-export async function fetchWithErrorHandling<T>(url: string): Promise<T> {
-  const response = await fetch(url)
+export async function fetchWithErrorHandling<T>(url: string, timeoutMs: number = 300000): Promise<T> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
   
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    clearTimeout(timeoutId)
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    return response.json()
+  } catch (error) {
+    clearTimeout(timeoutId)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error(`Request timeout after ${timeoutMs}ms`)
+    }
+    throw error
   }
-  
-  return response.json()
 }
 
 // Types for API responses
