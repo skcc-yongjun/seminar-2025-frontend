@@ -20,6 +20,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
 import {
   fetchPrompts,
   fetchPresentations,
@@ -27,11 +28,12 @@ import {
   createPrompt,
   updatePrompt,
   deletePrompt,
+  postPromptTest,
   type PromptResponse,
   type PresentationResponse,
   type PresenterResponse,
+  type PromptTestResponse,
 } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
 
 export default function PromptsPage() {
   // 상태 관리
@@ -52,11 +54,42 @@ export default function PromptsPage() {
   })
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
+  const [isTesting, setIsTesting] = useState(false)
+  const [testResult, setTestResult] = useState<PromptTestResponse | null>(null)
+  const [testError, setTestError] = useState<string | null>(null)
+
+  // 프롬프트 테스트(질문 생성만, DB 저장 없음)
+  const handlePromptTest = async () => {
+    if (!formData.presentation_id) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "발표를 선택하세요.",
+      })
+      return
+    }
+    setIsTesting(true)
+    setTestResult(null)
+    setTestError(null)
+    try {
+      const result = await postPromptTest({
+        presentation_id: formData.presentation_id,
+        prompt_override: formData.content,
+        count: 6,
+      })
+      setTestResult(result)
+    } catch (err: any) {
+      setTestError(err?.message || "테스트 실패")
+    } finally {
+      setIsTesting(false)
+    }
+  }
 
   /**
    * 초기 데이터 로드
    * 프롬프트 목록, 발표 목록, 발표자 목록을 동시에 조회
    */
+
   useEffect(() => {
     loadData()
   }, [])
@@ -329,18 +362,27 @@ export default function PromptsPage() {
             background-color: hsl(var(--background)) !important;
           }
         `}</style>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setTestResult(null);
+            setTestError("");
+          }
+        }} modal={true}>
           <DialogContent 
-            className="bg-background dark:bg-background backdrop-blur-none border-2 border-border shadow-2xl"
+            className="bg-background dark:bg-background backdrop-blur-none border-2 border-border shadow-2xl max-w-[100vw] w-full min-w-0 max-h-[90vh]"
             showCloseButton={true}
           >
           <DialogHeader className="pb-4">
             <DialogTitle className="text-2xl">{editingPrompt ? "프롬프트 수정" : "프롬프트 추가"}</DialogTitle>
             <DialogDescription className="text-base">프롬프트 정보를 입력해주세요.</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-[400px_1fr] gap-8 py-4">
-            {/* 좌측 컬럼 - 발표 및 타입 선택 */}
-            <div className="space-y-6">
+          <div
+            className="flex flex-row gap-6 py-4 min-h-[500px] max-h-[60vh] h-[60vh] w-full min-w-0 overflow-x-auto"
+            style={{flexWrap: 'nowrap'}}
+          >
+              {/* 좌측 컬럼 - 발표 및 타입 선택 */}
+              <div className="space-y-6 overflow-y-auto min-w-[220px] max-w-[350px] flex-shrink-0 flex-grow-0" style={{minWidth:220, maxWidth:350}}>
               <div className="space-y-3">
                 <Label htmlFor="presentation" className="text-base font-semibold">발표</Label>
                 <Select
@@ -402,7 +444,7 @@ export default function PromptsPage() {
             </div>
 
             {/* 우측 컬럼 - 내용 입력 */}
-            <div className="space-y-3 flex flex-col">
+            <div className="space-y-3 flex flex-col min-w-[350px] max-w-[600px] flex-shrink-0 flex-grow-0" style={{minWidth:350, maxWidth:600}}>
               <Label htmlFor="content" className="text-base font-semibold">프롬프트 내용</Label>
               <Textarea
                 id="content"
@@ -416,7 +458,8 @@ export default function PromptsPage() {
                 }}
                 placeholder="프롬프트 내용을 입력하세요&#10;&#10;예시:&#10;- AI 평가: 발표 내용의 기술적 정확성과 혁신성을 평가해주세요...&#10;- 질문 생성: 발표 내용을 바탕으로 심화 질문을 생성해주세요..."
                 disabled={isSaving}
-                className="h-[450px] resize-none overflow-y-auto font-mono text-sm leading-relaxed bg-background"
+                className="flex-1 min-h-0 resize-none overflow-y-auto font-mono text-sm leading-relaxed bg-background w-full max-w-full"
+                style={{height: '100%', maxHeight: 'calc(60vh - 100px)', minWidth:0, overflowX:'auto'}}
               />
               <div className="flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">
@@ -426,32 +469,64 @@ export default function PromptsPage() {
                   Ctrl+Enter로 저장
                 </p>
               </div>
+              <div className="flex gap-2 w-full mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)} 
+                  disabled={isSaving || isTesting}
+                  className="h-11 px-8"
+                >
+                  취소
+                </Button>
+                <Button 
+                  onClick={handleSave} 
+                  className="bg-sk-red hover:bg-sk-red/90 h-11 px-8" 
+                  disabled={isSaving || isTesting}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      저장 중...
+                    </>
+                  ) : (
+                    "저장"
+                  )}
+                </Button>
+                <Button
+                  onClick={handlePromptTest}
+                  className="bg-green-600 hover:bg-green-700 h-11 px-8"
+                  disabled={isTesting || isSaving || !formData.presentation_id}
+                  type="button"
+                >
+                  {isTesting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      테스트 중...
+                    </>
+                  ) : (
+                    "테스트 (DB 저장 안함)"
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* 우측 컬럼 - 테스트 결과 */}
+            <div className="flex flex-col min-w-[350px] max-w-[600px] max-h-full overflow-y-auto bg-muted/30 rounded-md border p-4 flex-shrink-0 flex-grow-0" style={{minWidth:350, maxWidth:600, overflowX:'auto'}}>
+              <div className="font-bold mb-2 text-green-700">테스트 결과 (Raw)</div>
+              {testError ? (
+                <div className="text-red-500 font-semibold">{testError}</div>
+              ) : testResult ? (
+                <textarea
+                  className="w-full h-full min-h-[300px] max-h-[400px] font-mono text-xs bg-background border rounded p-2 resize-none max-w-full"
+                  value={JSON.stringify(testResult, null, 2)}
+                  readOnly
+                  style={{height: '100%', minHeight: 200, minWidth:0, overflowX:'auto'}}
+                />
+              ) : (
+                <div className="text-muted-foreground text-sm">테스트 결과가 여기에 표시됩니다.</div>
+              )}
             </div>
           </div>
-          <DialogFooter className="pt-4 border-t">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDialogOpen(false)} 
-              disabled={isSaving}
-              className="h-11 px-8"
-            >
-              취소
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              className="bg-sk-red hover:bg-sk-red/90 h-11 px-8" 
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  저장 중...
-                </>
-              ) : (
-                "저장"
-              )}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       </>

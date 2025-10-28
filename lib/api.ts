@@ -1,3 +1,30 @@
+// 프롬프트 테스트(질문 생성만, DB 저장 없음)
+export interface PromptTestRequest {
+  presentation_id: string;
+  prompt_override?: string;
+  count?: number;
+}
+
+export interface PromptTestResponse {
+  presentation_id: string;
+  questions: any[];
+  image_count: number;
+  transcript_count: number;
+}
+
+export async function postPromptTest(data: PromptTestRequest): Promise<PromptTestResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/prompts/test`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error(`프롬프트 테스트 실패: ${response.status}`);
+  }
+  return response.json();
+}
 // API configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
@@ -112,6 +139,7 @@ export interface QuestionResponse {
 export interface QnAKeywordListResponse {
   total: number
   keywords: string[]
+  keywords_en: string[]
 }
 
 // API functions
@@ -642,6 +670,13 @@ export interface HumanEvaluationScoreBatchResponse {
   scores: HumanEvaluationScoreResponse[]
 }
 
+export interface EvaluatorCountResponse {
+  presentation_id: string
+  evaluator_count: number
+  total_evaluator_count: number
+  score_type: string
+}
+
 /**
  * 사람 평가 점수 배치 제출
  * @param presentationId 발표 ID
@@ -670,6 +705,169 @@ export async function submitHumanEvaluationScores(
   
   return response.json()
 }
+
+/**
+ * 평가 완료 인원 수 조회
+ * @param presentationId 발표 ID
+ * @param scoreType 점수 타입 (기본값: '최종')
+ * @returns 평가 완료 인원 수 정보
+ */
+export async function fetchEvaluatorCount(
+  presentationId: string,
+  scoreType: string = '최종'
+): Promise<EvaluatorCountResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/human-evaluation-scores/presentation/${presentationId}/evaluator-count?score_type=${encodeURIComponent(scoreType)}`
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`평가 인원 수 조회 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 발표 정보 조회 (단일)
+ * @param presentationId 발표 ID
+ * @returns 발표 정보
+ */
+export async function fetchPresentation(presentationId: string): Promise<PresentationResponse> {
+  const response = await fetch(`${API_ENDPOINTS.presentations}/${presentationId}`)
+  
+  if (!response.ok) {
+    throw new Error(`발표 조회 실패: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+// Presentation Analysis Comment API Types
+export interface PresentationAnalysisCommentResponse {
+  comment_id: number
+  presentation_id: string
+  type: string // '강점' | '약점' | '총평'
+  comment: string
+  source_type: string // '발표' | '자료'
+  source: string | null
+  created_at: string
+}
+
+export interface PresentationAnalysisCommentList {
+  total: number
+  items: PresentationAnalysisCommentResponse[]
+}
+
+/**
+ * 발표 분석 코멘트 조회
+ * @param presentationId 발표 ID
+ * @returns 분석 코멘트 목록 (강점, 약점, 총평)
+ */
+export async function fetchPresentationAnalysisComments(
+  presentationId: string
+): Promise<PresentationAnalysisCommentResponse[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentation-analysis-comments?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`분석 코멘트 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as PresentationAnalysisCommentList
+  return data.items
+}
+
+// AI Evaluation Score API Types
+export interface AIEvaluationScoreResponse {
+  score_id: number
+  presentation_id: string
+  category: string
+  score: number | string  // Decimal은 문자열로 반환될 수 있음
+  score_type: string
+  evaluated_at: string
+  created_at: string
+}
+
+export interface AIEvaluationScoreList {
+  total: number
+  items: AIEvaluationScoreResponse[]
+}
+
+/**
+ * AI 평가 점수 조회
+ * @param presentationId 발표 ID
+ * @returns AI 평가 점수 목록
+ */
+export async function fetchAIEvaluationScores(
+  presentationId: string
+): Promise<AIEvaluationScoreResponse[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/ai-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`AI 평가 점수 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as AIEvaluationScoreList
+  return data.items
+}
+
+// Human Evaluation Score Average API Types
+export interface HumanEvaluationScoreStats {
+  presentation_id: string
+  category: string
+  avg_score: number | string  // Decimal은 문자열로 반환될 수 있음
+  min_score: number | string
+  max_score: number | string
+  score_count: number
+}
+
+/**
+ * 사람 평가 평균 점수 조회
+ * @param presentationId 발표 ID
+ * @param scoreType 점수 타입 (기본값: '최종')
+ * @returns 카테고리별 평균 점수
+ */
+export async function fetchHumanEvaluationAverageScores(
+  presentationId: string,
+  scoreType: string = '최종'
+): Promise<HumanEvaluationScoreStats[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/human-evaluation-scores/presentation/${presentationId}/average?score_type=${encodeURIComponent(scoreType)}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`사람 평가 평균 점수 조회 실패: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+// QnA Categories API Types (더 이상 사용하지 않음 - 고정된 카테고리 사용)
+
+/**
+ * QnA 카테고리 목록 조회 (한글-영어 키워드 쌍)
+ * @returns QnA 키워드 쌍 목록 (제목 업데이트용)
+ */
+export async function fetchQnACategories(): Promise<{title: string, titleEn: string}[]> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/qna-questions/session/세션2/keywords`)
+  
+  if (!response.ok) {
+    throw new Error(`QnA 키워드 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as QnAKeywordListResponse
+  
+  // 한글과 영어 키워드를 쌍으로 묶어서 반환
+  return data.keywords.map((keyword, index) => ({
+    title: keyword,
+    titleEn: data.keywords_en[index] || keyword
+  }))
+}
+
 
 // ============================================================================
 // 패널토의 관련 API
