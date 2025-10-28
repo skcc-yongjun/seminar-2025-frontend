@@ -560,10 +560,10 @@ export default function PromptsPage() {
                   ) : testResult.parsed_result ? (
                       <div className="space-y-3">
                         {/* 질문 생성인 경우 (세션2) */}
-                        {testResult.metadata.prompt_type === "질문 생성" && testResult.parsed_result.questions && (
+                        {testResult.metadata.prompt_type === "질문 생성" && testResult.parsed_result.result && (
                           <div className="space-y-3">
                             <div className="font-bold text-lg mb-2">질문 생성 결과</div>
-                            {testResult.parsed_result.questions.map((q: any, idx: number) => (
+                            {testResult.parsed_result.result.map((q: any, idx: number) => (
                               <div key={idx} className="p-4 bg-background border rounded-lg space-y-2">
                                 <div className="font-bold text-base text-blue-600 dark:text-blue-400 mb-2">
                                   질문 {idx + 1}
