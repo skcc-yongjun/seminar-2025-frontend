@@ -549,9 +549,9 @@ export default function QnACategories() {
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.6 + index * 0.1 }}
                 >
-                  <foreignObject x={x - 80} y={y - 50} width="160" height="100">
+                  <foreignObject x={x - 100} y={y - 80} width="200" height="160">
                     <Link href={`/qna/${category.id}`} className="block group">
-                      <div className="flex flex-col items-center justify-center text-center gap-2">
+                      <div className="flex flex-col items-center justify-center text-center gap-3">
                         <div
                           className="w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm border-2 transition-all duration-300 group-hover:scale-110"
                           style={{
@@ -563,10 +563,10 @@ export default function QnACategories() {
                           <Icon className="w-6 h-6 text-white" strokeWidth={1.5} />
                         </div>
                         <div>
-                          <h2 className="text-lg font-bold text-white mb-0.5 group-hover:scale-105 transition-transform">
+                          <h2 className="text-3xl font-bold text-white mb-2 group-hover:scale-105 transition-transform">
                             {category.title}
                           </h2>
-                          <p className="text-blue-300/70 text-xs">{category.titleEn}</p>
+                          <p className="text-blue-300/70 text-lg">{category.titleEn}</p>
                         </div>
                       </div>
                     </Link>
