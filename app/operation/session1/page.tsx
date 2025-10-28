@@ -499,7 +499,7 @@ export default function Session1OperationPage() {
                     <Calculator className="w-6 h-6 text-green-400" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-1">총점 생성</h3>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">투표 강제 종료 및 총점 계산</h3>
                     <p className="text-sm text-muted-foreground">문제 발생 시 총점을 재생성합니다</p>
                   </div>
                 </div>
