@@ -3,7 +3,7 @@
 import { motion, useMotionValue, useSpring } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight, MessageCircleQuestion, Users, Settings } from "lucide-react"
+import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight, MessageCircleQuestion, Users, Settings, Headphones, Trophy, BarChart } from "lucide-react"
 
 export default function SessionEntry() {
   const mouseX = useMotionValue(0)
@@ -219,222 +219,11 @@ export default function SessionEntry() {
         </motion.div>
 
         <div className="space-y-4">
-          {/* Session 1 Divider */}
+          {/* 패널토의 Divider */}
           <motion.div 
             initial={{ opacity: 0, scaleX: 0 }} 
             animate={{ opacity: 1, scaleX: 1 }} 
             transition={{ delay: 0.05, duration: 0.5 }}
-            className="flex items-center my-8"
-          >
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-            <motion.div 
-              className="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-cyan-500/30"
-              whileHover={{ scale: 1.05, borderColor: "rgba(6, 182, 212, 0.6)" }}
-            >
-              <span className="text-sm font-semibold text-cyan-400">Session 1</span>
-            </motion.div>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Link href="/post-presentation" className="block group">
-              <motion.div
-                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
-                    initial={{ top: "-2rem" }}
-                    whileHover={{
-                      top: "100%",
-                      transition: { duration: 1, ease: "linear" },
-                    }}
-                  />
-                </div>
-
-                <div className="relative h-full flex items-center justify-center px-6">
-                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
-                    [session1] 발표 종료 후 대시보드
-                  </span>
-                </div>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <Link href="/single-presenter?session=세션1" className="block group">
-              <motion.div
-                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
-                    initial={{ top: "-2rem" }}
-                    whileHover={{
-                      top: "100%",
-                      transition: { duration: 1, ease: "linear" },
-                    }}
-                  />
-                </div>
-
-                <div className="relative h-full flex items-center justify-center px-6">
-                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
-                    [Session1] Seminar Control
-                  </span>
-                </div>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <Link href="/ranking" className="block group">
-              <motion.div
-                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-blue-500/50 to-purple-500/30 blur-2xl"
-                  animate={{
-                    opacity: [0.5, 0.8, 0.5],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Number.POSITIVE_INFINITY,
-                  }}
-                />
-
-                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl border-2 border-purple-500/50 rounded-xl group-hover:border-blue-500 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] transition-all duration-300">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent h-8"
-                    initial={{ top: "-2rem" }}
-                    whileHover={{
-                      top: "100%",
-                      transition: { duration: 1, ease: "linear" },
-                    }}
-                  />
-                </div>
-
-                <div className="relative h-full flex items-center justify-center px-6">
-                  <span className="text-xl font-bold text-blue-400 text-center text-balance group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
-                    [session1] 전체 종합평가 결과
-                  </span>
-                </div>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          {/* Session 2 Divider */}
-          <motion.div 
-            initial={{ opacity: 0, scaleX: 0 }} 
-            animate={{ opacity: 1, scaleX: 1 }} 
-            transition={{ delay: 0.25, duration: 0.5 }}
-            className="flex items-center my-8"
-          >
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-            <motion.div 
-              className="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-cyan-500/30"
-              whileHover={{ scale: 1.05, borderColor: "rgba(6, 182, 212, 0.6)" }}
-            >
-              <span className="text-sm font-semibold text-cyan-400">Session 2</span>
-            </motion.div>
-            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <Link href="/single-presenter?session=세션2" className="block group">
-              <motion.div
-                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
-                    initial={{ top: "-2rem" }}
-                    whileHover={{
-                      top: "100%",
-                      transition: { duration: 1, ease: "linear" },
-                    }}
-                  />
-                </div>
-
-                <div className="relative h-full flex items-center justify-center gap-3 px-6">
-                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
-                    [Session2] Seminar Control
-                  </span>
-                </div>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-            <Link href="/qna" className="block group">
-              <motion.div
-                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
-                    initial={{ top: "-2rem" }}
-                    whileHover={{
-                      top: "100%",
-                      transition: { duration: 1, ease: "linear" },
-                    }}
-                  />
-                </div>
-
-                <div className="relative h-full flex items-center justify-center gap-3 px-6">
-                  <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
-                    <MessageCircleQuestion className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
-                  </motion.div>
-                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
-                    [session2] Q&amp;A 세션
-                  </span>
-                </div>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          {/* Non Session Divider */}
-          <motion.div 
-            initial={{ opacity: 0, scaleX: 0 }} 
-            animate={{ opacity: 1, scaleX: 1 }} 
-            transition={{ delay: 0.42, duration: 0.5 }}
             className="flex items-center my-8"
           >
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
@@ -442,12 +231,12 @@ export default function SessionEntry() {
               className="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-purple-500/30"
               whileHover={{ scale: 1.05, borderColor: "rgba(168, 85, 247, 0.6)" }}
             >
-              <span className="text-sm font-semibold text-purple-400">Non Session</span>
+              <span className="text-sm font-semibold text-purple-400">패널토의</span>
             </motion.div>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <Link href="/panel-discussion" className="block group">
               <motion.div
                 className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
@@ -477,11 +266,255 @@ export default function SessionEntry() {
                     <Users className="w-6 h-6 text-purple-400 group-hover:text-purple-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
                   </motion.div>
                   <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-purple-400 transition-colors duration-300">
-                    [패널토의] 실시간 인사이트 모니터링
+                    실시간 토론 요약 AI
                   </span>
                 </div>
               </motion.div>
             </Link>
+          </motion.div>
+
+          {/* Session 1 Divider */}
+          <motion.div 
+            initial={{ opacity: 0, scaleX: 0 }} 
+            animate={{ opacity: 1, scaleX: 1 }} 
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="flex items-center my-8"
+          >
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+            <motion.div 
+              className="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-cyan-500/30"
+              whileHover={{ scale: 1.05, borderColor: "rgba(6, 182, 212, 0.6)" }}
+            >
+              <span className="text-sm font-semibold text-cyan-400">Session 1</span>
+            </motion.div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+          </motion.div>
+
+          
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <Link href="/single-presenter?session=세션1" className="block group">
+              <motion.div
+                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
+                    initial={{ top: "-2rem" }}
+                    whileHover={{
+                      top: "100%",
+                      transition: { duration: 1, ease: "linear" },
+                    }}
+                  />
+                </div>
+
+                <div className="relative h-full flex items-center justify-center gap-3 px-6">
+                  <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                    <Headphones className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                  </motion.div>
+                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
+                    [Session 1] 발표듣기
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <Link href="/post-presentation" className="block group">
+              <motion.div
+                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
+                    initial={{ top: "-2rem" }}
+                    whileHover={{
+                      top: "100%",
+                      transition: { duration: 1, ease: "linear" },
+                    }}
+                  />
+                </div>
+
+                <div className="relative h-full flex items-center justify-center gap-3 px-6">
+                  <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                    <BarChart className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                  </motion.div>
+                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
+                    [Session 1] AI 평가 결과
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <Link href="/ranking" className="block group">
+              <motion.div
+                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500/30 via-blue-500/50 to-purple-500/30 blur-2xl"
+                  animate={{
+                    opacity: [0.5, 0.8, 0.5],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                  }}
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-xl border-2 border-purple-500/50 rounded-xl group-hover:border-blue-500 group-hover:shadow-[0_0_30px_rgba(59,130,246,0.3)] transition-all duration-300">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/20 to-transparent h-8"
+                    initial={{ top: "-2rem" }}
+                    whileHover={{
+                      top: "100%",
+                      transition: { duration: 1, ease: "linear" },
+                    }}
+                  />
+                </div>
+
+                <div className="relative h-full flex items-center justify-center gap-3 px-6">
+                  <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                    <Trophy className="w-6 h-6 text-blue-400 group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
+                  </motion.div>
+                  <span className="text-xl font-bold text-blue-400 text-center text-balance group-hover:text-white transition-colors duration-300 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]">
+                    [Session 1] 전체 Ranking
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
+          </motion.div>
+
+          {/* Session 2 Divider */}
+          <motion.div 
+            initial={{ opacity: 0, scaleX: 0 }} 
+            animate={{ opacity: 1, scaleX: 1 }} 
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="flex items-center my-8"
+          >
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+            <motion.div 
+              className="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-cyan-500/30"
+              whileHover={{ scale: 1.05, borderColor: "rgba(6, 182, 212, 0.6)" }}
+            >
+              <span className="text-sm font-semibold text-cyan-400">Session 2</span>
+            </motion.div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <Link href="/single-presenter?session=세션2" className="block group">
+              <motion.div
+                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
+                    initial={{ top: "-2rem" }}
+                    whileHover={{
+                      top: "100%",
+                      transition: { duration: 1, ease: "linear" },
+                    }}
+                  />
+                </div>
+
+                <div className="relative h-full flex items-center justify-center gap-3 px-6">
+                  <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                    <Headphones className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                  </motion.div>
+                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
+                    [Session 2] 발표듣기
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+            <Link href="/qna" className="block group">
+              <motion.div
+                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
+                    initial={{ top: "-2rem" }}
+                    whileHover={{
+                      top: "100%",
+                      transition: { duration: 1, ease: "linear" },
+                    }}
+                  />
+                </div>
+
+                <div className="relative h-full flex items-center justify-center gap-3 px-6">
+                  <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                    <MessageCircleQuestion className="w-6 h-6 text-cyan-400 group-hover:text-cyan-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(6,182,212,0.5)]" />
+                  </motion.div>
+                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
+                    [Session2] Q&A, Who’s Asking? AI.
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
+          </motion.div>
+
+
+
+          {/* 관리화면 Divider */}
+          <motion.div 
+            initial={{ opacity: 0, scaleX: 0 }} 
+            animate={{ opacity: 1, scaleX: 1 }} 
+            transition={{ delay: 0.15, duration: 0.5 }}
+            className="flex items-center my-8"
+          >
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
+            <motion.div 
+              className="px-6 py-2 bg-slate-900/80 backdrop-blur-xl rounded-full border border-cyan-500/30"
+              whileHover={{ scale: 1.05, borderColor: "rgba(6, 182, 212, 0.6)" }}
+            >
+              <span className="text-sm font-semibold text-cyan-400">관리자 화면</span>
+            </motion.div>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent" />
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
