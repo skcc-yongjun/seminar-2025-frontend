@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight, MessageCircleQuestion } from "lucide-react"
+import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight, MessageCircleQuestion, Users } from "lucide-react"
 
 export default function SessionEntry() {
   const steps = [
@@ -188,8 +188,27 @@ export default function SessionEntry() {
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
           </div>
 
-          {/* Survey Start */}
+          {/* Panel Discussion */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <Link href="/panel-discussion" className="block group">
+              <div className="relative w-full h-24 rounded-xl overflow-hidden border border-purple-500/30 transition-all duration-300 hover:border-purple-500/60 hover:shadow-lg hover:shadow-purple-500/20 active:scale-[0.98]">
+                {/* Gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-purple-500/20 to-purple-500/10 opacity-0 group-active:opacity-100 transition-opacity duration-150" />
+
+                {/* Button content */}
+                <div className="relative h-full flex items-center justify-center gap-3 px-6 backdrop-blur-sm bg-card/30">
+                  <Users className="w-6 h-6 text-purple-400 group-hover:text-purple-300 transition-colors duration-300" />
+                  <span className="text-xl font-semibold text-foreground text-center text-balance group-hover:text-purple-400 transition-colors duration-300">
+                    [패널토의] 실시간 인사이트 모니터링
+                  </span>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
+          {/* Survey Start */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <Link href="/survey" className="block group">
               <div className="relative w-full h-24 rounded-xl overflow-hidden border border-sk-red/30 transition-all duration-300 hover:border-sk-red/60 hover:shadow-lg hover:shadow-sk-red/20 active:scale-[0.98]">
                 {/* Gradient overlay on hover */}

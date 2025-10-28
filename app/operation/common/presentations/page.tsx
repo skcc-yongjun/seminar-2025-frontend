@@ -400,6 +400,7 @@ export default function PresentationsPage() {
                 <SelectContent className="bg-background">
                   <SelectItem value="세션1">세션1</SelectItem>
                   <SelectItem value="세션2">세션2</SelectItem>
+                  <SelectItem value="패널토의">패널토의</SelectItem>
                 </SelectContent>
               </Select>
             </div>

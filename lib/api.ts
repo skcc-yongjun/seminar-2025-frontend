@@ -670,3 +670,74 @@ export async function submitHumanEvaluationScores(
   
   return response.json()
 }
+
+// ============================================================================
+// 패널토의 관련 API
+// ============================================================================
+
+/**
+ * 패널토의 인사이트 인터페이스
+ */
+export interface PanelInsight {
+  comment_id: number
+  presentation_id: string
+  timestamp_label: string
+  timestamp_seconds: number
+  comment_text: string
+  category: string
+  created_at: string
+}
+
+/**
+ * 패널토의 인사이트 목록 응답
+ */
+export interface PanelInsightList {
+  total: number
+  items: PanelInsight[]
+}
+
+/**
+ * 패널토의 발표 생성 요청
+ */
+export interface PanelPresentationCreate {
+  presentation_id?: string
+  session_type: "패널토의"
+  presenter_id: string
+  topic: string
+  presentation_order: number
+  status?: string
+}
+
+/**
+ * 패널토의 인사이트 조회
+ * 
+ * @param presentationId - 발표 ID
+ * @returns 인사이트 목록
+ */
+export async function getPanelInsights(presentationId: string): Promise<PanelInsightList> {
+  const url = `${API_BASE_URL}/seminar/api/ai-comments?presentation_id=${presentationId}&category=insight`
+  return fetchWithErrorHandling<PanelInsightList>(url)
+}
+
+/**
+ * 패널토의 발표 생성
+ * 
+ * @param data - 발표 생성 데이터
+ * @returns 생성된 발표 정보
+ */
+export async function createPanelPresentation(data: PanelPresentationCreate): Promise<PresentationResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/presentations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`발표 생성 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
