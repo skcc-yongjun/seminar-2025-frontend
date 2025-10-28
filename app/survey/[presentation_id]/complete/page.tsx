@@ -1,32 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { motion } from "framer-motion"
 import { CheckCircle2, ArrowRight } from "lucide-react"
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { fetchPresentations } from "@/lib/api"
 
-export default function CompletePage({ params }: { params: { presentation_id: string } }) {
-  const [presenter, setPresenter] = useState({ name: "", topic: "" })
+export default function CompletePage({ params }: { params: Promise<{ presentation_id: string }> }) {
+  const { presentation_id } = use(params)
+  const router = useRouter()
   const [nextPresentationId, setNextPresentationId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     async function loadNextPresentation() {
       try {
-        // localStorage에서 제출 데이터 로드
-        const submissionKey = `survey_submitted_${params.presentation_id}`
-        const submissionData = localStorage.getItem(submissionKey)
-
-        if (submissionData) {
-          const data = JSON.parse(submissionData)
-          setPresenter({
-            name: data.presenterName || "발표자",
-            topic: data.presenterTopic || "발표 주제",
-          })
-        }
-
         // 세션1의 모든 발표 조회
         const presentations = await fetchPresentations("세션1")
         
@@ -40,16 +30,20 @@ export default function CompletePage({ params }: { params: { presentation_id: st
           (a, b) => a.presentation_order - b.presentation_order
         )
 
-        // 현재 발표의 인덱스 찾기
-        const currentIndex = sortedPresentations.findIndex(
-          (p) => p.presentation_id === params.presentation_id
-        )
+        // 아직 제출하지 않은 첫 번째 발표 찾기 (미제출 발표 우선)
+        const unsubmittedPresentation = sortedPresentations.find(p => {
+          const key = `survey_submitted_${p.presentation_id}`
+          return !localStorage.getItem(key)
+        })
 
-        // 다음 발표가 있으면 설정
-        if (currentIndex !== -1 && currentIndex < sortedPresentations.length - 1) {
-          setNextPresentationId(sortedPresentations[currentIndex + 1].presentation_id)
+        if (unsubmittedPresentation) {
+          // 미제출 발표가 있으면 설정
+          setNextPresentationId(unsubmittedPresentation.presentation_id)
+          console.log("📍 [Complete] 다음 미제출 발표:", unsubmittedPresentation.presentation_id)
         } else {
-          setNextPresentationId(null) // 마지막 발표
+          // 모든 발표 제출 완료
+          setNextPresentationId(null)
+          console.log("✅ [Complete] 모든 발표 제출 완료")
         }
 
         setIsLoading(false)
@@ -60,7 +54,7 @@ export default function CompletePage({ params }: { params: { presentation_id: st
     }
 
     loadNextPresentation()
-  }, [params.presentation_id])
+  }, [presentation_id])
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -84,28 +78,25 @@ export default function CompletePage({ params }: { params: { presentation_id: st
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <h1 className="text-3xl font-bold text-foreground mb-3">
-              {!isLoading && nextPresentationId === null ? "평가가 모두 종료되었습니다" : "평가 제출 완료"}
+              {!isLoading && nextPresentationId === null 
+                ? "평가가 모두 종료되었습니다" 
+                : "평가 제출 완료"}
             </h1>
             <p className="text-muted-foreground mb-2">
               {!isLoading && nextPresentationId === null 
                 ? "모든 발표에 대한 평가를 완료하셨습니다. 감사합니다!" 
                 : "소중한 평가를 제출해주셔서 감사합니다."}
             </p>
-            {presenter.name && (
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <p className="text-sm text-muted-foreground mb-1">평가 완료</p>
-                <p className="font-semibold text-foreground">{presenter.name}</p>
-                <p className="text-sm text-muted-foreground mt-1">{presenter.topic}</p>
+
+            {isLoading && (
+              <div className="mt-8 text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="text-sm text-muted-foreground mt-2">다음 발표 확인 중...</p>
               </div>
             )}
-
-            <div className="mt-8 space-y-3">
-              {isLoading ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-sm text-muted-foreground mt-2">다음 발표 확인 중...</p>
-                </div>
-              ) : nextPresentationId ? (
+            
+            {!isLoading && nextPresentationId && (
+              <div className="mt-8 space-y-3">
                 <Link href={`/survey/${nextPresentationId}`} className="block">
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -134,24 +125,8 @@ export default function CompletePage({ params }: { params: { presentation_id: st
                     </Button>
                   </motion.div>
                 </Link>
-              ) : (
-                <Link href="/" className="block">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                  >
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full h-14 text-lg font-semibold"
-                    >
-                      홈으로 돌아가기
-                    </Button>
-                  </motion.div>
-                </Link>
-              )}
-            </div>
+              </div>
+            )}
           </motion.div>
         </div>
       </motion.div>

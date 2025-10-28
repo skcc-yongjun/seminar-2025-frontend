@@ -153,6 +153,14 @@ function SinglePresenterViewContent() {
 
   const handleStartPresentation = () => {
     console.log("발표 시작 버튼 클릭")
+    
+    // 발표 상태가 "대기" 또는 "진행중"인지 확인
+    const allowedStatuses = ["대기", "진행중"]
+    if (!allowedStatuses.includes(presenterInfo?.status || "")) {
+      alert(`발표 상태가 "${presenterInfo?.status}"입니다. "대기" 또는 "진행중" 상태일 때만 시작할 수 있습니다.`)
+      return
+    }
+    
     const newPresentationId = presenterInfo?.presentation_id || `${presenterInfo?.presenter?.name}_${Date.now()}`
     console.log("새로운 presentationId:", newPresentationId)
     setCurrentPresentationId(newPresentationId)
@@ -240,6 +248,23 @@ function SinglePresenterViewContent() {
                             {selectedSessionType}
                           </span>
                           <span className="text-gray-400 text-sm">·</span>
+                          <Badge 
+                            variant="outline" 
+                            className={`text-xs ${
+                              presenterInfo?.status === "대기" 
+                                ? "border-green-500/50 text-green-400 bg-green-500/10" 
+                                : presenterInfo?.status === "진행중"
+                                ? "border-yellow-500/50 text-yellow-400 bg-yellow-500/10"
+                                : presenterInfo?.status === "평가"
+                                ? "border-blue-500/50 text-blue-400 bg-blue-500/10"
+                                : presenterInfo?.status === "QnA"
+                                ? "border-purple-500/50 text-purple-400 bg-purple-500/10"
+                                : "border-gray-500/50 text-gray-400 bg-gray-500/10"
+                            }`}
+                          >
+                            {presenterInfo?.status || "상태 불명"}
+                          </Badge>
+                          <span className="text-gray-400 text-sm">·</span>
                           <span className="text-white text-sm font-medium">
                             {presenterInfo?.presenter?.name || "발표자 없음"} ({presenterInfo?.presenter?.company || ""})
                           </span>
@@ -313,40 +338,69 @@ function SinglePresenterViewContent() {
                         발표자가 없습니다.
                       </div>
                     ) : (
-                      presenters.map((presentation) => (
-                        <DropdownMenuItem
-                          key={presentation.presentation_id}
-                          onClick={() => {
-                            if (!isPresentationStarted) {
-                              setSelectedPresenterId(presentation.presentation_id)
-                            }
-                          }}
-                          disabled={isPresentationStarted}
-                          className={`flex flex-col items-start gap-2 p-3 cursor-pointer ${
-                            selectedPresenterId === presentation.presentation_id
-                              ? "bg-[#E61E2A]/20 text-white border-l-2 border-[#E61E2A]"
-                              : "text-gray-300 hover:bg-white/10 hover:text-white"
-                          } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : ""}`}
-                        >
-                          <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2">
-                              {selectedPresenterId === presentation.presentation_id && (
-                                <CheckCircle2 className="w-4 h-4 text-[#E61E2A]" />
-                              )}
-                              <span className="font-semibold text-sm">{presentation.presenter?.name || "발표자 미정"}</span>
-                              <span className="text-xs text-gray-400">({presentation.presenter?.company || "소속 미정"})</span>
+                      presenters.map((presentation) => {
+                        const allowedStatuses = ["대기", "진행중"]
+                        const isAllowed = allowedStatuses.includes(presentation.status || "")
+                        const canSelect = !isPresentationStarted && isAllowed
+                        
+                        return (
+                          <DropdownMenuItem
+                            key={presentation.presentation_id}
+                            onClick={() => {
+                              if (canSelect) {
+                                setSelectedPresenterId(presentation.presentation_id)
+                              } else if (!isAllowed) {
+                                alert(`이 발표는 현재 "${presentation.status}" 상태입니다. "대기" 또는 "진행중" 상태의 발표만 선택할 수 있습니다.`)
+                              }
+                            }}
+                            disabled={!canSelect}
+                            className={`flex flex-col items-start gap-2 p-3 ${
+                              canSelect ? "cursor-pointer" : "cursor-not-allowed opacity-50"
+                            } ${
+                              selectedPresenterId === presentation.presentation_id
+                                ? "bg-[#E61E2A]/20 text-white border-l-2 border-[#E61E2A]"
+                                : "text-gray-300 hover:bg-white/10 hover:text-white"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between w-full">
+                              <div className="flex items-center gap-2">
+                                {selectedPresenterId === presentation.presentation_id && (
+                                  <CheckCircle2 className="w-4 h-4 text-[#E61E2A]" />
+                                )}
+                                <span className="font-semibold text-sm">{presentation.presenter?.name || "발표자 미정"}</span>
+                                <span className="text-xs text-gray-400">({presentation.presenter?.company || "소속 미정"})</span>
+                                <Badge 
+                                  variant="outline" 
+                                  className={`text-xs ${
+                                    presentation.status === "대기" 
+                                      ? "border-green-500/50 text-green-400 bg-green-500/10" 
+                                      : presentation.status === "진행중"
+                                      ? "border-yellow-500/50 text-yellow-400 bg-yellow-500/10"
+                                      : presentation.status === "평가"
+                                      ? "border-blue-500/50 text-blue-400 bg-blue-500/10"
+                                      : presentation.status === "QnA"
+                                      ? "border-purple-500/50 text-purple-400 bg-purple-500/10"
+                                      : "border-gray-500/50 text-gray-400 bg-gray-500/10"
+                                  }`}
+                                >
+                                  {presentation.status}
+                                </Badge>
+                              </div>
                             </div>
-                          </div>
-                          <span className="text-xs text-gray-400 pl-6">{presentation.topic}</span>
-                        </DropdownMenuItem>
-                      ))
+                            <span className="text-xs text-gray-400 pl-6">{presentation.topic}</span>
+                            {!isAllowed && (
+                              <span className="text-xs text-orange-400 pl-6">⚠️ "{presentation.status}" 상태 - 선택 불가</span>
+                            )}
+                          </DropdownMenuItem>
+                        )
+                      })
                     )}
                     
                     <DropdownMenuSeparator className="bg-white/10 my-2" />
                     <DropdownMenuLabel className="text-white text-xs text-gray-400">
                       {isPresentationStarted 
                         ? "⚠️ 발표 진행 중에는 발표자를 변경할 수 없습니다" 
-                        : "💡 발표자를 선택하세요"}
+                        : "💡 '대기' 또는 '진행중' 상태의 발표만 선택 가능합니다"}
                     </DropdownMenuLabel>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -514,10 +568,18 @@ function SinglePresenterViewContent() {
                 {!isPresentationStarted ? (
                   <Button
                     onClick={handleStartPresentation}
-                    className="bg-[#E61E2A] hover:bg-[#c01820] text-white px-6 py-3 text-lg font-semibold rounded-lg shadow-lg gap-2"
+                    disabled={!["대기", "진행중"].includes(presenterInfo?.status || "")}
+                    className={`px-6 py-3 text-lg font-semibold rounded-lg shadow-lg gap-2 ${
+                      ["대기", "진행중"].includes(presenterInfo?.status || "")
+                        ? "bg-[#E61E2A] hover:bg-[#c01820] text-white"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    }`}
                   >
                     <Mic className="w-5 h-5" />
-                    발표 시작
+                    {["대기", "진행중"].includes(presenterInfo?.status || "") 
+                      ? (presenterInfo?.status === "진행중" ? "발표 재개" : "발표 시작")
+                      : `발표 불가 (${presenterInfo?.status || "상태 확인 필요"})`
+                    }
                   </Button>
                 ) : (
                   <Button

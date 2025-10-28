@@ -73,7 +73,7 @@ export default function OperationCommonPage() {
                       <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-sk-red transition-colors">
                         {section.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground">{section.description}</p>
+                      <p className="text-sm text-muted-foreground truncate">{section.description}</p>
                     </div>
                   </div>
                 </div>
