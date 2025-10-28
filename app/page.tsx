@@ -3,7 +3,7 @@
 import { motion, useMotionValue, useSpring } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useState } from "react"
-import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight, MessageCircleQuestion, Users } from "lucide-react"
+import { Mic, FileText, BookOpen, Brain, Database, Zap, BarChart3, ArrowRight, MessageCircleQuestion, Users, Settings } from "lucide-react"
 
 export default function SessionEntry() {
   const mouseX = useMotionValue(0)
@@ -519,22 +519,22 @@ export default function SessionEntry() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
-            <Link href="/operation/common" className="block group">
+            <Link href="/operation" className="block group">
               <motion.div
                 className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
+                  className="absolute inset-0 bg-gradient-to-r from-orange-500/20 via-orange-500/40 to-orange-500/20 blur-xl"
                   initial={{ opacity: 0 }}
                   whileHover={{ opacity: 1 }}
                   transition={{ duration: 0.3 }}
                 />
 
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-orange-500/30 rounded-xl group-hover:border-orange-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
                   <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
+                    className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/20 to-transparent h-8"
                     initial={{ top: "-2rem" }}
                     whileHover={{
                       top: "100%",
@@ -543,77 +543,12 @@ export default function SessionEntry() {
                   />
                 </div>
 
-                <div className="relative h-full flex items-center justify-center px-6">
-                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
-                    Operation - 공통
-                  </span>
-                </div>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
-            <Link href="/operation/session1" className="block group">
-              <motion.div
-                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
-                    initial={{ top: "-2rem" }}
-                    whileHover={{
-                      top: "100%",
-                      transition: { duration: 1, ease: "linear" },
-                    }}
-                  />
-                </div>
-
-                <div className="relative h-full flex items-center justify-center px-6">
-                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
-                    Operation - Session 1
-                  </span>
-                </div>
-              </motion.div>
-            </Link>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}>
-            <Link href="/operation/session2" className="block group">
-              <motion.div
-                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <motion.div
-                  className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-cyan-500/40 to-cyan-500/20 blur-xl"
-                  initial={{ opacity: 0 }}
-                  whileHover={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-
-                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-cyan-500/30 rounded-xl group-hover:border-cyan-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/20 to-transparent h-8"
-                    initial={{ top: "-2rem" }}
-                    whileHover={{
-                      top: "100%",
-                      transition: { duration: 1, ease: "linear" },
-                    }}
-                  />
-                </div>
-
-                <div className="relative h-full flex items-center justify-center px-6">
-                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-cyan-400 transition-colors duration-300">
-                    Operation - Session 2
+                <div className="relative h-full flex items-center justify-center gap-3 px-6">
+                  <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
+                    <Settings className="w-6 h-6 text-orange-400 group-hover:text-orange-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]" />
+                  </motion.div>
+                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-orange-400 transition-colors duration-300">
+                    운영자 전용 페이지
                   </span>
                 </div>
               </motion.div>

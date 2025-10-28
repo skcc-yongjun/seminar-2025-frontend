@@ -24,12 +24,6 @@ export default function OperationCommonPage() {
       description: "프롬프트 CRUD - 발표 / 프롬프트 타입 / 내용",
       href: "/operation/common/prompts",
     },
-    {
-      icon: MessageSquare,
-      title: "Q&A 관리",
-      description: "Q&A CRUD - 발표(세션2) / 질문 내용 / 선택 캐릭터 / 답변",
-      href: "/operation/common/qna",
-    },
   ]
 
   return (

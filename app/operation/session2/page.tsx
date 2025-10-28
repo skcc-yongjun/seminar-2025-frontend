@@ -307,6 +307,27 @@ export default function Session2OperationPage() {
               </div>
             </div>
           </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+            <div className="corporate-card rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-sk-red/10 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-sk-red" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Q&A 관리</h3>
+                    <p className="text-sm text-muted-foreground">Q&A 질문을 추가, 수정, 삭제하고 선택합니다</p>
+                  </div>
+                </div>
+                <Link href="/operation/session2/qna">
+                  <Button className="bg-sk-red hover:bg-sk-red/90">
+                    Q&A 관리
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
