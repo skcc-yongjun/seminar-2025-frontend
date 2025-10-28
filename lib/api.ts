@@ -817,3 +817,20 @@ export async function fetchHumanEvaluationAverageScores(
   
   return response.json()
 }
+
+// QnA Categories API Types (더 이상 사용하지 않음 - 고정된 카테고리 사용)
+
+/**
+ * QnA 카테고리 목록 조회 (키워드만 조회하여 제목 업데이트용)
+ * @returns QnA 키워드 목록 (제목 업데이트용)
+ */
+export async function fetchQnACategories(): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/qna-questions/session/세션2/keywords`)
+  
+  if (!response.ok) {
+    throw new Error(`QnA 키워드 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as QnAKeywordListResponse
+  return data.keywords
+}
