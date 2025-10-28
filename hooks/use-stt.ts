@@ -12,6 +12,18 @@ export interface STTResult {
 }
 
 /**
+ * 패널토의 인사이트 인터페이스
+ */
+export interface PanelInsight {
+  comment_id: number
+  insight_text: string
+  timestamp: string
+  timestamp_seconds: number
+  created_at: string
+  reason: string
+}
+
+/**
  * STT Hook 반환 타입
  */
 export interface UseSTTReturn {
@@ -19,10 +31,12 @@ export interface UseSTTReturn {
   isConnected: boolean
   transcript: string
   confidence: number
+  insights: PanelInsight[]
   error: string | null
   startRecording: () => Promise<void>
   stopRecording: () => void
   clearTranscript: () => void
+  clearInsights: () => void
 }
 
 /**
@@ -44,6 +58,7 @@ export function useSTT(
   const [isConnected, setIsConnected] = useState(false)
   const [transcript, setTranscript] = useState("")
   const [confidence, setConfidence] = useState(0)
+  const [insights, setInsights] = useState<PanelInsight[]>([])
   const [error, setError] = useState<string | null>(null)
 
   // Ref로 관리할 객체들
@@ -86,6 +101,18 @@ export function useSTT(
             // STT 결과 업데이트
             setTranscript(data.full_text || data.text)
             setConfidence(data.confidence || 0)
+          } else if (data.type === "panel_insight") {
+            // 패널토의 인사이트 처리
+            const insight: PanelInsight = {
+              comment_id: data.comment_id,
+              insight_text: data.insight_text,
+              timestamp: data.timestamp,
+              timestamp_seconds: data.timestamp_seconds,
+              created_at: data.created_at,
+              reason: data.reason || ""
+            }
+            setInsights((prev) => [...prev, insight])
+            console.log("💡 패널토의 인사이트:", insight.insight_text)
           } else if (data.type === "completed") {
             console.log("STT 완료:", data.message)
           } else if (data.type === "error") {
@@ -298,6 +325,13 @@ export function useSTT(
     setConfidence(0)
   }, [])
 
+  /**
+   * 인사이트 초기화
+   */
+  const clearInsights = useCallback(() => {
+    setInsights([])
+  }, [])
+
   // 컴포넌트 언마운트 시 정리
   useEffect(() => {
     return () => {
@@ -312,10 +346,12 @@ export function useSTT(
     isConnected,
     transcript,
     confidence,
+    insights,
     error,
     startRecording,
     stopRecording,
     clearTranscript,
+    clearInsights,
   }
 }
 

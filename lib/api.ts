@@ -1,3 +1,91 @@
+// 프롬프트 테스트(질문 생성만, DB 저장 없음)
+export interface PromptTestRequest {
+  presentation_id: string;
+  prompt_override?: string;
+  count?: number;
+}
+
+export interface PromptTestResponse {
+  presentation_id: string;
+  raw_result: string;
+  parsed_result?: any;
+  parse_error?: string;
+  metadata: {
+    image_count: number;
+    transcript_count: number;
+    prompt_type?: string;
+  };
+}
+
+export async function postPromptTest(data: PromptTestRequest): Promise<PromptTestResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/prompts/test`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    throw new Error(`프롬프트 테스트 실패: ${response.status}`);
+  }
+  return response.json();
+}
+
+// 프롬프트 테스트 스트리밍
+export async function* postPromptTestStream(data: PromptTestRequest): AsyncGenerator<string, void, unknown> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/prompts/test/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`프롬프트 테스트 스트리밍 실패: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Response body is not readable');
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+            if (parsed.done) {
+              return;
+            }
+            if (parsed.chunk) {
+              yield parsed.chunk;
+            }
+          } catch (e) {
+            console.error('Failed to parse SSE data:', e);
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
 // API configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
@@ -839,6 +927,78 @@ export async function fetchQnACategories(): Promise<{title: string, titleEn: str
     title: keyword,
     titleEn: data.keywords_en[index] || keyword
   }))
+}
+
+
+// ============================================================================
+// 패널토의 관련 API
+// ============================================================================
+
+/**
+ * 패널토의 인사이트 인터페이스
+ */
+export interface PanelInsight {
+  comment_id: number
+  presentation_id: string
+  timestamp_label: string
+  timestamp_seconds: number
+  comment_text: string
+  category: string
+  created_at: string
+}
+
+/**
+ * 패널토의 인사이트 목록 응답
+ */
+export interface PanelInsightList {
+  total: number
+  items: PanelInsight[]
+}
+
+/**
+ * 패널토의 발표 생성 요청
+ */
+export interface PanelPresentationCreate {
+  presentation_id?: string
+  session_type: "패널토의"
+  presenter_id: string
+  topic: string
+  presentation_order: number
+  status?: string
+}
+
+/**
+ * 패널토의 인사이트 조회
+ * 
+ * @param presentationId - 발표 ID
+ * @returns 인사이트 목록
+ */
+export async function getPanelInsights(presentationId: string): Promise<PanelInsightList> {
+  const url = `${API_BASE_URL}/seminar/api/ai-comments?presentation_id=${presentationId}&category=insight`
+  return fetchWithErrorHandling<PanelInsightList>(url)
+}
+
+/**
+ * 패널토의 발표 생성
+ * 
+ * @param data - 발표 생성 데이터
+ * @returns 생성된 발표 정보
+ */
+export async function createPanelPresentation(data: PanelPresentationCreate): Promise<PresentationResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/presentations`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`발표 생성 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
 }
 
 /**

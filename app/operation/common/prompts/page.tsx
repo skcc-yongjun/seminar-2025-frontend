@@ -19,7 +19,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState, useEffect } from "react"
+import { useToast } from "@/hooks/use-toast"
 import {
   fetchPrompts,
   fetchPresentations,
@@ -27,11 +29,12 @@ import {
   createPrompt,
   updatePrompt,
   deletePrompt,
+  postPromptTest,
   type PromptResponse,
   type PresentationResponse,
   type PresenterResponse,
+  type PromptTestResponse,
 } from "@/lib/api"
-import { useToast } from "@/hooks/use-toast"
 
 export default function PromptsPage() {
   // 상태 관리
@@ -52,11 +55,45 @@ export default function PromptsPage() {
   })
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
+  const [isTesting, setIsTesting] = useState(false)
+  const [testResult, setTestResult] = useState<PromptTestResponse | null>(null)
+  const [testError, setTestError] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<string>("raw")
+
+  // 프롬프트 테스트 (DB 저장 없음)
+  const handlePromptTest = async () => {
+    if (!formData.presentation_id) {
+      toast({
+        variant: "destructive",
+        title: "입력 오류",
+        description: "발표를 선택하세요.",
+      })
+      return
+    }
+    
+    setIsTesting(true)
+    setTestResult(null)
+    setTestError(null)
+    
+    try {
+      const result = await postPromptTest({
+        presentation_id: formData.presentation_id,
+        prompt_override: formData.content,
+        count: 6,
+      })
+      setTestResult(result)
+    } catch (err: any) {
+      setTestError(err?.message || "테스트 실패")
+    } finally {
+      setIsTesting(false)
+    }
+  }
 
   /**
    * 초기 데이터 로드
    * 프롬프트 목록, 발표 목록, 발표자 목록을 동시에 조회
    */
+
   useEffect(() => {
     loadData()
   }, [])
@@ -329,18 +366,28 @@ export default function PromptsPage() {
             background-color: hsl(var(--background)) !important;
           }
         `}</style>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setTestResult(null);
+            setTestError(null);
+            setActiveTab("raw");
+          }
+        }} modal={true}>
           <DialogContent 
-            className="bg-background dark:bg-background backdrop-blur-none border-2 border-border shadow-2xl"
+            className="bg-background dark:bg-background backdrop-blur-none border-2 border-border shadow-2xl max-w-[100vw] w-full min-w-0 max-h-[90vh]"
             showCloseButton={true}
           >
           <DialogHeader className="pb-4">
             <DialogTitle className="text-2xl">{editingPrompt ? "프롬프트 수정" : "프롬프트 추가"}</DialogTitle>
             <DialogDescription className="text-base">프롬프트 정보를 입력해주세요.</DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-[400px_1fr] gap-8 py-4">
-            {/* 좌측 컬럼 - 발표 및 타입 선택 */}
-            <div className="space-y-6">
+          <div
+            className="flex flex-row gap-6 py-4 min-h-[500px] max-h-[60vh] h-[60vh] w-full min-w-0 overflow-x-auto"
+            style={{flexWrap: 'nowrap'}}
+          >
+              {/* 좌측 컬럼 - 발표 및 타입 선택 */}
+              <div className="space-y-6 overflow-y-auto min-w-[220px] max-w-[350px] flex-shrink-0 flex-grow-0" style={{minWidth:220, maxWidth:350}}>
               <div className="space-y-3">
                 <Label htmlFor="presentation" className="text-base font-semibold">발표</Label>
                 <Select
@@ -402,7 +449,7 @@ export default function PromptsPage() {
             </div>
 
             {/* 우측 컬럼 - 내용 입력 */}
-            <div className="space-y-3 flex flex-col">
+            <div className="space-y-3 flex flex-col min-w-[350px] max-w-[600px] flex-shrink-0 flex-grow-0" style={{minWidth:350, maxWidth:600}}>
               <Label htmlFor="content" className="text-base font-semibold">프롬프트 내용</Label>
               <Textarea
                 id="content"
@@ -416,7 +463,8 @@ export default function PromptsPage() {
                 }}
                 placeholder="프롬프트 내용을 입력하세요&#10;&#10;예시:&#10;- AI 평가: 발표 내용의 기술적 정확성과 혁신성을 평가해주세요...&#10;- 질문 생성: 발표 내용을 바탕으로 심화 질문을 생성해주세요..."
                 disabled={isSaving}
-                className="h-[450px] resize-none overflow-y-auto font-mono text-sm leading-relaxed bg-background"
+                className="flex-1 min-h-0 resize-none overflow-y-auto font-mono text-sm leading-relaxed bg-background w-full max-w-full"
+                style={{height: '100%', maxHeight: 'calc(60vh - 100px)', minWidth:0, overflowX:'auto'}}
               />
               <div className="flex justify-between items-center">
                 <p className="text-sm text-muted-foreground">
@@ -426,32 +474,276 @@ export default function PromptsPage() {
                   Ctrl+Enter로 저장
                 </p>
               </div>
+              <div className="flex gap-2 w-full mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsDialogOpen(false)} 
+                  disabled={isSaving || isTesting}
+                  className="h-11 px-8"
+                >
+                  취소
+                </Button>
+                <Button 
+                  onClick={handleSave} 
+                  className="bg-sk-red hover:bg-sk-red/90 h-11 px-8" 
+                  disabled={isSaving || isTesting}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      저장 중...
+                    </>
+                  ) : (
+                    "저장"
+                  )}
+                </Button>
+                <Button
+                  onClick={handlePromptTest}
+                  className="bg-green-600 hover:bg-green-700 h-11 px-8"
+                  disabled={isTesting || isSaving || !formData.presentation_id}
+                  type="button"
+                >
+                  {isTesting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      테스트 중...
+                    </>
+                  ) : (
+                    "테스트 (DB 저장 안함)"
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* 우측 컬럼 - 테스트 결과 */}
+            <div className="flex flex-col min-w-[350px] max-w-[600px] max-h-full bg-muted/30 rounded-md border p-4 flex-shrink-0 flex-grow-0" style={{minWidth:350, maxWidth:600}}>
+              <div className="font-bold mb-3 text-green-700 flex items-center gap-2">
+                테스트 결과
+                {isTesting && <Loader2 className="w-4 h-4 animate-spin" />}
+              </div>
+              
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col min-h-0">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="raw">RAW</TabsTrigger>
+                  <TabsTrigger 
+                    value="parsed" 
+                    disabled={!testResult || isTesting}
+                    className="disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Parsed
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="raw" className="flex-1 min-h-0 overflow-auto mt-2">
+              {testError ? (
+                    <div className="text-red-500 font-semibold p-3 bg-red-50 dark:bg-red-950 rounded border border-red-200 dark:border-red-800">
+                      <strong>오류:</strong> {testError}
+                    </div>
+              ) : testResult ? (
+                <textarea
+                      className="w-full h-full min-h-[300px] font-mono text-xs bg-background border rounded p-2 resize-none"
+                      value={testResult.raw_result || ""}
+                  readOnly
+                />
+              ) : (
+                    <div className="text-muted-foreground text-sm p-3">테스트 버튼을 눌러 결과를 확인하세요.</div>
+                  )}
+                </TabsContent>
+                
+                <TabsContent value="parsed" className="flex-1 min-h-0 overflow-auto mt-2">
+                  {!testResult ? (
+                    <div className="text-muted-foreground text-sm p-3">테스트 결과가 없습니다.</div>
+                  ) : testResult.parse_error ? (
+                    <div className="text-red-500 text-sm p-2 bg-red-50 dark:bg-red-950 rounded border border-red-200 dark:border-red-800">
+                      <strong>파싱 오류:</strong> {testResult.parse_error}
+                    </div>
+                  ) : testResult.parsed_result ? (
+                      <div className="space-y-3">
+                        {/* 질문 생성인 경우 (세션2) */}
+                        {testResult.metadata.prompt_type === "질문 생성" && testResult.parsed_result.questions && (
+                          <div className="space-y-3">
+                            <div className="font-bold text-lg mb-2">질문 생성 결과</div>
+                            {testResult.parsed_result.questions.map((q: any, idx: number) => (
+                              <div key={idx} className="p-4 bg-background border rounded-lg space-y-2">
+                                <div className="font-bold text-base text-blue-600 dark:text-blue-400 mb-2">
+                                  질문 {idx + 1}
+                                </div>
+                                
+                                {/* 키워드 */}
+                                {q.keyword && (
+                                  <div className="flex gap-2 items-start">
+                                    <span className="font-semibold text-sm min-w-[80px]">키워드:</span>
+                                    <span className="text-sm">{q.keyword}</span>
+                                  </div>
+                                )}
+                                
+                                {/* 제목 */}
+                                {q.title && (
+                                  <div className="flex gap-2 items-start">
+                                    <span className="font-semibold text-sm min-w-[80px]">제목:</span>
+                                    <span className="text-sm font-medium">{q.title}</span>
+                                  </div>
+                                )}
+                                
+                                {/* 질문 */}
+                                <div className="flex gap-2 items-start">
+                                  <span className="font-semibold text-sm min-w-[80px]">질문:</span>
+                                  <span className="text-sm flex-1">{q.question}</span>
+                                </div>
+                                
+                                {/* 질문 자막 */}
+                                {q.question_korean_caption && (
+                                  <div className="flex gap-2 items-start">
+                                    <span className="font-semibold text-sm min-w-[80px]">질문 자막:</span>
+                                    <span className="text-sm text-muted-foreground flex-1">{q.question_korean_caption}</span>
+                                  </div>
+                                )}
+                                
+                                {/* 답변 */}
+                                {q.answer_text && (
+                                  <div className="flex gap-2 items-start">
+                                    <span className="font-semibold text-sm min-w-[80px]">답변:</span>
+                                    <span className="text-sm text-muted-foreground flex-1">{q.answer_text}</span>
+                                  </div>
+                                )}
+                                
+                                {/* 답변 자막 */}
+                                {q.answer_korean_caption && (
+                                  <div className="flex gap-2 items-start">
+                                    <span className="font-semibold text-sm min-w-[80px]">답변 자막:</span>
+                                    <span className="text-sm text-muted-foreground flex-1">{q.answer_korean_caption}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                          
+                        {/* AI 평가인 경우 (세션1) */}
+                        {testResult.metadata.prompt_type === "AI 평가" && (
+                          <div className="space-y-4">
+                            <div className="font-bold text-lg mb-2">AI 평가 결과</div>
+                            
+                            {/* 평가 점수 */}
+                            {testResult.parsed_result.scores && Array.isArray(testResult.parsed_result.scores) && (
+                              <div className="space-y-2">
+                                <div className="font-semibold text-base text-blue-600 dark:text-blue-400">평가 점수</div>
+                                <div className="grid gap-2">
+                                  {testResult.parsed_result.scores.map((scoreItem: any, idx: number) => (
+                                    <div key={idx} className="p-3 bg-background border rounded-lg">
+                                      <div className="flex justify-between items-center">
+                                        <div className="font-semibold text-sm">{scoreItem.category}</div>
+                                        <span className="font-bold text-lg text-blue-600 dark:text-blue-400 ml-2">
+                                          {scoreItem.score}점
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* 강점 */}
+                            {testResult.parsed_result.feedback.strengths && (
+                              <div className="space-y-2">
+                                <div className="font-semibold text-base text-green-600 dark:text-green-400">강점</div>
+                                {Array.isArray(testResult.parsed_result.feedback.strengths) ? (
+                                  <div className="space-y-2">
+                                    {testResult.parsed_result.feedback.strengths.map((strength: any, idx: number) => (
+                                      <div key={idx} className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
+                                        {typeof strength === 'object' ? (
+                                          <div className="space-y-1">
+                                            <div className="text-sm text-green-900 dark:text-green-100 font-medium">{strength.text}</div>
+                                            {strength.source && (
+                                              <div className="text-xs text-green-700 dark:text-green-300 mt-2 p-2 bg-green-100/50 dark:bg-green-950/50 rounded flex gap-2">
+                                                <strong>출처:</strong> 
+                                                <span>[{strength.sourceType}] {strength.source}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <div className="text-sm text-green-900 dark:text-green-100">{strength}</div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-sm p-3 bg-green-50 dark:bg-green-950 rounded">
+                                    {testResult.parsed_result.strengths}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* 약점 (개선점) */}
+                            {testResult.parsed_result.feedback?.weakness && (
+                              <div className="space-y-2">
+                                <div className="font-semibold text-base text-orange-600 dark:text-orange-400">약점 / 개선점</div>
+                                {Array.isArray(testResult.parsed_result.feedback.weakness) ? (
+                                  <div className="space-y-2">
+                                    {testResult.parsed_result.feedback.weakness.map((weakness: any, idx: number) => (
+                                      <div key={idx} className="p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded-lg">
+                                        {typeof weakness === 'object' ? (
+                                          <div className="space-y-1">
+                                            <div className="text-sm text-orange-900 dark:text-orange-100 font-medium">{weakness.text}</div>
+                                            {weakness.source && (
+                                              <div className="text-xs text-orange-700 dark:text-orange-300 mt-2 p-2 bg-orange-100/50 dark:bg-orange-950/50 rounded flex gap-2">
+                                                <strong>출처:</strong>
+                                                <span>[{weakness.sourceType}] {weakness.source}</span>
+                                              </div>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          <div className="text-sm text-orange-900 dark:text-orange-100">{weakness}</div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-sm p-3 bg-orange-50 dark:bg-orange-950 rounded">
+                                    {testResult.parsed_result.feedback.weakness}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                            {/* 총평 */}
+                            {testResult.parsed_result.feedback?.overall && (
+                              <div className="space-y-2">
+                                <div className="font-semibold text-base text-purple-600 dark:text-purple-400">총평</div>
+                                {Array.isArray(testResult.parsed_result.feedback.overall) ? (
+                                  <div className="space-y-2">
+                                    {testResult.parsed_result.feedback.overall.map((item: any, idx: number) => (
+                                      <div key={idx} className="p-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
+                                        <div className="text-sm text-purple-900 dark:text-purple-100 font-medium whitespace-pre-wrap">{item.text}</div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="p-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
+                                    <div className="text-sm text-purple-900 dark:text-purple-100 whitespace-pre-wrap">{testResult.parsed_result.feedback.overall}</div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            
+                          </div>
+                        )}
+                          
+                        {/* 기타 결과는 JSON으로 표시 */}
+                        {(!testResult.parsed_result.questions && !testResult.parsed_result.scores && !testResult.parsed_result.feedback) && (
+                          <pre className="text-xs bg-muted/50 p-2 rounded overflow-auto max-h-[400px]">
+                            {JSON.stringify(testResult.parsed_result, null, 2)}
+                          </pre>
+                        )}
+                      </div>
+                  ) : (
+                    <div className="text-muted-foreground text-sm p-3">파싱된 결과가 없습니다.</div>
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
-          <DialogFooter className="pt-4 border-t">
-            <Button 
-              variant="outline" 
-              onClick={() => setIsDialogOpen(false)} 
-              disabled={isSaving}
-              className="h-11 px-8"
-            >
-              취소
-            </Button>
-            <Button 
-              onClick={handleSave} 
-              className="bg-sk-red hover:bg-sk-red/90 h-11 px-8" 
-              disabled={isSaving}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  저장 중...
-                </>
-              ) : (
-                "저장"
-              )}
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
       </>

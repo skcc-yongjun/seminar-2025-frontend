@@ -271,9 +271,23 @@ export default function QnaPage() {
   /**
    * 선택 상태 토글
    * @param questionId 질문 ID
+   * @param qna Q&A 정보 (created_by, is_selected 확인용)
    */
-  const handleToggleSelect = async (questionId: number, event: React.MouseEvent) => {
+  const handleToggleSelect = async (questionId: number, qna: QnAQuestionResponse, event: React.MouseEvent) => {
     event.stopPropagation() // 이벤트 전파 방지
+    
+    // AI 생성 Q&A를 선택하려고 할 때만 확인 창 표시
+    if (!qna.is_selected && qna.created_by === 1) {
+      const confirmed = window.confirm(
+        "AI가 생성한 Q&A입니다. 이 질문을 선택하시겠습니까?\n\n" +
+        "선택하면 실제 세션에서 사용됩니다."
+      )
+      
+      if (!confirmed) {
+        return // 사용자가 취소하면 함수 종료
+      }
+    }
+    
     try {
       await toggleQnAQuestionSelect(questionId)
       // 목록 다시 로드
@@ -444,7 +458,16 @@ export default function QnaPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {qnas.map((qna, index) => (
+                  {/* 선택된 Q&A가 먼저 보이도록 정렬 */}
+                  {qnas
+                    .sort((a, b) => {
+                      // is_selected가 true인 것이 먼저 오도록 정렬
+                      if (a.is_selected && !b.is_selected) return -1
+                      if (!a.is_selected && b.is_selected) return 1
+                      // 선택 여부가 같으면 question_id 순서 유지
+                      return a.question_id - b.question_id
+                    })
+                    .map((qna, index) => (
                     <motion.div
                       key={qna.question_id}
                       initial={{ opacity: 0, y: 20 }}
@@ -480,7 +503,7 @@ export default function QnaPage() {
                           <div className="flex items-center gap-3">
                             {/* 선택 상태 토글 버튼 - 더 명확하게 */}
                             <Button
-                              onClick={(e) => handleToggleSelect(qna.question_id, e)}
+                              onClick={(e) => handleToggleSelect(qna.question_id, qna, e)}
                               variant="outline"
                               size="sm"
                               className={`min-w-[80px] transition-all ${
