@@ -34,18 +34,14 @@ export default function QnACategories() {
   const handleCategoryClick = async (keyword: string) => {
     try {
       setClickedCategory(keyword)
-      setLoading(true)
-      setError(null)
       
-      // 키워드로 랜덤 질문 조회
-      const question = await fetchRandomSelectedQuestionByKeyword(keyword)
-      
-      // 질문 ID를 사용하여 리다이렉트
-      router.push(`/qna/${encodeURIComponent(keyword)}/${question.question_id}`)
+      // 생성 중 화면을 보여주기 위해 약간의 딜레이 후 category 페이지로 이동
+      setTimeout(() => {
+        router.push(`/qna/${encodeURIComponent(keyword)}`)
+      }, 500)
     } catch (err) {
-      console.error('질문 조회 실패:', err)
-      setError(err instanceof Error ? err.message : '질문을 불러오는데 실패했습니다.')
-      setLoading(false)
+      console.error('카테고리 이동 실패:', err)
+      setError(err instanceof Error ? err.message : '카테고리로 이동하는데 실패했습니다.')
       setClickedCategory(null)
     }
   }
@@ -302,6 +298,128 @@ export default function QnACategories() {
       className="min-h-screen p-8 md:p-12 relative overflow-hidden"
       style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
     >
+      {/* Loading overlay when category is clicked */}
+      {clickedCategory && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: "rgba(10, 22, 40, 0.95)" }}
+        >
+          <div className="text-center">
+            {/* 회전하는 외부 링 */}
+            <div className="relative h-64 w-64 mx-auto mb-8">
+              <motion.div
+                className="absolute inset-0"
+                animate={{
+                  rotate: [0, 360],
+                }}
+                transition={{
+                  duration: 25,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "linear",
+                }}
+              >
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 rounded-full blur-3xl opacity-30" />
+              </motion.div>
+
+              {/* 펄스 링 */}
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute inset-0 rounded-full border-2 border-cyan-500/30"
+                  animate={{
+                    scale: [1, 1.5, 1.5],
+                    opacity: [0.6, 0, 0],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: i * 1,
+                    ease: "easeOut",
+                  }}
+                />
+              ))}
+
+              {/* Brain 아이콘 */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0],
+                  }}
+                  transition={{
+                    scale: {
+                      duration: 2,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "easeInOut",
+                    },
+                    rotate: {
+                      duration: 3,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "easeInOut",
+                    },
+                  }}
+                >
+                  <Brain 
+                    className="w-32 h-32 text-cyan-400" 
+                    strokeWidth={1.5}
+                    style={{
+                      filter: "drop-shadow(0 0 20px rgba(34, 211, 238, 0.8))",
+                    }}
+                  />
+                </motion.div>
+              </div>
+
+              {/* 주변 파티클 */}
+              {[...Array(8)].map((_, i) => {
+                const angle = (i * 45 * Math.PI) / 180
+                const radius = 100
+                return (
+                  <motion.div
+                    key={`particle-${i}`}
+                    className="absolute w-2 h-2 bg-cyan-400 rounded-full"
+                    style={{
+                      left: "50%",
+                      top: "50%",
+                      marginLeft: "-4px",
+                      marginTop: "-4px",
+                    }}
+                    animate={{
+                      x: [0, radius * Math.cos(angle), 0],
+                      y: [0, radius * Math.sin(angle), 0],
+                      opacity: [0, 1, 0],
+                      scale: [0, 1, 0],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Number.POSITIVE_INFINITY,
+                      delay: i * 0.25,
+                      ease: "easeOut",
+                    }}
+                  />
+                )
+              })}
+            </div>
+            
+            <motion.h4 
+              className="text-3xl font-bold text-white mb-4"
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+            >
+              AI가 질문을 생성하는 중입니다
+            </motion.h4>
+            <motion.p
+              className="text-cyan-400/70 text-lg"
+              animate={{ opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
+            >
+              잠시만 기다려주세요...
+            </motion.p>
+          </div>
+        </motion.div>
+      )}
+
       <div className="fixed inset-0 pointer-events-none opacity-20">
         <motion.div
           className="absolute inset-0"
