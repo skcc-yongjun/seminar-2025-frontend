@@ -4,12 +4,15 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, Brain, Target, TrendingUp, Cpu } from "lucide-react"
 import { useEffect, useState } from "react"
-import { fetchQnACategories } from "@/lib/api"
+import { useRouter } from "next/navigation"
+import { fetchQnACategories, fetchRandomSelectedQuestionByKeyword } from "@/lib/api"
 
 export default function QnACategories() {
   const [keywordPairs, setKeywordPairs] = useState<{title: string, titleEn: string}[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [clickedCategory, setClickedCategory] = useState<string | null>(null)
+  const router = useRouter()
 
   useEffect(() => {
     const loadKeywords = async () => {
@@ -27,6 +30,25 @@ export default function QnACategories() {
 
     loadKeywords()
   }, [])
+
+  const handleCategoryClick = async (keyword: string) => {
+    try {
+      setClickedCategory(keyword)
+      setLoading(true)
+      setError(null)
+      
+      // 키워드로 랜덤 질문 조회
+      const question = await fetchRandomSelectedQuestionByKeyword(keyword)
+      
+      // 질문 ID를 사용하여 리다이렉트
+      router.push(`/qna/${encodeURIComponent(keyword)}/${question.question_id}`)
+    } catch (err) {
+      console.error('질문 조회 실패:', err)
+      setError(err instanceof Error ? err.message : '질문을 불러오는데 실패했습니다.')
+      setLoading(false)
+      setClickedCategory(null)
+    }
+  }
 
 
 
@@ -76,8 +98,83 @@ export default function QnACategories() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-blue-300 text-lg">키워드를 불러오는 중...</p>
+          {/* AI 생성 중 애니메이션 (모든 로딩 상태에서 동일) */}
+          <div className="relative">
+            {/* 뇌 아이콘 애니메이션 */}
+            <motion.div
+              className="relative mx-auto mb-8"
+              animate={{
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }}
+            >
+              <Brain className="w-32 h-32 text-blue-500 mx-auto" strokeWidth={1.5} />
+              <motion.div
+                className="absolute inset-0"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.8, 0.3],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+              >
+                <Brain className="w-32 h-32 text-cyan-400" strokeWidth={1} />
+              </motion.div>
+            </motion.div>
+
+            {/* 점들 애니메이션 */}
+            <div className="flex justify-center space-x-2 mb-6">
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-3 h-3 bg-blue-400 rounded-full"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: i * 0.2,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+            </div>
+
+            <h2 className="text-4xl font-bold text-white mb-4">
+              AI가 열심히 질문을 생성 중입니다
+            </h2>
+            <p className="text-blue-300 text-xl mb-2">
+              {clickedCategory ? `${clickedCategory} 카테고리의 맞춤형 질문을 만들고 있어요` : '키워드를 불러오고 있어요'}
+            </p>
+            <p className="text-blue-400/70 text-base">
+              잠시만 기다려주세요...
+            </p>
+
+            {/* 진행 바 */}
+            <div className="w-64 h-2 bg-blue-900/30 rounded-full mx-auto mt-6 overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full"
+                animate={{
+                  x: ["-100%", "100%"],
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -87,12 +184,77 @@ export default function QnACategories() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}>
         <div className="text-center">
-          <p className="text-red-400 text-lg mb-4">{error}</p>
+          {/* AI 생성 중 애니메이션 (에러 상태에서도) */}
+          <div className="relative mb-8">
+            <motion.div
+              className="relative mx-auto mb-6"
+              animate={{
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Number.POSITIVE_INFINITY,
+                ease: "easeInOut",
+              }}
+            >
+              <Brain className="w-24 h-24 text-blue-500 mx-auto" strokeWidth={1.5} />
+              <motion.div
+                className="absolute inset-0"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.8, 0.3],
+                }}
+                transition={{
+                  duration: 1.5,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "easeInOut",
+                }}
+              >
+                <Brain className="w-24 h-24 text-cyan-400" strokeWidth={1} />
+              </motion.div>
+            </motion.div>
+
+            {/* 점들 애니메이션 */}
+            <div className="flex justify-center space-x-2 mb-4">
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-2 h-2 bg-blue-400 rounded-full"
+                  animate={{
+                    scale: [1, 1.5, 1],
+                    opacity: [0.5, 1, 0.5],
+                  }}
+                  transition={{
+                    duration: 1,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: i * 0.2,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <h2 className="text-4xl font-bold text-white mb-4">
+            AI가 열심히 질문을 생성 중입니다
+          </h2>
+          <p className="text-blue-300 text-xl mb-2">
+            {clickedCategory} 카테고리의 맞춤형 질문을 만들고 있어요
+          </p>
+          <p className="text-blue-400/70 text-base mb-6">
+            잠시만 기다려주세요...
+          </p>
+
           <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            onClick={() => {
+              setError(null)
+              setLoading(false)
+              setClickedCategory(null)
+            }} 
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            다시 시도
+            돌아가기
           </button>
         </div>
       </div>
@@ -303,21 +465,20 @@ export default function QnACategories() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + index * 0.15, type: "spring" }}
               >
-                <Link href={`/qna/${category.id}`}>
-                  <motion.path
-                    d={createFanPath(category.angle, 140, 320, 80)}
-                    fill={`url(#gradient-${index})`}
-                    stroke={category.glowColor}
-                    strokeWidth="2"
-                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-40 hover:stroke-[3]"
-                    whileHover={{
-                      scale: 1.05,
-                    }}
-                    style={{
-                      filter: `drop-shadow(0 0 8px ${category.glowColor})`,
-                    }}
-                  />
-                </Link>
+                <motion.path
+                  d={createFanPath(category.angle, 140, 320, 80)}
+                  fill={`url(#gradient-${index})`}
+                  stroke={category.glowColor}
+                  strokeWidth="2"
+                  className="cursor-pointer transition-all duration-300 hover:fill-opacity-40 hover:stroke-[3]"
+                  whileHover={{
+                    scale: 1.05,
+                  }}
+                  onClick={() => handleCategoryClick(category.title)}
+                  style={{
+                    filter: `drop-shadow(0 0 8px ${category.glowColor})`,
+                  }}
+                />
               </motion.g>
             ))}
 
@@ -550,7 +711,10 @@ export default function QnACategories() {
                   transition={{ delay: 0.6 + index * 0.1 }}
                 >
                   <foreignObject x={x - 100} y={y - 80} width="200" height="160">
-                    <Link href={`/qna/${category.id}`} className="block group">
+                    <div 
+                      className="block group cursor-pointer"
+                      onClick={() => handleCategoryClick(category.title)}
+                    >
                       <div className="flex flex-col items-center justify-center text-center gap-3">
                         <div
                           className="w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-sm border-2 transition-all duration-300 group-hover:scale-110"
@@ -569,7 +733,7 @@ export default function QnACategories() {
                           <p className="text-blue-300/70 text-lg">{category.titleEn}</p>
                         </div>
                       </div>
-                    </Link>
+                    </div>
                   </foreignObject>
                 </motion.g>
               )

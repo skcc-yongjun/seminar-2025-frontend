@@ -840,3 +840,21 @@ export async function fetchQnACategories(): Promise<{title: string, titleEn: str
     titleEn: data.keywords_en[index] || keyword
   }))
 }
+
+/**
+ * 키워드별 선택된 질문 랜덤 조회 및 선택 해제
+ * @param keyword 검색할 키워드
+ * @returns 랜덤으로 선택된 질문 정보
+ */
+export async function fetchRandomSelectedQuestionByKeyword(keyword: string): Promise<QnAQuestionResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/qna-questions/keyword/${encodeURIComponent(keyword)}/selected`)
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(`AI가 카테고리 '${keyword}'에 해당하는 질문을 생성중입니다.`)
+    }
+    throw new Error(`질문 조회 실패: ${response.status}`)
+  }
+  
+  return response.json()
+}
