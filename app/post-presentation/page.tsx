@@ -3,10 +3,11 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
-import { Home, Sparkles, Brain } from "lucide-react"
+import { Home, Sparkles } from "lucide-react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Brain3D } from "@/components/brain-3d"
 import { 
   fetchEvaluatorCount, 
   fetchPresentation, 
@@ -378,20 +379,112 @@ export default function PostPresentationPage() {
   }, [isImplicationAnalysisComplete, selectedPresentationId])
 
   return (
-    <div className="min-h-screen p-4 md:p-6 relative overflow-x-hidden">
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sk-red/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sk-red/3 rounded-full blur-3xl" />
+    <div
+      className="min-h-screen p-4 md:p-6 relative overflow-x-hidden"
+      style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
+    >
+      {/* Animated grid pattern */}
+      <div className="fixed inset-0 pointer-events-none opacity-20">
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }}
+          animate={{
+            backgroundPosition: ["0px 0px", "50px 50px"],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "linear",
+          }}
+        />
       </div>
 
-      <div className="max-w-[1800px] mx-auto space-y-6 relative z-10">
+      {/* Scanning line effect */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.1) 50%, transparent 100%)",
+          height: "200px",
+        }}
+        animate={{
+          y: ["-200px", "100vh"],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "linear",
+        }}
+      />
+
+      {/* Floating particles */}
+      {[...Array(15)].map((_, i) => (
+        <motion.div
+          key={`particle-${i}`}
+          className="fixed w-1 h-1 bg-cyan-400 rounded-full pointer-events-none"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -100, 0],
+            opacity: [0, 1, 0],
+            scale: [0, 1.5, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: Math.random() * 5,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+
+      {/* Hexagonal pattern overlay */}
+      <div className="fixed inset-0 pointer-events-none opacity-5">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse">
+              <polygon
+                points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"
+                fill="none"
+                stroke="rgba(59, 130, 246, 0.5)"
+                strokeWidth="0.5"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hexagons)" />
+        </svg>
+      </div>
+
+      {/* Blue glowing orbs */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px]" />
+      </div>
+
+      <div className="max-w-[1920px] mx-auto space-y-6 relative z-10">
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center justify-between mb-6"
         >
           <Link href="/">
-            <Button variant="ghost" size="sm" className="gap-2 hover:bg-sk-red/10">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+              style={{
+                color: "rgba(34, 211, 238, 0.9)",
+                borderColor: "rgba(59, 130, 246, 0.3)",
+                borderWidth: "1px",
+              }}
+            >
               <Home className="w-4 h-4" />
               홈으로
             </Button>
@@ -400,29 +493,29 @@ export default function PostPresentationPage() {
           <div className="flex-1 flex justify-center">
             <div className="text-center">
               {isLoadingPresentations ? (
-                <h1 className="text-xl md:text-2xl font-semibold text-balance text-foreground">
+                <h1 className="text-xl md:text-2xl font-semibold text-balance text-white">
                   로딩 중...
                 </h1>
               ) : (
                 <>
                   <Select value={selectedPresentationId} onValueChange={setSelectedPresentationId}>
-                    <SelectTrigger className="w-auto border-0 bg-transparent hover:bg-muted/50 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-2 gap-2 mb-1">
+                    <SelectTrigger className="w-auto border-0 bg-transparent hover:bg-cyan-500/10 focus:ring-0 focus:ring-offset-0 h-auto py-0 px-2 gap-2 mb-1 transition-colors">
                       <SelectValue>
-                        <h1 className="text-xl md:text-2xl font-semibold text-balance text-foreground">
+                        <h1 className="text-xl md:text-2xl font-semibold text-balance text-white">
                           {selectedPresentation?.topic || "발표를 선택하세요"}
                         </h1>
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="bg-card/95 backdrop-blur-md border-border">
+                    <SelectContent className="bg-slate-900/95 backdrop-blur-xl border-cyan-500/30">
                       {presentations.map((presentation) => (
                         <SelectItem
                           key={presentation.presentation_id}
                           value={presentation.presentation_id}
-                          className="text-foreground focus:bg-muted focus:text-foreground cursor-pointer"
+                          className="text-white focus:bg-cyan-500/20 focus:text-cyan-300 cursor-pointer"
                         >
                           <div className="flex flex-col items-start gap-1 py-1">
                             <span className="font-semibold">{presentation.topic}</span>
-                            <span className="text-sm text-muted-foreground">
+                            <span className="text-sm text-cyan-400/70">
                               {presentation.presenter?.name || "발표자"} · {presentation.presenter?.company || "회사"}
                             </span>
                           </div>
@@ -430,8 +523,8 @@ export default function PostPresentationPage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-                    <Sparkles className="w-3 h-3 text-sk-red" />
+                  <p className="text-xs text-cyan-400/70 flex items-center justify-center gap-2">
+                    <Sparkles className="w-3 h-3 text-cyan-400" />
                     AI 기반 종합 분석 시스템
                   </p>
                 </>
@@ -446,11 +539,17 @@ export default function PostPresentationPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="corporate-card p-8 rounded-lg border-2 border-sk-red/30 shadow-lg relative"
+          className="p-8 rounded-lg border-2 shadow-lg relative"
+          style={{
+            background: "rgba(10, 20, 40, 0.95)",
+            backdropFilter: "blur(24px)",
+            borderColor: "rgba(59, 130, 246, 0.3)",
+            boxShadow: "0 0 30px rgba(59, 130, 246, 0.2), 0 8px 32px rgba(0, 0, 0, 0.6)",
+          }}
         >
           {loadingStage === "revealed" && (
             <div className="mb-8">
-              <h3 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">AI 종합 분석</h3>
+              <h3 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">AI 종합 분석</h3>
             </div>
           )}
 
@@ -476,22 +575,8 @@ export default function PostPresentationPage() {
                       exit={{ opacity: 0 }}
                       className="space-y-4"
                     >
-                      <div className="relative">
-                        <Brain className="w-16 h-16 text-sk-red mx-auto animate-pulse" />
-                        <motion.div
-                          animate={{
-                            rotate: [0, 360],
-                          }}
-                          transition={{
-                            duration: 3,
-                            repeat: Number.POSITIVE_INFINITY,
-                            ease: "linear",
-                          }}
-                          className="absolute -inset-3 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                        >
-                          <Sparkles className="w-6 h-6 text-sk-red/60 absolute top-0 right-0" />
-                          <Sparkles className="w-5 h-5 text-sk-red/40 absolute bottom-0 left-0" />
-                        </motion.div>
+                      <div className="relative h-48 w-48 mx-auto">
+                        <Brain3D className="w-full h-full" />
                       </div>
                       <div className="space-y-2">
                         <h4 className="text-2xl font-bold text-white">AI가 발표내용을 분석하는 중입니다</h4>
@@ -517,8 +602,9 @@ export default function PostPresentationPage() {
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                        className="h-48 w-48 mx-auto"
                       >
-                        <Brain className="w-16 h-16 text-sk-red mx-auto" />
+                        <Brain3D className="w-full h-full" />
                       </motion.div>
                       <motion.h4
                         initial={{ opacity: 0, y: 10 }}
@@ -538,7 +624,9 @@ export default function PostPresentationPage() {
                       className="space-y-6"
                     >
                       <div className="space-y-2">
-                        <Brain className="w-16 h-16 text-sk-red mx-auto" />
+                        <div className="h-48 w-48 mx-auto">
+                          <Brain3D className="w-full h-full" />
+                        </div>
                         <h4 className="text-2xl font-bold text-white">AI 분석 완료</h4>
                         <p className="text-sm text-white/70">발표에 대한 종합 분석이 준비되었습니다</p>
                       </div>
@@ -550,7 +638,12 @@ export default function PostPresentationPage() {
                         <Button
                           onClick={handleRevealResults}
                           size="lg"
-                          className="bg-sk-red hover:bg-sk-red/90 text-white px-8 py-6 text-lg font-semibold rounded-lg shadow-xl hover:shadow-2xl transition-all gap-3"
+                          className="px-8 py-6 text-lg font-semibold rounded-lg shadow-xl hover:shadow-2xl transition-all gap-3"
+                          style={{
+                            background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                            color: "white",
+                            boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+                          }}
                         >
                           <Sparkles className="w-5 h-5" />
                           결과 확인하기
@@ -565,45 +658,51 @@ export default function PostPresentationPage() {
 
           <div className="relative min-h-[600px]">
             {loadingStage === "revealed" && (
-              <div className="space-y-10">
+              <div className="space-y-8 max-w-5xl mx-auto">
                 {isAnalyzingImplication && analyzingLine && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex items-center gap-3 text-lg font-semibold text-sk-red"
+                    className="flex items-center justify-center gap-3 text-lg font-semibold text-cyan-400"
                   >
-                    <Brain className="w-5 h-5 animate-pulse" />
+                    <div className="h-10 w-10 animate-pulse">
+                      <Brain3D className="w-full h-full" />
+                    </div>
                     <span className="animate-pulse">{analyzingLine}</span>
                   </motion.div>
                 )}
 
                 {/* Strengths Section */}
-                <div className="flex gap-10">
-                  <div className="w-1/6 flex-shrink-0 flex items-center justify-center min-h-[140px]">
-                    <h4 className="text-3xl font-bold text-foreground">잘한 점</h4>
-                  </div>
-                  <div className="w-5/6">
-                    <div className="border-2 border-border/60 rounded-xl p-7 min-h-[140px] bg-muted/10">
+                <div className="w-full">
+                  <div
+                    className="rounded-xl p-8 min-h-[200px]"
+                    style={{
+                      border: "2px solid rgba(59, 130, 246, 0.5)",
+                      background: "rgba(10, 20, 40, 0.95)",
+                      boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
+                    }}
+                  >
+                    <h4 className="text-3xl font-bold text-center mb-8" style={{ color: "#ec4899" }}>
+                      강점
+                    </h4>
                       {isLoadingAnalysis ? (
                         <p className="text-muted-foreground">로딩 중...</p>
                       ) : strengths.length === 0 ? (
                         <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
                       ) : (
-                        <ul className="space-y-5">
+                        <ul className="space-y-6">
                         {strengths.map((strength, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleStrengthItems.includes(idx) && (
                               <motion.li
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="text-lg font-medium text-foreground leading-relaxed flex items-start gap-4"
+                                className="text-lg font-medium text-white leading-relaxed"
                               >
-                                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center text-sm font-bold mt-1">
-                                  {idx + 1}
-                                </span>
-                                <span className="flex-1 flex items-center gap-2 flex-wrap">
-                                  <span>
+                                <div className="flex items-start gap-3">
+                                  <span className="text-white">•</span>
+                                  <span className="flex-1">
                                     <TypewriterText
                                       text={strength.text}
                                       delay={50}
@@ -611,64 +710,67 @@ export default function PostPresentationPage() {
                                         setCompletedStrengthItems((prev) => [...prev, idx])
                                       }}
                                     />
+                                    {completedStrengthItems.includes(idx) && (
+                                      <motion.span
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="inline-flex items-center gap-2 ml-2"
+                                      >
+                                        {strength.voiceAnalysis && (
+                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                            음성분석 {strength.voiceAnalysis}
+                                          </span>
+                                        )}
+                                        {strength.presentationMaterial && (
+                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                            발표자료 {strength.presentationMaterial}
+                                          </span>
+                                        )}
+                                      </motion.span>
+                                    )}
                                   </span>
-                                  {completedStrengthItems.includes(idx) && (
-                                    <motion.span
-                                      initial={{ opacity: 0, scale: 0.8 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      transition={{ duration: 0.3 }}
-                                      className="flex items-center gap-2"
-                                    >
-                                      {strength.voiceAnalysis && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold bg-foreground/90 text-background border border-foreground/30">
-                                          음성분석 {strength.voiceAnalysis}
-                                        </span>
-                                      )}
-                                      {strength.presentationMaterial && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold bg-slate-200 text-slate-800 border border-slate-300">
-                                          발표자료 {strength.presentationMaterial}
-                                        </span>
-                                      )}
-                                    </motion.span>
-                                  )}
-                                </span>
+                                </div>
                               </motion.li>
                             )}
                           </AnimatePresence>
                         ))}
                       </ul>
                       )}
-                    </div>
                   </div>
                 </div>
 
                 {/* Weaknesses Section */}
-                <div className="flex gap-10">
-                  <div className="w-1/6 flex-shrink-0 flex items-center justify-center min-h-[140px]">
-                    <h4 className="text-3xl font-bold text-foreground">아쉬운 점</h4>
-                  </div>
-                  <div className="w-5/6">
-                    <div className="border-2 border-sk-red/40 rounded-xl p-7 min-h-[140px] bg-muted/10">
+                <div className="w-full">
+                  <div
+                    className="rounded-xl p-8 min-h-[200px]"
+                    style={{
+                      border: "2px solid rgba(59, 130, 246, 0.5)",
+                      background: "rgba(10, 20, 40, 0.95)",
+                      boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
+                    }}
+                  >
+                    <h4 className="text-3xl font-bold text-center mb-8" style={{ color: "#ec4899" }}>
+                      약점
+                    </h4>
                       {isLoadingAnalysis ? (
                         <p className="text-muted-foreground">로딩 중...</p>
                       ) : improvements.length === 0 ? (
                         <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
                       ) : (
-                        <ul className="space-y-5">
+                        <ul className="space-y-6">
                         {improvements.map((improvement, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleWeaknessItems.includes(idx) && (
                               <motion.li
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="text-lg font-medium text-foreground leading-relaxed flex items-start gap-4"
+                                className="text-lg font-medium text-white leading-relaxed"
                               >
-                                <span className="flex-shrink-0 w-7 h-7 rounded-full bg-foreground text-background flex items-center justify-center text-sm font-bold mt-1">
-                                  {idx + 1}
-                                </span>
-                                <span className="flex-1 flex items-center gap-2 flex-wrap">
-                                  <span>
+                                <div className="flex items-start gap-3">
+                                  <span className="text-white">•</span>
+                                  <span className="flex-1">
                                     <TypewriterText
                                       text={improvement.text}
                                       delay={50}
@@ -676,44 +778,49 @@ export default function PostPresentationPage() {
                                         setCompletedWeaknessItems((prev) => [...prev, idx])
                                       }}
                                     />
+                                    {completedWeaknessItems.includes(idx) && (
+                                      <motion.span
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="inline-flex items-center gap-2 ml-2"
+                                      >
+                                        {improvement.voiceAnalysis && (
+                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                            음성분석 {improvement.voiceAnalysis}
+                                          </span>
+                                        )}
+                                        {improvement.presentationMaterial && (
+                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                            발표자료 {improvement.presentationMaterial}
+                                          </span>
+                                        )}
+                                      </motion.span>
+                                    )}
                                   </span>
-                                  {completedWeaknessItems.includes(idx) && (
-                                    <motion.span
-                                      initial={{ opacity: 0, scale: 0.8 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      transition={{ duration: 0.3 }}
-                                      className="flex items-center gap-2"
-                                    >
-                                      {improvement.voiceAnalysis && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold bg-foreground/90 text-background border border-foreground/30">
-                                          음성분석 {improvement.voiceAnalysis}
-                                        </span>
-                                      )}
-                                      {improvement.presentationMaterial && (
-                                        <span className="inline-flex items-center px-3 py-1 rounded-md text-sm font-semibold bg-slate-200 text-slate-800 border border-slate-300">
-                                          발표자료 {improvement.presentationMaterial}
-                                        </span>
-                                      )}
-                                    </motion.span>
-                                  )}
-                                </span>
+                                </div>
                               </motion.li>
                             )}
                           </AnimatePresence>
                         ))}
                       </ul>
                       )}
-                    </div>
                   </div>
                 </div>
 
                 {/* Summary Section */}
-                <div className="flex gap-10">
-                  <div className="w-1/6 flex-shrink-0 flex items-center justify-center min-h-[120px]">
-                    <h4 className="text-3xl font-bold text-foreground">종합 의견</h4>
-                  </div>
-                  <div className="w-5/6">
-                    <div className="border-2 border-sk-red/40 rounded-xl p-7 min-h-[120px] bg-sk-red/10">
+                <div className="w-full">
+                  <div
+                    className="rounded-xl p-8 min-h-[150px]"
+                    style={{
+                      border: "2px solid rgba(59, 130, 246, 0.5)",
+                      background: "rgba(10, 20, 40, 0.95)",
+                      boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
+                    }}
+                  >
+                    <h4 className="text-3xl font-bold text-center mb-8" style={{ color: "#ec4899" }}>
+                      총평
+                    </h4>
                       {isLoadingAnalysis ? (
                         <p className="text-muted-foreground">로딩 중...</p>
                       ) : !summary ? (
@@ -725,7 +832,7 @@ export default function PostPresentationPage() {
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}
                               transition={{ duration: 0.3 }}
-                              className="text-lg font-medium text-foreground leading-relaxed"
+                              className="text-lg font-medium text-white leading-relaxed text-center"
                             >
                               <TypewriterText
                                 text={summary}
@@ -736,7 +843,6 @@ export default function PostPresentationPage() {
                           )}
                         </AnimatePresence>
                       )}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -754,9 +860,11 @@ export default function PostPresentationPage() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-3 text-lg font-semibold text-muted-foreground"
+                  className="flex items-center gap-3 text-lg font-semibold text-cyan-400"
                 >
-                  <Brain className="w-5 h-5 animate-pulse text-sk-red" />
+                  <div className="h-10 w-10 animate-pulse">
+                    <Brain3D className="w-full h-full" />
+                  </div>
                   <span className="animate-pulse">
                     평가집계중... ({evaluatorCount}/{totalEvaluatorCount})
                   </span>
@@ -766,11 +874,21 @@ export default function PostPresentationPage() {
               <Button
                 onClick={() => router.push(`/post-presentation/evaluations?presentationId=${selectedPresentationId}`)}
                 disabled={!isEvaluationComplete}
-                className={`px-6 py-3 text-base font-semibold rounded-lg shadow-lg transition-all gap-2 ${
+                size="lg"
+                className="px-6 py-3 text-base font-semibold rounded-lg shadow-lg transition-all gap-2"
+                style={
                   isEvaluationComplete
-                    ? "bg-sk-red hover:bg-sk-red/90 text-white hover:shadow-xl"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
+                    ? {
+                        background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                        color: "white",
+                        boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+                      }
+                    : {
+                        background: "rgba(100, 116, 139, 0.5)",
+                        color: "rgba(148, 163, 184, 0.7)",
+                        cursor: "not-allowed",
+                      }
+                }
               >
                 <Sparkles className="w-4 h-4" />
                 결과 확인하기
@@ -783,10 +901,15 @@ export default function PostPresentationPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="flex items-center justify-between pt-3 border-t border-border/30"
+          className="flex items-center justify-between pt-3"
+          style={{ borderTop: "1px solid rgba(59, 130, 246, 0.2)" }}
         >
-          <p className="text-xs text-muted-foreground">© 2025 SK Group. All rights reserved.</p>
-          <p className="text-xs text-muted-foreground">AI 기반 발표 평가 시스템</p>
+          <p className="text-xs" style={{ color: "rgba(34, 211, 238, 0.6)" }}>
+            © 2025 SK Group. All rights reserved.
+          </p>
+          <p className="text-xs" style={{ color: "rgba(34, 211, 238, 0.6)" }}>
+            AI 기반 발표 평가 시스템
+          </p>
         </motion.div>
       </div>
     </div>
