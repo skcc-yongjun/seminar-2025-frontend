@@ -2,9 +2,10 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowLeft, Sparkles, Lightbulb, Calculator, Users, Loader2 } from "lucide-react"
+import { ArrowLeft, Sparkles, Lightbulb, Calculator, Users, Loader2, Clock, CheckCircle, Play, Pause, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import { useState, useEffect } from "react"
 import { 
   fetchPresentations, 
@@ -12,9 +13,12 @@ import {
   generateAIEvaluation,
   calculatePresentationSummary,
   fetchEvaluatorCount,
+  fetchPresentation,
+  fetchAIEvaluationScores,
   type PresentationResponse,
   type PresenterResponse,
-  type EvaluatorCountResponse
+  type EvaluatorCountResponse,
+  type AIEvaluationScoreResponse
 } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
@@ -27,6 +31,11 @@ export default function Session1OperationPage() {
   const [isGeneratingScore, setIsGeneratingScore] = useState(false)
   const [isGeneratingImplication, setIsGeneratingImplication] = useState(false)
   const [isGeneratingTotal, setIsGeneratingTotal] = useState(false)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isRefreshingStatus, setIsRefreshingStatus] = useState(false)
+  const [currentPresentation, setCurrentPresentation] = useState<PresentationResponse | null>(null)
+  const [aiScores, setAiScores] = useState<AIEvaluationScoreResponse[]>([])
+  const [isLoadingAiScores, setIsLoadingAiScores] = useState(false)
   const { toast } = useToast()
 
   // 발표 목록 로드
@@ -34,12 +43,12 @@ export default function Session1OperationPage() {
     loadPresentations()
   }, [])
 
-  // 선택된 발표의 평가 인원 수 조회 (5초마다 갱신)
+  // 선택된 발표의 평가 인원 수 조회, 발표 상태 조회, AI 점수 조회
   useEffect(() => {
     if (selectedPresentation) {
       loadEvaluatorCount()
-      const interval = setInterval(loadEvaluatorCount, 5000)
-      return () => clearInterval(interval)
+      loadCurrentPresentation()
+      loadAIScores()
     }
   }, [selectedPresentation])
 
@@ -80,6 +89,72 @@ export default function Session1OperationPage() {
     }
   }
 
+  const loadCurrentPresentation = async () => {
+    if (!selectedPresentation) return
+    
+    try {
+      const presentation = await fetchPresentation(selectedPresentation)
+      setCurrentPresentation(presentation)
+    } catch (error) {
+      console.error("발표 상태 조회 실패:", error)
+    }
+  }
+
+  const handleRefreshStatusOnly = async () => {
+    if (!selectedPresentation) return
+    try {
+      setIsRefreshingStatus(true)
+      await loadCurrentPresentation()
+    } catch (error) {
+      console.error("발표 상태 새로고침 실패:", error)
+    } finally {
+      setIsRefreshingStatus(false)
+    }
+  }
+
+  const loadAIScores = async () => {
+    if (!selectedPresentation) return
+    
+    try {
+      setIsLoadingAiScores(true)
+      const scores = await fetchAIEvaluationScores(selectedPresentation)
+      setAiScores(scores)
+    } catch (error) {
+      console.error("AI 점수 조회 실패:", error)
+      setAiScores([])
+    } finally {
+      setIsLoadingAiScores(false)
+    }
+  }
+
+  const handleRefreshEvaluatorCount = async () => {
+    if (!selectedPresentation) return
+    
+    try {
+      setIsRefreshing(true)
+      await Promise.all([
+        loadEvaluatorCount(),
+        loadCurrentPresentation(),
+        loadAIScores()
+      ])
+    } catch (error) {
+      console.error("새로고침 실패:", error)
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  const handleRefreshAIScores = async () => {
+    if (!selectedPresentation) return
+    
+    try {
+      setIsLoadingAiScores(true)
+      await loadAIScores()
+    } catch (error) {
+      console.error("AI 점수 새로고침 실패:", error)
+    }
+  }
+
   const handleGenerateScore = async () => {
     if (!window.confirm("AI 점수를 생성하시겠습니까?\n처리 시간이 10~30초 정도 소요될 수 있습니다.")) {
       return
@@ -88,6 +163,9 @@ export default function Session1OperationPage() {
     try {
       setIsGeneratingScore(true)
       const result = await generateAIEvaluation(selectedPresentation)
+      
+      // AI 점수 생성 후 점수 목록 새로고침
+      await loadAIScores()
       
       toast({
         title: "성공",
@@ -163,6 +241,67 @@ export default function Session1OperationPage() {
     return `${presentation.topic} - ${presenter?.name || '알 수 없음'}`
   }
 
+  const getStatusInfo = (status: string) => {
+    switch (status.toLowerCase()) {
+      case '대기중':
+      case 'waiting':
+        return {
+          icon: Clock,
+          color: 'text-yellow-500',
+          bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
+          borderColor: 'border-yellow-200 dark:border-yellow-800',
+          label: '대기중'
+        }
+      case '진행중':
+      case 'in_progress':
+      case 'in-progress':
+        return {
+          icon: Play,
+          color: 'text-blue-500',
+          bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+          borderColor: 'border-blue-200 dark:border-blue-800',
+          label: '진행중'
+        }
+      case '완료':
+      case 'completed':
+      case 'finished':
+        return {
+          icon: CheckCircle,
+          color: 'text-green-500',
+          bgColor: 'bg-green-50 dark:bg-green-900/20',
+          borderColor: 'border-green-200 dark:border-green-800',
+          label: '완료'
+        }
+      case '일시정지':
+      case 'paused':
+        return {
+          icon: Pause,
+          color: 'text-orange-500',
+          bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+          borderColor: 'border-orange-200 dark:border-orange-800',
+          label: '일시정지'
+        }
+      case '오류':
+      case 'error':
+      case 'failed':
+        return {
+          icon: AlertCircle,
+          color: 'text-red-500',
+          bgColor: 'bg-red-50 dark:bg-red-900/20',
+          borderColor: 'border-red-200 dark:border-red-800',
+          label: '오류'
+        }
+      default:
+        return {
+          icon: Clock,
+          color: 'text-gray-500',
+          bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+          borderColor: 'border-gray-200 dark:border-gray-800',
+          label: status || '알 수 없음'
+        }
+    }
+  }
+
   return (
     <div className="min-h-screen p-4 md:p-6 relative overflow-hidden">
       <div className="fixed inset-0 pointer-events-none">
@@ -197,12 +336,16 @@ export default function Session1OperationPage() {
               </div>
             ) : (
               <Select value={selectedPresentation} onValueChange={setSelectedPresentation}>
-                <SelectTrigger className="w-full bg-background border-input">
+                <SelectTrigger className="w-full bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100">
                   <SelectValue placeholder="발표를 선택하세요" />
                 </SelectTrigger>
-                <SelectContent className="bg-background border-border shadow-lg">
+                <SelectContent className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 shadow-xl backdrop-blur-none">
                   {presentations.map((presentation) => (
-                    <SelectItem key={presentation.presentation_id} value={presentation.presentation_id} className="bg-background hover:bg-accent">
+                    <SelectItem 
+                      key={presentation.presentation_id} 
+                      value={presentation.presentation_id} 
+                      className="bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer"
+                    >
                       {getPresentationName(presentation.presentation_id)}
                     </SelectItem>
                   ))}
@@ -212,11 +355,64 @@ export default function Session1OperationPage() {
           </div>
         </motion.div>
 
+        {/* Presentation Status */}
+        {currentPresentation && (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <div className="corporate-card rounded-xl p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className={`w-12 h-12 ${getStatusInfo(currentPresentation.status).bgColor} rounded-lg flex items-center justify-center border ${getStatusInfo(currentPresentation.status).borderColor}`}>
+                    {(() => {
+                      const StatusIcon = getStatusInfo(currentPresentation.status).icon
+                      return <StatusIcon className={`w-6 h-6 ${getStatusInfo(currentPresentation.status).color}`} />
+                    })()}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">발표 상태</h3>
+                    <p className="text-sm text-muted-foreground">현재 선택된 발표의 진행 상태</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <RefreshButton
+                    onRefresh={handleRefreshStatusOnly}
+                    isRefreshing={isRefreshingStatus}
+                    autoRefreshInterval={8000}
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div />
+                <div className="text-right">
+                  <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${getStatusInfo(currentPresentation.status).bgColor} border ${getStatusInfo(currentPresentation.status).borderColor}`}>
+                    {(() => {
+                      const StatusIcon = getStatusInfo(currentPresentation.status).icon
+                      return <StatusIcon className={`w-4 h-4 ${getStatusInfo(currentPresentation.status).color}`} />
+                    })()}
+                    <span className={`font-medium ${getStatusInfo(currentPresentation.status).color}`}>
+                      {getStatusInfo(currentPresentation.status).label}
+                    </span>
+                  </div>
+                  {currentPresentation.start_time && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      시작: {new Date(currentPresentation.start_time).toLocaleString('ko-KR')}
+                    </p>
+                  )}
+                  {currentPresentation.end_time && (
+                    <p className="text-xs text-muted-foreground">
+                      종료: {new Date(currentPresentation.end_time).toLocaleString('ko-KR')}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Operation Buttons */}
         <div className="space-y-4">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <div className="corporate-card rounded-xl p-6">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
                     <Sparkles className="w-6 h-6 text-blue-400" />
@@ -226,51 +422,72 @@ export default function Session1OperationPage() {
                     <p className="text-sm text-muted-foreground">문제 발생 시 AI 점수를 재생성합니다</p>
                   </div>
                 </div>
-                <Button
-                  onClick={handleGenerateScore}
-                  disabled={!selectedPresentation || isGeneratingScore}
-                  className="bg-blue-500 hover:bg-blue-600"
-                >
-                  {isGeneratingScore ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      생성 중...
-                    </>
-                  ) : (
-                    "생성"
-                  )}
-                </Button>
+                <div className="flex items-center gap-3">
+                  <RefreshButton
+                    onRefresh={handleRefreshAIScores}
+                    isRefreshing={isLoadingAiScores}
+                    autoRefreshInterval={10000}
+                  />
+                  <Button
+                    onClick={handleGenerateScore}
+                    disabled={!selectedPresentation || isGeneratingScore}
+                    className="bg-blue-500 hover:bg-blue-600"
+                  >
+                    {isGeneratingScore ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        생성 중...
+                      </>
+                    ) : (
+                      "생성"
+                    )}
+                  </Button>
+                </div>
               </div>
-            </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <div className="corporate-card rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                    <Lightbulb className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-1">Implication 생성</h3>
-                    <p className="text-sm text-muted-foreground">문제 발생 시 또는 중간 시점에 생성 가능</p>
+              
+              {/* AI 점수 표시 */}
+              {isLoadingAiScores ? (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                  <span className="ml-2 text-sm text-muted-foreground">AI 점수 로딩 중...</span>
+                </div>
+              ) : aiScores.length > 0 ? (
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-foreground mb-2">현재 AI 점수</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {aiScores.map((score, index) => (
+                      <div
+                        key={`${score.score_id}-${index}`}
+                        className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
+                      >
+                        <div className="text-xs text-blue-600 dark:text-blue-400 font-medium mb-1">
+                          {score.category}
+                        </div>
+                        <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
+                          {typeof score.score === 'string' ? parseFloat(score.score).toFixed(1) : score.score.toFixed(1)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {new Date(score.evaluated_at).toLocaleString('ko-KR', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <Button
-                  onClick={handleGenerateImplication}
-                  disabled={!selectedPresentation || isGeneratingImplication}
-                  className="bg-purple-500 hover:bg-purple-600"
-                >
-                  {isGeneratingImplication ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      생성 중...
-                    </>
-                  ) : (
-                    "생성"
-                  )}
-                </Button>
-              </div>
+              ) : (
+                <div className="text-center py-4">
+                  <div className="text-sm text-muted-foreground">
+                    AI 점수가 생성되지 않았습니다.
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    "생성" 버튼을 눌러 AI 점수를 생성해보세요.
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -314,17 +531,24 @@ export default function Session1OperationPage() {
                   <h3 className="text-lg font-semibold text-foreground mb-1">휴먼 평가 완료 인원</h3>
                   <p className="text-sm text-muted-foreground">평가 완료 인원을 확인합니다</p>
                 </div>
-                <div className="text-right">
-                  {evaluatorCount ? (
-                    <>
-                      <p className="text-2xl font-bold text-sk-red">
-                        {evaluatorCount.evaluator_count} / {evaluatorCount.total_evaluator_count}
-                      </p>
-                      <p className="text-xs text-muted-foreground">완료 / 총원</p>
-                    </>
-                  ) : (
-                    <Loader2 className="w-6 h-6 animate-spin text-sk-red" />
-                  )}
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    {evaluatorCount ? (
+                      <>
+                        <p className="text-2xl font-bold text-sk-red">
+                          {evaluatorCount.evaluator_count} / {evaluatorCount.total_evaluator_count}
+                        </p>
+                        <p className="text-xs text-muted-foreground">완료 / 총원</p>
+                      </>
+                    ) : (
+                      <Loader2 className="w-6 h-6 animate-spin text-sk-red" />
+                    )}
+                  </div>
+                  <RefreshButton
+                    onRefresh={handleRefreshEvaluatorCount}
+                    isRefreshing={isRefreshing}
+                    autoRefreshInterval={5000}
+                  />
                 </div>
               </div>
             </div>
