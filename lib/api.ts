@@ -112,6 +112,7 @@ export interface QuestionResponse {
 export interface QnAKeywordListResponse {
   total: number
   keywords: string[]
+  keywords_en: string[]
 }
 
 // API functions
@@ -821,10 +822,10 @@ export async function fetchHumanEvaluationAverageScores(
 // QnA Categories API Types (더 이상 사용하지 않음 - 고정된 카테고리 사용)
 
 /**
- * QnA 카테고리 목록 조회 (키워드만 조회하여 제목 업데이트용)
- * @returns QnA 키워드 목록 (제목 업데이트용)
+ * QnA 카테고리 목록 조회 (한글-영어 키워드 쌍)
+ * @returns QnA 키워드 쌍 목록 (제목 업데이트용)
  */
-export async function fetchQnACategories(): Promise<string[]> {
+export async function fetchQnACategories(): Promise<{title: string, titleEn: string}[]> {
   const response = await fetch(`${API_BASE_URL}/seminar/api/qna-questions/session/세션2/keywords`)
   
   if (!response.ok) {
@@ -832,5 +833,10 @@ export async function fetchQnACategories(): Promise<string[]> {
   }
   
   const data = await response.json() as QnAKeywordListResponse
-  return data.keywords
+  
+  // 한글과 영어 키워드를 쌍으로 묶어서 반환
+  return data.keywords.map((keyword, index) => ({
+    title: keyword,
+    titleEn: data.keywords_en[index] || keyword
+  }))
 }

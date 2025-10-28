@@ -7,7 +7,7 @@ import { useEffect, useState } from "react"
 import { fetchQnACategories } from "@/lib/api"
 
 export default function QnACategories() {
-  const [keywords, setKeywords] = useState<string[]>([])
+  const [keywordPairs, setKeywordPairs] = useState<{title: string, titleEn: string}[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -16,7 +16,7 @@ export default function QnACategories() {
       try {
         setLoading(true)
         const data = await fetchQnACategories()
-        setKeywords(data)
+        setKeywordPairs(data)
       } catch (err) {
         console.error('키워드 로딩 실패:', err)
         setError('키워드를 불러오는데 실패했습니다.')
@@ -30,12 +30,9 @@ export default function QnACategories() {
 
 
 
-  // 고정된 카테고리 설정 (API 응답과 관계없이 일관된 UI 유지)
-  const fixedCategories = [
+  // UI 스타일만 하드코딩 (색상, 아이콘, 위치 등)
+  const uiStyles = [
     {
-      id: "group",
-      title: "AI 전략 방향",
-      subtitle: "AI 전략 방향",
       icon: Target,
       color: "#4a5f8f",
       glowColor: "#6b8cce",
@@ -43,19 +40,13 @@ export default function QnACategories() {
       angle: 0,
     },
     {
-      id: "market", 
-      title: "AI 경쟁 전략",
-      subtitle: "AI 경쟁 전략",
       icon: TrendingUp,
-      color: "#4a5f8f",
+      color: "#4a5f8f", 
       glowColor: "#6b8cce",
       position: "left",
       angle: 240,
     },
     {
-      id: "business",
-      title: "AI Biz. 전환",
-      subtitle: "AI Biz. 전환",
       icon: Cpu,
       color: "#5a4f8f",
       glowColor: "#8b7cce",
@@ -64,16 +55,22 @@ export default function QnACategories() {
     },
   ]
 
-  // API에서 받은 키워드를 기반으로 제목만 업데이트 (색상과 모양은 고정)
-  const transformedCategories = keywords.length > 0 ? fixedCategories.map((fixedCategory, index) => {
-    const keyword = keywords[index]
+  // API에서 받은 키워드 쌍과 UI 스타일을 결합하여 카테고리 생성
+  const transformedCategories = keywordPairs.length > 0 ? keywordPairs.map((keywordPair, index) => {
+    const style = uiStyles[index % uiStyles.length] // 스타일 순환 사용
     
     return {
-      ...fixedCategory, // 고정된 스타일 유지
-      title: keyword || fixedCategory.title, // API에서 키워드를 제목으로 사용
-      subtitle: keyword || fixedCategory.subtitle,
+      id: keywordPair.title, // 한글 키워드를 ID로 사용
+      title: keywordPair.title, // 한글 키워드를 제목으로 사용
+      titleEn: keywordPair.titleEn, // 영어 키워드를 영어 제목으로 사용
+      ...style, // UI 스타일 적용
     }
-  }) : fixedCategories
+  }) : uiStyles.map((style, index) => ({
+    id: `default-${index}`,
+    title: `기본 카테고리 ${index + 1}`,
+    titleEn: `Default Category ${index + 1}`,
+    ...style,
+  }))
 
   if (loading) {
     return (
@@ -312,12 +309,9 @@ export default function QnACategories() {
                     fill={`url(#gradient-${index})`}
                     stroke={category.glowColor}
                     strokeWidth="2"
-                    className="cursor-pointer transition-all duration-300"
+                    className="cursor-pointer transition-all duration-300 hover:fill-opacity-40 hover:stroke-[3]"
                     whileHover={{
-                      fill: category.glowColor,
-                      fillOpacity: 0.4,
-                      strokeWidth: 3,
-                      filter: `drop-shadow(0 0 15px ${category.glowColor})`,
+                      scale: 1.05,
                     }}
                     style={{
                       filter: `drop-shadow(0 0 8px ${category.glowColor})`,
@@ -572,7 +566,7 @@ export default function QnACategories() {
                           <h2 className="text-lg font-bold text-white mb-0.5 group-hover:scale-105 transition-transform">
                             {category.title}
                           </h2>
-                          <p className="text-blue-300/70 text-xs">{category.subtitle}</p>
+                          <p className="text-blue-300/70 text-xs">{category.titleEn}</p>
                         </div>
                       </div>
                     </Link>
