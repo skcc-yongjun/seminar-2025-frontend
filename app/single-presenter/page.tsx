@@ -177,10 +177,93 @@ function SinglePresenterViewContent() {
   }
 
   return (
-    <div className="min-h-screen p-4 md:p-6 relative overflow-x-hidden flex flex-col bg-[#1a1a1a]">
+    <div 
+      className="min-h-screen p-4 md:p-6 relative overflow-x-hidden flex flex-col"
+      style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
+    >
+      {/* Animated grid pattern */}
+      <div className="fixed inset-0 pointer-events-none opacity-20">
+        <motion.div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+            `,
+            backgroundSize: "50px 50px",
+          }}
+          animate={{
+            backgroundPosition: ["0px 0px", "50px 50px"],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Number.POSITIVE_INFINITY,
+            ease: "linear",
+          }}
+        />
+      </div>
+
+      {/* Scanning line effect */}
+      <motion.div
+        className="fixed inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.1) 50%, transparent 100%)",
+          height: "200px",
+        }}
+        animate={{
+          y: ["-200px", "100vh"],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: "linear",
+        }}
+      />
+
+      {/* Floating particles */}
+      {[...Array(15)].map((_, i) => (
+        <motion.div
+          key={`particle-${i}`}
+          className="fixed w-1 h-1 bg-cyan-400 rounded-full pointer-events-none"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -100, 0],
+            opacity: [0, 1, 0],
+            scale: [0, 1.5, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: Math.random() * 5,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+
+      {/* Hexagonal pattern overlay */}
+      <div className="fixed inset-0 pointer-events-none opacity-5">
+        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <pattern id="hexagons" width="50" height="43.4" patternUnits="userSpaceOnUse">
+              <polygon
+                points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"
+                fill="none"
+                stroke="rgba(59, 130, 246, 0.5)"
+                strokeWidth="0.5"
+              />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#hexagons)" />
+        </svg>
+      </div>
+
+      {/* Blue glowing orbs */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#E61E2A]/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#E61E2A]/3 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px]" />
       </div>
 
       <div className="max-w-[1400px] mx-auto w-full space-y-6 relative z-10 flex-1 flex flex-col">
@@ -214,16 +297,117 @@ function SinglePresenterViewContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-[#1a1a1a] flex flex-col items-center justify-center"
+              className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+              style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
             >
+              {/* Animated grid pattern */}
+              <div className="absolute inset-0 pointer-events-none opacity-20">
+                <motion.div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px)
+                    `,
+                    backgroundSize: "50px 50px",
+                  }}
+                  animate={{
+                    backgroundPosition: ["0px 0px", "50px 50px"],
+                  }}
+                  transition={{
+                    duration: 20,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }}
+                />
+              </div>
+
+              {/* Scanning line effect */}
+              <motion.div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: "linear-gradient(180deg, transparent 0%, rgba(34, 211, 238, 0.1) 50%, transparent 100%)",
+                  height: "200px",
+                }}
+                animate={{
+                  y: ["-200px", "100vh"],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Number.POSITIVE_INFINITY,
+                  ease: "linear",
+                }}
+              />
+
+              {/* Floating particles */}
+              {[...Array(15)].map((_, i) => (
+                <motion.div
+                  key={`monitoring-particle-${i}`}
+                  className="absolute w-1 h-1 bg-cyan-400 rounded-full pointer-events-none"
+                  style={{
+                    left: `${Math.random() * 100}%`,
+                    top: `${Math.random() * 100}%`,
+                  }}
+                  animate={{
+                    y: [0, -100, 0],
+                    opacity: [0, 1, 0],
+                    scale: [0, 1.5, 0],
+                  }}
+                  transition={{
+                    duration: 3 + Math.random() * 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    delay: Math.random() * 5,
+                    ease: "easeInOut",
+                  }}
+                />
+              ))}
+
+              {/* Hexagonal pattern overlay */}
+              <div className="absolute inset-0 pointer-events-none opacity-5">
+                <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <pattern id="hexagons-monitoring" width="50" height="43.4" patternUnits="userSpaceOnUse">
+                      <polygon
+                        points="24.8,22 37.3,29.2 37.3,43.7 24.8,50.9 12.3,43.7 12.3,29.2"
+                        fill="none"
+                        stroke="rgba(59, 130, 246, 0.5)"
+                        strokeWidth="0.5"
+                      />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#hexagons-monitoring)" />
+                </svg>
+              </div>
+
+              {/* Blue glowing orbs */}
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[100px]" />
+                <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px]" />
+              </div>
+
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="absolute top-8 left-0 right-0 flex justify-center px-4"
+                className="absolute top-8 left-0 right-0 flex justify-center px-4 z-10"
               >
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 hover:bg-black/60 hover:border-white/20 transition-all duration-200">
+                    <button 
+                      className="backdrop-blur-md px-6 py-3 rounded-full border transition-all duration-200"
+                      style={{
+                        background: "rgba(10, 20, 40, 0.95)",
+                        borderColor: "rgba(59, 130, 246, 0.4)",
+                        boxShadow: "0 0 20px rgba(59, 130, 246, 0.2)",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(34, 211, 238, 0.6)"
+                        e.currentTarget.style.boxShadow = "0 0 30px rgba(34, 211, 238, 0.3)"
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = "rgba(59, 130, 246, 0.4)"
+                        e.currentTarget.style.boxShadow = "0 0 20px rgba(59, 130, 246, 0.2)"
+                      }}
+                    >
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           {isPresentationStarted ? (
@@ -275,9 +459,21 @@ function SinglePresenterViewContent() {
                       </div>
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-96 bg-black/90 backdrop-blur-md border-white/10 max-h-[500px] overflow-y-auto">
-                    <DropdownMenuLabel className="text-white font-bold text-base">세션 선택</DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuContent 
+                    className="w-96 backdrop-blur-md border max-h-[500px] overflow-y-auto"
+                    style={{
+                      background: "rgba(10, 20, 40, 0.98)",
+                      borderColor: "rgba(59, 130, 246, 0.3)",
+                      boxShadow: "0 0 40px rgba(59, 130, 246, 0.3)",
+                    }}
+                  >
+                    <DropdownMenuLabel 
+                      className="font-bold text-base"
+                      style={{ color: "rgba(34, 211, 238, 0.9)" }}
+                    >
+                      세션 선택
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator style={{ background: "rgba(59, 130, 246, 0.3)" }} />
                     
                     {/* 세션 선택 버튼 */}
                     <div className="flex gap-2 p-2">
@@ -288,11 +484,12 @@ function SinglePresenterViewContent() {
                           }
                         }}
                         disabled={isPresentationStarted}
-                        className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                        className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all border ${
                           selectedSessionType === "세션1"
-                            ? "bg-[#E61E2A] text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            ? "bg-[#E61E2A]/20 text-[#E61E2A] border-[#E61E2A]/50"
+                            : "bg-slate-800/50 text-gray-300 border-slate-700/50 hover:bg-slate-700/50 hover:border-cyan-500/30"
                         } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                        style={selectedSessionType === "세션1" ? { boxShadow: "0 0 20px rgba(230, 30, 42, 0.3)" } : {}}
                       >
                         세션1
                       </button>
@@ -303,23 +500,29 @@ function SinglePresenterViewContent() {
                           }
                         }}
                         disabled={isPresentationStarted}
-                        className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
+                        className={`flex-1 px-4 py-2 rounded-lg font-semibold text-sm transition-all border ${
                           selectedSessionType === "세션2"
-                            ? "bg-cyan-500 text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/50"
+                            : "bg-slate-800/50 text-gray-300 border-slate-700/50 hover:bg-slate-700/50 hover:border-cyan-500/30"
                         } ${isPresentationStarted ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                        style={selectedSessionType === "세션2" ? { boxShadow: "0 0 20px rgba(34, 211, 238, 0.3)" } : {}}
                       >
                         세션2
                       </button>
                     </div>
                     
-                    <DropdownMenuSeparator className="bg-white/10" />
-                    <DropdownMenuLabel className="text-white font-bold text-base">발표자 선택</DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-white/10" />
+                    <DropdownMenuSeparator style={{ background: "rgba(59, 130, 246, 0.3)" }} />
+                    <DropdownMenuLabel 
+                      className="font-bold text-base"
+                      style={{ color: "rgba(34, 211, 238, 0.9)" }}
+                    >
+                      발표자 선택
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator style={{ background: "rgba(59, 130, 246, 0.3)" }} />
                     
                     {isLoadingPresenters ? (
                       <div className="flex items-center justify-center py-8 gap-2">
-                        <Loader2 className="w-5 h-5 text-[#E61E2A] animate-spin" />
+                        <Loader2 className="w-5 h-5 text-cyan-400 animate-spin" />
                         <span className="text-gray-400 text-sm">발표자 목록 로딩 중...</span>
                       </div>
                     ) : presentersError ? (
@@ -328,7 +531,12 @@ function SinglePresenterViewContent() {
                         <Button
                           size="sm"
                           onClick={() => window.location.reload()}
-                          className="bg-[#E61E2A] hover:bg-[#c01820] text-white"
+                          className="text-white border"
+                          style={{
+                            background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                            borderColor: "rgba(59, 130, 246, 0.5)",
+                            boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)",
+                          }}
                         >
                           다시 시도
                         </Button>
@@ -358,14 +566,17 @@ function SinglePresenterViewContent() {
                               canSelect ? "cursor-pointer" : "cursor-not-allowed opacity-50"
                             } ${
                               selectedPresenterId === presentation.presentation_id
-                                ? "bg-[#E61E2A]/20 text-white border-l-2 border-[#E61E2A]"
-                                : "text-gray-300 hover:bg-white/10 hover:text-white"
+                                ? "bg-cyan-500/20 text-white border-l-2 border-cyan-400"
+                                : "text-gray-300 hover:bg-cyan-500/10 hover:text-white"
                             }`}
+                            style={selectedPresenterId === presentation.presentation_id ? {
+                              boxShadow: "0 0 15px rgba(34, 211, 238, 0.2)"
+                            } : {}}
                           >
                             <div className="flex items-center justify-between w-full">
                               <div className="flex items-center gap-2">
                                 {selectedPresenterId === presentation.presentation_id && (
-                                  <CheckCircle2 className="w-4 h-4 text-[#E61E2A]" />
+                                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
                                 )}
                                 <span className="font-semibold text-sm">{presentation.presenter?.name || "발표자 미정"}</span>
                                 <span className="text-xs text-gray-400">({presentation.presenter?.company || "소속 미정"})</span>
@@ -396,8 +607,8 @@ function SinglePresenterViewContent() {
                       })
                     )}
                     
-                    <DropdownMenuSeparator className="bg-white/10 my-2" />
-                    <DropdownMenuLabel className="text-white text-xs text-gray-400">
+                    <DropdownMenuSeparator style={{ background: "rgba(59, 130, 246, 0.3)", marginTop: "0.5rem", marginBottom: "0.5rem" }} />
+                    <DropdownMenuLabel className="text-xs" style={{ color: "rgba(34, 211, 238, 0.7)" }}>
                       {isPresentationStarted 
                         ? "⚠️ 발표 진행 중에는 발표자를 변경할 수 없습니다" 
                         : "💡 '대기' 또는 '진행중' 상태의 발표만 선택 가능합니다"}
@@ -410,7 +621,8 @@ function SinglePresenterViewContent() {
                 {isPresentationStarted && (
                   <>
                     <motion.div
-                      className="absolute w-[400px] h-[400px] rounded-full border-2 border-[#E61E2A]/30"
+                      className="absolute w-[400px] h-[400px] rounded-full border-2"
+                      style={{ borderColor: "rgba(34, 211, 238, 0.3)" }}
                       animate={{
                         scale: [1, 1.2, 1],
                         opacity: [0.5, 0.2, 0.5],
@@ -422,7 +634,8 @@ function SinglePresenterViewContent() {
                       }}
                     />
                     <motion.div
-                      className="absolute w-[350px] h-[350px] rounded-full border-2 border-[#E61E2A]/40"
+                      className="absolute w-[350px] h-[350px] rounded-full border-2"
+                      style={{ borderColor: "rgba(59, 130, 246, 0.4)" }}
                       animate={{
                         scale: [1, 1.15, 1],
                         opacity: [0.6, 0.3, 0.6],
@@ -435,7 +648,8 @@ function SinglePresenterViewContent() {
                       }}
                     />
                     <motion.div
-                      className="absolute w-[300px] h-[300px] rounded-full bg-[#E61E2A]/10"
+                      className="absolute w-[300px] h-[300px] rounded-full"
+                      style={{ background: "rgba(34, 211, 238, 0.15)" }}
                       animate={{
                         scale: [1, 1.1, 1],
                         opacity: [0.7, 0.4, 0.7],
@@ -454,13 +668,37 @@ function SinglePresenterViewContent() {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", duration: 0.8 }}
-                  className={`relative z-10 w-[200px] h-[200px] rounded-full flex items-center justify-center shadow-2xl ${
-                    isPresentationStarted 
-                      ? "bg-gradient-to-br from-[#E61E2A] to-[#c01820]" 
-                      : "bg-gray-600"
-                  }`}
+                  className="relative z-10 w-[200px] h-[200px] rounded-full flex items-center justify-center"
+                  style={isPresentationStarted ? {
+                    background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                    boxShadow: "0 0 60px rgba(59, 130, 246, 0.6), 0 0 100px rgba(34, 211, 238, 0.4)",
+                  } : {
+                    background: "linear-gradient(135deg, #1e3a5f, #0f2744)",
+                    border: "2px solid rgba(59, 130, 246, 0.4)",
+                    boxShadow: "0 0 40px rgba(59, 130, 246, 0.3), inset 0 0 30px rgba(34, 211, 238, 0.1)",
+                  }}
                 >
-                  <Mic className="w-24 h-24 text-white" strokeWidth={2} />
+                  <Mic 
+                    className={`w-24 h-24 ${isPresentationStarted ? 'text-white' : 'text-cyan-300'}`} 
+                    strokeWidth={2} 
+                  />
+                  {!isPresentationStarted && (
+                    <motion.div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        border: "2px solid rgba(34, 211, 238, 0.3)",
+                      }}
+                      animate={{
+                        scale: [1, 1.1, 1],
+                        opacity: [0.5, 0.2, 0.5],
+                      }}
+                      transition={{
+                        duration: 2,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  )}
                 </motion.div>
               </div>
 
@@ -476,9 +714,16 @@ function SinglePresenterViewContent() {
                     {Array.from({ length: 60 }).map((_, i) => (
                       <motion.div
                         key={i}
-                        className={`w-1.5 rounded-full ${
-                          isPresentationStarted ? "bg-[#E61E2A]" : "bg-gray-500"
-                        }`}
+                        className="w-1.5 rounded-full"
+                        style={isPresentationStarted ? {
+                          background: i % 2 === 0 
+                            ? "linear-gradient(to top, #3b82f6, #22d3ee)" 
+                            : "linear-gradient(to top, #2563eb, #06b6d4)",
+                          boxShadow: "0 0 10px rgba(34, 211, 238, 0.5)",
+                        } : {
+                          background: "linear-gradient(to top, #334155, #475569)",
+                          boxShadow: "0 0 5px rgba(59, 130, 246, 0.2)",
+                        }}
                         animate={isPresentationStarted ? {
                           height: [Math.random() * 20 + 10, Math.random() * 50 + 20, Math.random() * 30 + 10],
                         } : {
@@ -496,7 +741,14 @@ function SinglePresenterViewContent() {
                 </div>
 
                 {/* 실시간 STT 결과 표시 */}
-                <Card className="w-full max-w-4xl bg-black/60 backdrop-blur-md border border-white/10 p-6">
+                <Card 
+                  className="w-full max-w-4xl backdrop-blur-md border p-6"
+                  style={{
+                    background: "rgba(10, 20, 40, 0.95)",
+                    borderColor: "rgba(59, 130, 246, 0.3)",
+                    boxShadow: "0 0 30px rgba(59, 130, 246, 0.2)",
+                  }}
+                >
                   <div className="space-y-3">
                     {/* 상태 표시 */}
                     <div className="flex items-center justify-between">
@@ -511,8 +763,8 @@ function SinglePresenterViewContent() {
                             </>
                           ) : isRecording ? (
                             <>
-                              <Volume2 className="w-5 h-5 text-[#E61E2A] animate-pulse" />
-                              <Badge variant="outline" className="border-[#E61E2A]/50 text-[#E61E2A]">
+                              <Volume2 className="w-5 h-5 text-cyan-400 animate-pulse" />
+                              <Badge variant="outline" className="border-cyan-500/50 text-cyan-400">
                                 녹음 중
                               </Badge>
                             </>
@@ -526,7 +778,7 @@ function SinglePresenterViewContent() {
                           )}
                         </div>
                         {isConnected && (
-                          <Badge variant="outline" className="border-green-500/50 text-green-400">
+                          <Badge variant="outline" className="border-cyan-500/50 text-cyan-400">
                             STT 연결됨
                           </Badge>
                         )}
@@ -540,13 +792,26 @@ function SinglePresenterViewContent() {
 
                     {/* 에러 메시지 */}
                     {sttError && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+                      <div 
+                        className="p-3 rounded-lg border"
+                        style={{
+                          background: "rgba(239, 68, 68, 0.1)",
+                          borderColor: "rgba(239, 68, 68, 0.3)",
+                          boxShadow: "0 0 15px rgba(239, 68, 68, 0.2)",
+                        }}
+                      >
                         <p className="text-red-400 text-sm">{sttError}</p>
                       </div>
                     )}
 
                     {/* 트랜스크립트 표시 */}
-                    <div className="min-h-[120px] max-h-[200px] overflow-y-auto p-4 bg-black/40 rounded-lg border border-white/5">
+                    <div 
+                      className="min-h-[120px] max-h-[200px] overflow-y-auto p-4 rounded-lg border"
+                      style={{
+                        background: "rgba(10, 20, 40, 0.6)",
+                        borderColor: "rgba(59, 130, 246, 0.2)",
+                      }}
+                    >
                       {!isPresentationStarted ? (
                         <p className="text-gray-500 text-sm italic">발표를 시작하면 음성 인식 결과가 여기에 표시됩니다...</p>
                       ) : transcript ? (
@@ -569,11 +834,16 @@ function SinglePresenterViewContent() {
                   <Button
                     onClick={handleStartPresentation}
                     disabled={!["대기", "진행중"].includes(presenterInfo?.status || "")}
-                    className={`px-6 py-3 text-lg font-semibold rounded-lg shadow-lg gap-2 ${
+                    className={`px-6 py-3 text-lg font-semibold rounded-lg gap-2 border transition-all ${
                       ["대기", "진행중"].includes(presenterInfo?.status || "")
-                        ? "bg-[#E61E2A] hover:bg-[#c01820] text-white"
-                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                        ? "text-white"
+                        : "bg-slate-800/50 text-gray-400 cursor-not-allowed border-slate-700/50"
                     }`}
+                    style={["대기", "진행중"].includes(presenterInfo?.status || "") ? {
+                      background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                      borderColor: "rgba(59, 130, 246, 0.5)",
+                      boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+                    } : {}}
                   >
                     <Mic className="w-5 h-5" />
                     {["대기", "진행중"].includes(presenterInfo?.status || "") 
@@ -585,7 +855,20 @@ function SinglePresenterViewContent() {
                   <Button
                     onClick={handleEndPresentation}
                     variant="outline"
-                    className="border-red-500/50 hover:bg-red-500/10 text-red-400 bg-black/40 backdrop-blur-md gap-2"
+                    className="backdrop-blur-md gap-2 border text-red-400 transition-all"
+                    style={{
+                      background: "rgba(10, 20, 40, 0.95)",
+                      borderColor: "rgba(239, 68, 68, 0.5)",
+                      boxShadow: "0 0 20px rgba(239, 68, 68, 0.3)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)"
+                      e.currentTarget.style.boxShadow = "0 0 30px rgba(239, 68, 68, 0.4)"
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "rgba(10, 20, 40, 0.95)"
+                      e.currentTarget.style.boxShadow = "0 0 20px rgba(239, 68, 68, 0.3)"
+                    }}
                   >
                     <MicOff className="w-4 h-4" />
                     발표 종료
@@ -609,7 +892,7 @@ function SinglePresenterViewContent() {
                   animate={{ scale: 1 }}
                   transition={{ type: "spring", duration: 0.6 }}
                 >
-                  <CheckCircle2 className="w-32 h-32 text-[#E61E2A] mx-auto" />
+                  <CheckCircle2 className="w-32 h-32 text-cyan-400 mx-auto" />
                 </motion.div>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
@@ -617,19 +900,23 @@ function SinglePresenterViewContent() {
                   transition={{ delay: 0.3 }}
                   className="space-y-4"
                 >
-                  <h2 className="text-4xl font-bold text-white">발표가 종료되었습니다</h2>
-                  <p className="text-xl text-gray-400">다음 발표를 준비합니다.</p>
+                  <h2 className="text-4xl font-bold" style={{ color: "rgba(34, 211, 238, 0.95)" }}>
+                    발표가 종료되었습니다
+                  </h2>
+                  <p className="text-xl" style={{ color: "rgba(148, 163, 184, 0.8)" }}>
+                    다음 발표를 준비합니다.
+                  </p>
                   <div className="flex items-center justify-center gap-2 pt-4">
                     <div
-                      className="w-2 h-2 bg-[#E61E2A] rounded-full animate-bounce"
+                      className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
                       style={{ animationDelay: "0ms" }}
                     />
                     <div
-                      className="w-2 h-2 bg-[#E61E2A] rounded-full animate-bounce"
+                      className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
                       style={{ animationDelay: "150ms" }}
                     />
                     <div
-                      className="w-2 h-2 bg-[#E61E2A] rounded-full animate-bounce"
+                      className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"
                       style={{ animationDelay: "300ms" }}
                     />
                   </div>
@@ -645,14 +932,22 @@ function SinglePresenterViewContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="flex items-center justify-between pt-3 border-t border-white/10"
+            className="flex items-center justify-between pt-3"
+            style={{ borderTop: "1px solid rgba(59, 130, 246, 0.2)" }}
           >
-            <p className="text-xs text-gray-500">© 2025 SK Group. All rights reserved.</p>
+            <p className="text-xs" style={{ color: "rgba(34, 211, 238, 0.6)" }}>
+              © 2025 SK Group. All rights reserved.
+            </p>
             <Link href="/">
               <Button
                 size="sm"
-                variant="outline"
-                className="gap-2 border-white/20 hover:bg-white/5 text-white bg-transparent"
+                variant="ghost"
+                className="gap-2"
+                style={{
+                  color: "rgba(34, 211, 238, 0.9)",
+                  borderColor: "rgba(59, 130, 246, 0.3)",
+                  borderWidth: "1px",
+                }}
               >
                 <Home className="w-4 h-4" />
                 홈으로
@@ -668,9 +963,12 @@ function SinglePresenterViewContent() {
 export default function SinglePresenterView() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#1a1a1a]">
+      <div 
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
+      >
         <div className="flex items-center gap-3">
-          <Loader2 className="w-6 h-6 text-[#E61E2A] animate-spin" />
+          <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
           <span className="text-white text-lg">로딩 중...</span>
         </div>
       </div>
