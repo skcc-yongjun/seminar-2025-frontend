@@ -7,9 +7,14 @@ export interface PromptTestRequest {
 
 export interface PromptTestResponse {
   presentation_id: string;
-  questions: any[];
-  image_count: number;
-  transcript_count: number;
+  raw_result: string;
+  parsed_result?: any;
+  parse_error?: string;
+  metadata: {
+    image_count: number;
+    transcript_count: number;
+    prompt_type?: string;
+  };
 }
 
 export async function postPromptTest(data: PromptTestRequest): Promise<PromptTestResponse> {
@@ -24,6 +29,62 @@ export async function postPromptTest(data: PromptTestRequest): Promise<PromptTes
     throw new Error(`프롬프트 테스트 실패: ${response.status}`);
   }
   return response.json();
+}
+
+// 프롬프트 테스트 스트리밍
+export async function* postPromptTestStream(data: PromptTestRequest): AsyncGenerator<string, void, unknown> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/prompts/test/stream`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error(`프롬프트 테스트 스트리밍 실패: ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error('Response body is not readable');
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+            if (parsed.done) {
+              return;
+            }
+            if (parsed.chunk) {
+              yield parsed.chunk;
+            }
+          } catch (e) {
+            console.error('Failed to parse SSE data:', e);
+          }
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
 }
 // API configuration
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"

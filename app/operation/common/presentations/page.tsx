@@ -43,6 +43,7 @@ export default function PresentationsPage() {
     presentation_order: 1,
     status: "대기",
   })
+  const [pdfFile, setPdfFile] = useState<File | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
 
@@ -90,6 +91,7 @@ export default function PresentationsPage() {
       presentation_order: 1,
       status: "대기",
     })
+    setPdfFile(null)
     setIsDialogOpen(true)
   }
 
@@ -106,6 +108,7 @@ export default function PresentationsPage() {
       presentation_order: presentation.presentation_order,
       status: presentation.status,
     })
+    setPdfFile(null) // 수정 모드에서는 PDF 파일 초기화
     setIsDialogOpen(true)
   }
 
@@ -167,12 +170,24 @@ export default function PresentationsPage() {
    * 발표 저장 (생성 또는 수정)
    */
   const handleSave = async () => {
-    // 입력값 검증
-    if (!formData.session_type || !formData.presenter_id || !formData.topic) {
+    // 입력값 검증 - 누락된 필드 확인
+    const missingFields: string[] = []
+    
+    if (!formData.session_type) {
+      missingFields.push("세션")
+    }
+    if (!formData.presenter_id) {
+      missingFields.push("발표자")
+    }
+    if (!formData.topic || formData.topic.trim() === "") {
+      missingFields.push("주제")
+    }
+    
+    if (missingFields.length > 0) {
       toast({
         variant: "destructive",
         title: "입력 오류",
-        description: "세션, 발표자, 주제는 필수 입력 항목입니다.",
+        description: `다음 필수 항목을 입력해주세요: ${missingFields.join(", ")}`,
       })
       return
     }
@@ -199,6 +214,7 @@ export default function PresentationsPage() {
           topic: formData.topic,
           presentation_order: formData.presentation_order,
           status: formData.status,
+          pdf_file: pdfFile || undefined,
         })
         toast({
           title: "성공",
@@ -215,6 +231,7 @@ export default function PresentationsPage() {
         presentation_order: 1,
         status: "대기",
       })
+      setPdfFile(null)
 
       // 목록 다시 로드
       await loadData()
@@ -388,7 +405,9 @@ export default function PresentationsPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="session">세션</Label>
+              <Label htmlFor="session">
+                세션 <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.session_type}
                 onValueChange={(value) => setFormData({ ...formData, session_type: value })}
@@ -405,7 +424,9 @@ export default function PresentationsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="presenter">발표자</Label>
+              <Label htmlFor="presenter">
+                발표자 <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.presenter_id || undefined}
                 onValueChange={(value) => setFormData({ ...formData, presenter_id: value })}
@@ -424,7 +445,9 @@ export default function PresentationsPage() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="topic">주제</Label>
+              <Label htmlFor="topic">
+                주제 <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="topic"
                 value={formData.topic}
@@ -465,6 +488,43 @@ export default function PresentationsPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {!editingPresentation && (
+              <div className="space-y-2">
+                <Label htmlFor="pdf">PDF 자료 (선택)</Label>
+                <Input
+                  id="pdf"
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    if (file) {
+                      // PDF 파일 확인
+                      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+                        toast({
+                          variant: "destructive",
+                          title: "파일 형식 오류",
+                          description: "PDF 파일만 업로드 가능합니다.",
+                        })
+                        e.target.value = ''
+                        return
+                      }
+                      setPdfFile(file)
+                    }
+                  }}
+                  disabled={isSaving}
+                  className="cursor-pointer"
+                />
+                {pdfFile && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    선택된 파일: {pdfFile.name} ({(pdfFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  * PDF 파일만 업로드 가능합니다
+                </p>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
