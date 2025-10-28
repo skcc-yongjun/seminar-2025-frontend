@@ -1044,3 +1044,182 @@ export async function fetchRandomSelectedQuestionByKeyword(keyword: string): Pro
   
   return response.json()
 }
+
+// ============================================================================
+// Session 1 & Session 2 Operation 관련 API
+// ============================================================================
+
+/**
+ * AI 평가 결과 인터페이스
+ */
+export interface AIEvaluationResult {
+  presentation_id: string
+  image_count: number
+  transcript_count: number
+  feedback_count: number
+  score_count: number
+  evaluation_time: number
+  raw_response: string
+}
+
+/**
+ * [Session1] 발표 AI 평가 생성
+ * @param presentationId 발표 ID
+ * @returns AI 평가 결과
+ */
+export async function generateAIEvaluation(presentationId: string): Promise<AIEvaluationResult> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentations/${presentationId}/ai-evaluation`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`AI 평가 생성 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 총점 계산 결과 인터페이스
+ */
+export interface PresentationSummaryResult {
+  summary_id: string
+  presentation_id: string
+  total_score: number
+  ai_score: number
+  human_score: number
+  calculation_details: {
+    ai_evaluation: {
+      score: number
+      weights: Record<string, number>
+      multiplier: number
+    }
+    human_evaluation: {
+      score: number
+      weights: Record<string, number>
+      multiplier: number
+    }
+    total_calculation: {
+      ai_weight: number
+      human_weight: number
+    }
+  }
+}
+
+/**
+ * [Session1] 발표 총점 계산 및 요약 생성
+ * @param presentationId 발표 ID
+ * @returns 총점 계산 결과
+ */
+export async function calculatePresentationSummary(presentationId: string): Promise<PresentationSummaryResult> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentation-summaries/calculate/${presentationId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`총점 계산 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * AI 질문 생성 결과 인터페이스
+ */
+export interface QnAGenerationResult {
+  question_id: number
+  presentation_id: string
+  title: string | null
+  keyword: string | null
+  question_text: string
+  answer_text: string | null
+  created_by: number
+  is_selected: boolean
+  created_at: string
+}
+
+/**
+ * [Session2] 발표 AI 질문 생성 (2단계 방식)
+ * @param presentationId 발표 ID
+ * @returns 생성된 첫 번째 질문
+ */
+export async function generateQnAQuestions(presentationId: string): Promise<QnAGenerationResult> {
+  const formData = new FormData()
+  formData.append('presentation_id', presentationId)
+  
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/qna-questions`,
+    {
+      method: 'POST',
+      body: formData,
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Q&A 질문 생성 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 아바타 비디오 생성 입력 인터페이스
+ */
+export interface AvatarVideoInput {
+  character_name: string
+  text: string
+  is_question: boolean
+}
+
+/**
+ * 아바타 비디오 생성 결과 인터페이스
+ */
+export interface AvatarVideoResult {
+  video_url: string
+  character_name: string
+  text: string
+  is_question: boolean
+  processing_time_seconds: number
+  status: string
+  error_message?: string
+}
+
+/**
+ * [Session2] 아바타 비디오 생성
+ * @param data 아바타 비디오 생성 데이터
+ * @returns 생성된 비디오 정보
+ */
+export async function generateAvatarVideo(data: AvatarVideoInput): Promise<AvatarVideoResult> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/avatar-video/generate`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`아바타 비디오 생성 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
