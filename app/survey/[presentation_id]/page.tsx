@@ -586,42 +586,107 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
   // 로딩 중이거나 데이터가 없을 때
   if (loading || !presentation) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">설문조사 정보를 불러오는 중...</p>
+      <div 
+        className="flex items-center justify-center min-h-screen relative overflow-hidden"
+        style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
+      >
+        <div className="fixed inset-0 pointer-events-none opacity-20">
+          <div
+            className="absolute inset-0 animate-pulse"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px)",
+              backgroundSize: "50px 50px",
+            }}
+          />
+        </div>
+        
+        <div className="text-center relative z-10">
+          <div className="relative">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"
+              style={{ boxShadow: "0 0 20px rgba(6, 182, 212, 0.5)" }}
+            ></div>
+            <div className="absolute inset-0 animate-ping rounded-full h-12 w-12 border border-cyan-500/30 mx-auto"></div>
+          </div>
+          <p className="text-cyan-400 text-lg font-medium">설문조사 정보를 불러오는 중...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div 
+      className="min-h-screen relative overflow-x-hidden"
+      style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
+    >
+      {/* Background effects */}
+      <div className="fixed inset-0 pointer-events-none opacity-20">
+        <div
+          className="absolute inset-0 animate-pulse"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px)",
+            backgroundSize: "50px 50px",
+          }}
+        />
+      </div>
+      
+      {/* Floating particles */}
+      {Array.from({ length: 10 }).map((_, i) => (
+        <motion.div
+          key={i}
+          className="fixed w-1 h-1 bg-cyan-400/20 rounded-full"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            opacity: [0.1, 0.3, 0.1],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 2,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: Math.random() * 2,
+          }}
+        />
+      ))}
+      
       {/* Sticky Header */}
-      <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
+      <div className="sticky top-0 z-50 backdrop-blur-md border-b shadow-sm"
+        style={{
+          background: "rgba(10, 22, 40, 0.85)",
+          borderColor: "rgba(6, 182, 212, 0.2)",
+        }}
+      >
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             <Link href="/">
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10">
                 <ChevronLeft className="h-5 w-5" />
               </Button>
             </Link>
             <div className="flex items-center gap-6 flex-1">
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-xl font-bold text-foreground">{presentation.presenter?.name || "발표자"}</h1>
+                  <h1 className="text-xl font-bold text-white">{presentation.presenter?.name || "발표자"}</h1>
                   {/* iPad indicator */}
                   {isIpad && (
-                    <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded-full">
-                      <Tablet className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400">iPad</span>
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full"
+                      style={{
+                        background: "rgba(6, 182, 212, 0.2)",
+                        border: "1px solid rgba(6, 182, 212, 0.4)",
+                      }}
+                    >
+                      <Tablet className="h-3 w-3 text-cyan-400" />
+                      <span className="text-xs font-medium text-cyan-400">iPad</span>
                     </div>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">{presentation.presenter?.company || "회사"}</p>
+                <p className="text-sm text-cyan-400/70">{presentation.presenter?.company || "회사"}</p>
               </div>
-              <div className="flex-1 border-l border-border pl-6">
-                <p className="text-2xl font-bold text-foreground leading-tight">{presentation.topic}</p>
+              <div className="flex-1 pl-6" style={{ borderLeft: "1px solid rgba(6, 182, 212, 0.3)" }}>
+                <p className="text-2xl font-bold text-white leading-tight">{presentation.topic}</p>
               </div>
             </div>
           </div>
@@ -646,7 +711,13 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
             >
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-sk-red text-white text-sm font-bold">
+                  <span 
+                    className="inline-flex items-center justify-center w-6 h-6 rounded-full text-white text-sm font-bold"
+                    style={{ 
+                      background: "rgba(6, 182, 212, 0.8)",
+                      boxShadow: "0 0 10px rgba(6, 182, 212, 0.5)"
+                    }}
+                  >
                     {question.id}
                   </span>
                   <h3 className="text-lg font-bold text-foreground">[{question.category}]</h3>
@@ -676,9 +747,14 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
                             ? value <= hoveredRating.value
                             : value <= (ratings[question.id] || 0)
                         )
-                          ? "fill-sk-red text-sk-red"
+                          ? "fill-cyan-400 text-cyan-400"
                           : "text-muted-foreground/30"
                       }`}
+                      style={(
+                        hoveredRating?.questionId === question.id
+                          ? value <= hoveredRating.value
+                          : value <= (ratings[question.id] || 0)
+                      ) ? { filter: "drop-shadow(0 0 8px rgba(6, 182, 212, 0.8))" } : {}}
                     />
                     <span className={`absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity ${
                       isIpad ? 'group-active:opacity-100' : ''
@@ -696,7 +772,12 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
                   animate={{ opacity: 1, scale: 1 }}
                   className="text-center"
                 >
-                  <p className="text-2xl font-bold text-sk-red">{ratings[question.id]}점</p>
+                  <p 
+                    className="text-2xl font-bold text-cyan-400"
+                    style={{ textShadow: "0 0 10px rgba(6, 182, 212, 0.5)" }}
+                  >
+                    {ratings[question.id]}점
+                  </p>
                 </motion.div>
               )}
             </motion.div>
@@ -708,13 +789,20 @@ export default function SurveyPage({ params }: { params: Promise<{ presentation_
               onClick={handleSubmit}
               disabled={submitting}
               size="lg"
-              className={`bg-sk-red hover:bg-sk-red/90 text-white px-12 ${
+              variant="outline"
+              className={`text-white px-12 ${
                 isIpad ? 'h-12 text-lg' : ''
               }`}
+              style={{
+                background: submitting ? "rgba(100, 116, 139, 0.3)" : "rgba(6, 182, 212, 0.2)",
+                border: "2px solid rgba(6, 182, 212, 0.5)",
+                color: "#22d3ee",
+                boxShadow: submitting ? "none" : "0 0 20px rgba(6, 182, 212, 0.3)",
+              }}
             >
               {submitting ? (
                 <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-400"></div>
                   제출 중...
                 </span>
               ) : (

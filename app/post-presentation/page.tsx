@@ -875,20 +875,12 @@ export default function PostPresentationPage() {
                 onClick={() => router.push(`/post-presentation/evaluations?presentationId=${selectedPresentationId}`)}
                 disabled={!isEvaluationComplete}
                 size="lg"
-                className="px-6 py-3 text-base font-semibold rounded-lg shadow-lg transition-all gap-2"
-                style={
+                variant="outline"
+                className={`px-6 py-3 text-base font-semibold rounded-lg transition-all gap-2 ${
                   isEvaluationComplete
-                    ? {
-                        background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-                        color: "white",
-                        boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
-                      }
-                    : {
-                        background: "rgba(100, 116, 139, 0.5)",
-                        color: "rgba(148, 163, 184, 0.7)",
-                        cursor: "not-allowed",
-                      }
-                }
+                    ? "bg-slate-900/60 backdrop-blur-sm border-cyan-500/50 text-cyan-400 hover:bg-slate-800/80 hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)]"
+                    : "bg-slate-900/30 border-slate-700/50 text-slate-500 cursor-not-allowed"
+                }`}
               >
                 <Sparkles className="w-4 h-4" />
                 결과 확인하기

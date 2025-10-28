@@ -50,10 +50,30 @@ export default function SurveyPage() {
   }, [router])
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-        <p className="text-gray-600">설문조사 페이지로 이동 중...</p>
+    <div 
+      className="flex items-center justify-center min-h-screen relative overflow-hidden"
+      style={{ background: "linear-gradient(to bottom, #0a1628, #0f1f3a, #0a1628)" }}
+    >
+      {/* Background effects */}
+      <div className="fixed inset-0 pointer-events-none opacity-20">
+        <div
+          className="absolute inset-0 animate-pulse"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px)",
+            backgroundSize: "50px 50px",
+          }}
+        />
+      </div>
+      
+      <div className="text-center relative z-10">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400 mx-auto mb-4"
+            style={{ boxShadow: "0 0 20px rgba(6, 182, 212, 0.5)" }}
+          ></div>
+          <div className="absolute inset-0 animate-ping rounded-full h-12 w-12 border border-cyan-500/30 mx-auto"></div>
+        </div>
+        <p className="text-cyan-400 text-lg font-medium">설문조사 페이지로 이동 중...</p>
       </div>
     </div>
   )
