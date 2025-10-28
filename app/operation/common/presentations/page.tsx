@@ -259,6 +259,25 @@ export default function PresentationsPage() {
     return presenter ? presenter.name : presenterId
   }
 
+  /**
+   * 세션별로 발표 목록 분리 및 정렬
+   */
+  const getPresentationsBySession = () => {
+    const session1 = presentations
+      .filter(p => p.session_type === "세션1")
+      .sort((a, b) => a.presentation_order - b.presentation_order)
+    
+    const session2 = presentations
+      .filter(p => p.session_type === "세션2")
+      .sort((a, b) => a.presentation_order - b.presentation_order)
+    
+    const panel = presentations
+      .filter(p => p.session_type === "패널토의")
+      .sort((a, b) => a.presentation_order - b.presentation_order)
+
+    return { session1, session2, panel }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "완료":
@@ -316,69 +335,160 @@ export default function PresentationsPage() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
-            {presentations.map((presentation, index) => (
-              <motion.div
-                key={presentation.presentation_id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <div className="corporate-card rounded-xl p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Badge variant="outline" className="border-sk-red/30 text-sk-red">
-                          {presentation.session_type}
-                        </Badge>
-                        <Badge variant="outline" className={getStatusColor(presentation.status)}>
-                          {presentation.status}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">
-                          순서: {presentation.presentation_order}
-                        </span>
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">{presentation.topic}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        발표자: {getPresenterName(presentation.presenter_id)}
-                      </p>
-                      <p className="text-xs text-muted-foreground/60 mt-1">
-                        ID: {presentation.presentation_id}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleResetToInProgress(presentation.presentation_id)}
-                        variant="outline"
-                        size="sm"
-                        className="text-blue-500 hover:text-blue-600 border-blue-500/30 hover:border-blue-500/50"
-                        disabled={isSaving}
-                        title="상태를 '진행중'으로 초기화"
-                      >
-                        <RefreshCw className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleEdit(presentation)}
-                        variant="outline"
-                        size="sm"
-                        disabled={isSaving}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        onClick={() => handleDelete(presentation.presentation_id)}
-                        variant="outline"
-                        size="sm"
-                        className="text-destructive hover:text-destructive bg-transparent"
-                        disabled={isSaving}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative">
+            {/* 세션1 */}
+            <div className="space-y-4 relative lg:pr-6 lg:border-r lg:border-gray-200 dark:lg:border-gray-700">
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-xl font-semibold text-foreground">세션1</h2>
+                <Badge variant="outline" className="border-sk-red/30 text-sk-red">
+                  {getPresentationsBySession().session1.length}개
+                </Badge>
+              </div>
+              {getPresentationsBySession().session1.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  세션1에 등록된 발표가 없습니다.
                 </div>
-              </motion.div>
-            ))}
+              ) : (
+                <div className="space-y-3">
+                  {getPresentationsBySession().session1.map((presentation, index) => (
+                    <motion.div
+                      key={presentation.presentation_id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                    >
+                      <div className="corporate-card rounded-xl p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Badge variant="outline" className={getStatusColor(presentation.status)}>
+                                {presentation.status}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                순서: {presentation.presentation_order}
+                              </span>
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{presentation.topic}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              발표자: {getPresenterName(presentation.presenter_id)}
+                            </p>
+                            <p className="text-xs text-muted-foreground/60 mt-1">
+                              ID: {presentation.presentation_id}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleResetToInProgress(presentation.presentation_id)}
+                              variant="outline"
+                              size="sm"
+                              className="text-blue-500 hover:text-blue-600 border-blue-500/30 hover:border-blue-500/50"
+                              disabled={isSaving}
+                              title="상태를 '진행중'으로 초기화"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleEdit(presentation)}
+                              variant="outline"
+                              size="sm"
+                              disabled={isSaving}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(presentation.presentation_id)}
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:text-destructive bg-transparent"
+                              disabled={isSaving}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 세션2 */}
+            <div className="space-y-4 relative lg:pl-6">
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-xl font-semibold text-foreground">세션2</h2>
+                <Badge variant="outline" className="border-sk-red/30 text-sk-red">
+                  {getPresentationsBySession().session2.length}개
+                </Badge>
+              </div>
+              {getPresentationsBySession().session2.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  세션2에 등록된 발표가 없습니다.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {getPresentationsBySession().session2.map((presentation, index) => (
+                    <motion.div
+                      key={presentation.presentation_id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                    >
+                      <div className="corporate-card rounded-xl p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Badge variant="outline" className={getStatusColor(presentation.status)}>
+                                {presentation.status}
+                              </Badge>
+                              <span className="text-sm text-muted-foreground">
+                                순서: {presentation.presentation_order}
+                              </span>
+                            </div>
+                            <h3 className="text-lg font-semibold text-foreground mb-2">{presentation.topic}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              발표자: {getPresenterName(presentation.presenter_id)}
+                            </p>
+                            <p className="text-xs text-muted-foreground/60 mt-1">
+                              ID: {presentation.presentation_id}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              onClick={() => handleResetToInProgress(presentation.presentation_id)}
+                              variant="outline"
+                              size="sm"
+                              className="text-blue-500 hover:text-blue-600 border-blue-500/30 hover:border-blue-500/50"
+                              disabled={isSaving}
+                              title="상태를 '진행중'으로 초기화"
+                            >
+                              <RefreshCw className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleEdit(presentation)}
+                              variant="outline"
+                              size="sm"
+                              disabled={isSaving}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              onClick={() => handleDelete(presentation.presentation_id)}
+                              variant="outline"
+                              size="sm"
+                              className="text-destructive hover:text-destructive bg-transparent"
+                              disabled={isSaving}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
