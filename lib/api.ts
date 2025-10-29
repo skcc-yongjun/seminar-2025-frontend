@@ -882,25 +882,6 @@ export interface AIEvaluationScoreList {
   items: AIEvaluationScoreResponse[]
 }
 
-/**
- * AI 평가 점수 조회
- * @param presentationId 발표 ID
- * @returns AI 평가 점수 목록
- */
-export async function fetchAIEvaluationScores(
-  presentationId: string
-): Promise<AIEvaluationScoreResponse[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/ai-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
-  )
-  
-  if (!response.ok) {
-    throw new Error(`AI 평가 점수 조회 실패: ${response.status}`)
-  }
-  
-  const data = await response.json() as AIEvaluationScoreList
-  return data.items
-}
 
 // Human Evaluation Score Average API Types
 export interface HumanEvaluationScoreStats {
@@ -1048,6 +1029,139 @@ export async function fetchAICommentsAfterTimestamp(
   
   const data = await response.json() as AICommentList
   return data.items
+}
+
+// AI Evaluation Scores API Types
+export interface AIEvaluationScoreResponse {
+  score_id: number
+  presentation_id: string
+  category: string
+  score: number
+  score_type: string
+  evaluated_at: string
+  created_at: string
+}
+
+export interface AIEvaluationScoreList {
+  total: number
+  items: AIEvaluationScoreResponse[]
+}
+
+/**
+ * AI 평가 점수 조회
+ * @param presentationId 발표 ID (옵션)
+ * @returns AI 평가 점수 목록
+ */
+export async function fetchAIEvaluationScores(
+  presentationId?: string
+): Promise<AIEvaluationScoreResponse[]> {
+  const url = presentationId 
+    ? `${API_BASE_URL}/seminar/api/ai-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
+    : `${API_BASE_URL}/seminar/api/ai-evaluation-scores`
+  
+  const response = await fetch(url)
+  
+  if (!response.ok) {
+    throw new Error(`AI 평가 점수 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as AIEvaluationScoreList
+  return data.items
+}
+
+// Human Evaluation Scores API Types
+export interface HumanEvaluationScoreResponse {
+  score_id: number
+  presentation_id: string
+  category: string
+  score: number
+  evaluator_id: string
+  created_at: string
+  updated_at: string | null
+}
+
+export interface HumanEvaluationScoreList {
+  total: number
+  items: HumanEvaluationScoreResponse[]
+}
+
+/**
+ * 사람 평가 점수 조회
+ * @param presentationId 발표 ID (옵션)
+ * @returns 사람 평가 점수 목록
+ */
+export async function fetchHumanEvaluationScores(
+  presentationId?: string
+): Promise<HumanEvaluationScoreResponse[]> {
+  const url = presentationId 
+    ? `${API_BASE_URL}/seminar/api/human-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
+    : `${API_BASE_URL}/seminar/api/human-evaluation-scores`
+  
+  const response = await fetch(url)
+  
+  if (!response.ok) {
+    throw new Error(`사람 평가 점수 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as HumanEvaluationScoreList
+  return data.items
+}
+
+// Combined Summary Data Type
+export interface PresentationSummaryData {
+  presentation_id: string
+  presenter_name: string
+  company: string
+  topic: string
+  ai_score: number
+  human_score: number
+  final_score: number
+  detailed_scores: Record<string, number>
+  summary_text?: string
+  key_points?: string[]
+}
+
+// Category Rankings API Types
+export interface CategoryRankingItem {
+  rank: number
+  presenter_id: string
+  name: string
+  company: string
+  presentation_id: string
+  topic: string
+  score: number
+}
+
+export interface CategoryRankingList {
+  ranking_type: string
+  total: number
+  items: CategoryRankingItem[]
+}
+
+export interface CategoryRankingsResponse {
+  ai_category_rankings: CategoryRankingList[]
+  human_category_rankings: CategoryRankingList[]
+}
+
+/**
+ * 카테고리별 세부 랭킹 조회
+ * @param sessionType 세션 타입 (세션1, 세션2)
+ * @param limit 조회할 최대 개수
+ * @returns 카테고리별 랭킹 정보
+ */
+export async function fetchCategoryRankings(
+  sessionType: string,
+  limit: number = 100
+): Promise<CategoryRankingsResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/rankings/${encodeURIComponent(sessionType)}/detail?limit=${limit}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`카테고리별 랭킹 조회 실패: ${response.status}`)
+  }
+  
+  return await response.json() as CategoryRankingsResponse
 }
 
 /**

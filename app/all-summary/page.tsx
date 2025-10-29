@@ -3,173 +3,226 @@
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, BarChart3 } from "lucide-react"
+import { ArrowLeft, BarChart3, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { 
+  fetchPresentationsWithPresenters, 
+  fetchAIEvaluationScores, 
+  fetchHumanEvaluationScores,
+  fetchPresentationSummary,
+  fetchCategoryRankings,
+  type PresentationSummaryData,
+  type PresentationWithPresenter,
+  type CategoryRankingsResponse
+} from "@/lib/api"
 
 export default function AllSummaryPage() {
-  const [detailedTab, setDetailedTab] = useState<"ai" | "onsite">("ai")
   const [selectedCriterion, setSelectedCriterion] = useState("전략적 중요도")
+  const [allPresenters, setAllPresenters] = useState<PresentationSummaryData[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [categoryRankings, setCategoryRankings] = useState<CategoryRankingsResponse | null>(null)
+  const [criteria, setCriteria] = useState<string[]>([])
+  const [aiCriteria, setAiCriteria] = useState<string[]>([])
+  const [humanCriteria, setHumanCriteria] = useState<string[]>([])
 
-  const allPresenters = [
-    {
-      name: "김민수",
-      company: "SK텔레콤",
-      aiScore: 8.7,
-      onsiteScore: 8.8,
-      finalScore: 8.8,
-      detailedScores: {
-        "전략적 중요도": 9.0,
-        "O/I 수준 진단": 8.7,
-        "과제 목표 수준": 8.9,
-        "실행 가능성": 8.8,
-        "Process/System": 8.6,
-        "본원적 경쟁력 연계": 8.5,
-        혁신성: 8.7,
-        "기대 효과": 8.9,
-      },
-    },
-    {
-      name: "박성호",
-      company: "SK하이닉스",
-      aiScore: 8.3,
-      onsiteScore: 8.4,
-      finalScore: 8.4,
-      detailedScores: {
-        "전략적 중요도": 8.8,
-        "O/I 수준 진단": 8.3,
-        "과제 목표 수준": 8.4,
-        "실행 가능성": 8.0,
-        "Process/System": 8.2,
-        "본원적 경쟁력 연계": 8.1,
-        혁신성: 8.5,
-        "기대 효과": 8.6,
-      },
-    },
-    {
-      name: "이정훈",
-      company: "SK E&S",
-      aiScore: 7.7,
-      onsiteScore: 8.0,
-      finalScore: 7.8,
-      detailedScores: {
-        "전략적 중요도": 8.5,
-        "O/I 수준 진단": 7.6,
-        "과제 목표 수준": 7.7,
-        "실행 가능성": 7.3,
-        "Process/System": 7.5,
-        "본원적 경쟁력 연계": 7.8,
-        혁신성: 7.9,
-        "기대 효과": 8.0,
-      },
-    },
-    {
-      name: "정수연",
-      company: "SK바이오팜",
-      aiScore: 8.1,
-      onsiteScore: 7.9,
-      finalScore: 8.0,
-      detailedScores: {
-        "전략적 중요도": 8.2,
-        "O/I 수준 진단": 8.0,
-        "과제 목표 수준": 7.5,
-        "실행 가능성": 7.1,
-        "Process/System": 7.8,
-        "본원적 경쟁력 연계": 8.3,
-        혁신성: 8.1,
-        "기대 효과": 7.9,
-      },
-    },
-    {
-      name: "윤풍영",
-      company: "SK AX",
-      aiScore: 7.0,
-      onsiteScore: 7.3,
-      finalScore: 7.2,
-      detailedScores: {
-        "전략적 중요도": 8.0,
-        "O/I 수준 진단": 7.0,
-        "과제 목표 수준": 8.3,
-        "실행 가능성": 8.6,
-        "Process/System": 6.8,
-        "본원적 경쟁력 연계": 6.5,
-        혁신성: 7.2,
-        "기대 효과": 7.0,
-      },
-    },
-    {
-      name: "최영희",
-      company: "SK네트웍스",
-      aiScore: 6.9,
-      onsiteScore: 7.2,
-      finalScore: 7.1,
-      detailedScores: {
-        "전략적 중요도": 7.5,
-        "O/I 수준 진단": 6.8,
-        "과제 목표 수준": 7.9,
-        "실행 가능성": 7.5,
-        "Process/System": 6.5,
-        "본원적 경쟁력 연계": 6.3,
-        혁신성: 7.0,
-        "기대 효과": 6.8,
-      },
-    },
-    {
-      name: "강동원",
-      company: "SK이노베이션",
-      aiScore: 6.5,
-      onsiteScore: 6.8,
-      finalScore: 6.7,
-      detailedScores: {
-        "전략적 중요도": 7.0,
-        "O/I 수준 진단": 6.5,
-        "과제 목표 수준": 6.8,
-        "실행 가능성": 6.3,
-        "Process/System": 6.2,
-        "본원적 경쟁력 연계": 6.0,
-        혁신성: 6.7,
-        "기대 효과": 6.5,
-      },
-    },
-    {
-      name: "한지민",
-      company: "SK스퀘어",
-      aiScore: 6.2,
-      onsiteScore: 6.5,
-      finalScore: 6.3,
-      detailedScores: {
-        "전략적 중요도": 6.8,
-        "O/I 수준 진단": 6.2,
-        "과제 목표 수준": 6.5,
-        "실행 가능성": 6.0,
-        "Process/System": 5.8,
-        "본원적 경쟁력 연계": 5.9,
-        혁신성: 6.4,
-        "기대 효과": 6.3,
-      },
-    },
-  ]
+  // 카테고리명 매핑 테이블 (백엔드 카테고리명 -> 실제 점수 키)
+  const categoryMapping: Record<string, string> = {
+    "경쟁력 진단": "경쟁력 진단",
+    "과제 구체성": "과제 구체성", 
+    "도전적 목표": "도전적 목표",
+    "본원적 경쟁력": "본원적 경쟁력",
+    "지속가능성": "지속가능성",
+    "혁신성": "혁신성"
+  }
 
-  const criteria = [
-    "전략적 중요도",
-    "O/I 수준 진단",
-    "과제 목표 수준",
-    "실행 가능성",
-    "Process/System",
-    "본원적 경쟁력 연계",
-    "혁신성",
-    "기대 효과",
-  ]
+  // API에서 데이터 로드
+  useEffect(() => {
+    const loadSummaryData = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+
+        // 세션1 발표자 정보만 가져오기
+        const presentations = await fetchPresentationsWithPresenters("세션1")
+        
+        // 카테고리별 랭킹 정보 가져오기
+        const categoryData = await fetchCategoryRankings("세션1")
+        setCategoryRankings(categoryData)
+        
+        // 평가 기준 추출 (AI + 사람 평가 카테고리 분리)
+        const aiCategories = categoryData.ai_category_rankings.map(ranking => ranking.ranking_type)
+        const humanCategories = categoryData.human_category_rankings.map(ranking => ranking.ranking_type)
+        const allCategories = [...aiCategories, ...humanCategories]
+        
+        setCriteria(allCategories)
+        setAiCriteria(aiCategories)
+        setHumanCriteria(humanCategories)
+        
+        console.log("백엔드에서 가져온 카테고리:", allCategories)
+        console.log("AI 평가 카테고리:", aiCategories)
+        console.log("현장 평가 카테고리:", humanCategories)
+        
+        // 첫 번째 기준을 기본 선택으로 설정
+        if (allCategories.length > 0) {
+          setSelectedCriterion(allCategories[0])
+        }
+        
+        // 각 발표에 대한 점수와 요약 정보 가져오기
+        const summaryData: PresentationSummaryData[] = []
+        
+        for (const presentation of presentations) {
+          try {
+            // AI 평가 점수 가져오기
+            const aiScores = await fetchAIEvaluationScores(presentation.presentation_id)
+            console.log(`발표 ${presentation.presentation_id} AI 점수:`, aiScores)
+            
+            // 사람 평가 점수 가져오기
+            const humanScores = await fetchHumanEvaluationScores(presentation.presentation_id)
+            console.log(`발표 ${presentation.presentation_id} 사람 점수:`, humanScores)
+            
+            // 요약 정보 가져오기
+            const summary = await fetchPresentationSummary(presentation.presentation_id)
+            
+            // 점수 계산
+            const aiScore = aiScores.length > 0 
+              ? aiScores.reduce((sum, score) => sum + Number(score.score), 0) / aiScores.length 
+              : 0
+            
+            const humanScore = humanScores.length > 0 
+              ? humanScores.reduce((sum, score) => sum + Number(score.score), 0) / humanScores.length 
+              : 0
+            
+            const finalScore = humanScore > 0 ? humanScore : aiScore
+            
+            // 상세 점수 매핑 (AI + 사람 평가 점수 모두 포함)
+            const detailedScores: Record<string, number> = {}
+            
+            // AI 평가 점수 매핑
+            aiScores.forEach(score => {
+              detailedScores[score.category] = Number(score.score)
+            })
+            
+            // 사람 평가 점수 매핑 (같은 카테고리가 있으면 평균값 사용)
+            humanScores.forEach(score => {
+              const existingScore = detailedScores[score.category]
+              if (existingScore !== undefined) {
+                // 이미 AI 점수가 있으면 평균값 사용
+                detailedScores[score.category] = (existingScore + Number(score.score)) / 2
+              } else {
+                // AI 점수가 없으면 사람 점수만 사용
+                detailedScores[score.category] = Number(score.score)
+              }
+            })
+            
+            console.log(`발표 ${presentation.presentation_id} 상세 점수:`, detailedScores)
+            
+            summaryData.push({
+              presentation_id: presentation.presentation_id,
+              presenter_name: presentation.presenter?.name || "발표자 미정",
+              company: presentation.presenter?.company || "회사 미정",
+              topic: presentation.topic || "주제 미정",
+              ai_score: Math.round(aiScore * 10) / 10,
+              human_score: Math.round(humanScore * 10) / 10,
+              final_score: Math.round(finalScore * 10) / 10,
+              detailed_scores: detailedScores,
+              summary_text: summary?.summary_text,
+              key_points: summary?.key_points || []
+            })
+          } catch (err) {
+            console.error(`발표 ${presentation.presentation_id} 데이터 로드 실패:`, err)
+            // 에러가 있어도 다른 발표는 계속 처리
+          }
+        }
+        
+        setAllPresenters(summaryData)
+      } catch (err) {
+        console.error("요약 데이터 로드 실패:", err)
+        setError("데이터를 불러오는데 실패했습니다.")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadSummaryData()
+  }, [])
+
+  // 데이터가 없을 때 사용할 기본값
+  const displayPresenters = allPresenters.length > 0 ? allPresenters : []
+  const sortedPresenters = displayPresenters.sort((a, b) => b.final_score - a.final_score)
+
+  // 로딩 상태
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <Loader2 className="w-12 h-12 text-cyan-400 animate-spin mx-auto mb-4" />
+              <p className="text-white text-lg">데이터를 불러오는 중...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 에러 상태
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+              <p className="text-white text-lg mb-4">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()}
+                className="bg-cyan-600 hover:bg-cyan-700"
+              >
+                다시 시도
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // 데이터가 없는 경우
+  if (displayPresenters.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <BarChart3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-white text-lg">표시할 데이터가 없습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+
 
   const colors = ["#06b6d4", "#0ea5e9", "#3b82f6", "#6366f1", "#8b5cf6", "#a855f7", "#d946ef", "#ec4899"]
 
-  const aiRanked = [...allPresenters].sort((a, b) => b.aiScore - a.aiScore)
-  const finalRanked = [...allPresenters].sort((a, b) => b.finalScore - a.finalScore)
-  const onsiteRanked = [...allPresenters].sort((a, b) => b.onsiteScore - a.onsiteScore)
+  const aiRanked = [...displayPresenters].sort((a, b) => b.ai_score - a.ai_score)
+  const finalRanked = [...displayPresenters].sort((a, b) => b.final_score - a.final_score)
+  const onsiteRanked = [...displayPresenters].sort((a, b) => b.human_score - a.human_score)
 
-  const criterionSorted = [...allPresenters].sort(
-    (a, b) => b.detailedScores[selectedCriterion] - a.detailedScores[selectedCriterion],
-  )
+  // 선택된 기준이 AI 평가인지 현장 평가인지 확인
+  const isAICriterion = aiCriteria.includes(selectedCriterion)
+  const isHumanCriterion = humanCriteria.includes(selectedCriterion)
+
+  const criterionSorted = criteria.length > 0 
+    ? [...displayPresenters].sort(
+        (a, b) => (b.detailed_scores[selectedCriterion] || 0) - (a.detailed_scores[selectedCriterion] || 0),
+      )
+    : []
 
   return (
     <div
@@ -301,7 +354,7 @@ export default function AllSummaryPage() {
                 <div className="space-y-3">
                   {aiRanked.map((presenter, idx) => (
                     <motion.div
-                      key={presenter.company}
+                      key={`${presenter.presentation_id}-${idx}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 + idx * 0.05 }}
@@ -313,10 +366,10 @@ export default function AllSummaryPage() {
                         </div>
                         <div>
                           <p className="text-white font-medium">{presenter.company}</p>
-                          <p className="text-xs text-slate-400">{presenter.name}</p>
+                          <p className="text-xs text-slate-400">{presenter.presenter_name}</p>
                         </div>
                       </div>
-                      <p className="text-cyan-400 font-bold text-lg">{presenter.aiScore.toFixed(1)}</p>
+                      <p className="text-cyan-400 font-bold text-lg">{presenter.ai_score.toFixed(1)}</p>
                     </motion.div>
                   ))}
                 </div>
@@ -376,7 +429,7 @@ export default function AllSummaryPage() {
                 <div className="space-y-3">
                   {finalRanked.map((presenter, idx) => (
                     <motion.div
-                      key={presenter.company}
+                      key={`${presenter.presentation_id}-${idx}`}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.3 + idx * 0.05 }}
@@ -417,7 +470,7 @@ export default function AllSummaryPage() {
                           <p className="text-white font-bold text-lg group-hover:text-cyan-300 transition-colors">
                             {presenter.company}
                           </p>
-                          <p className="text-slate-400 text-sm">{presenter.name}</p>
+                          <p className="text-slate-400 text-sm">{presenter.presenter_name}</p>
                         </div>
                       </div>
                       <motion.p
@@ -434,7 +487,7 @@ export default function AllSummaryPage() {
                         }}
                         transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
                       >
-                        {presenter.finalScore.toFixed(1)}
+                        {presenter.final_score.toFixed(1)}
                       </motion.p>
                     </motion.div>
                   ))}
@@ -452,7 +505,7 @@ export default function AllSummaryPage() {
                 <div className="space-y-3">
                   {onsiteRanked.map((presenter, idx) => (
                     <motion.div
-                      key={presenter.company}
+                      key={`${presenter.presentation_id}-${idx}`}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 + idx * 0.05 }}
@@ -464,10 +517,10 @@ export default function AllSummaryPage() {
                         </div>
                         <div>
                           <p className="text-white font-medium">{presenter.company}</p>
-                          <p className="text-xs text-slate-400">{presenter.name}</p>
+                          <p className="text-xs text-slate-400">{presenter.presenter_name}</p>
                         </div>
                       </div>
-                      <p className="text-cyan-400 font-bold text-lg">{presenter.onsiteScore.toFixed(1)}</p>
+                      <p className="text-cyan-400 font-bold text-lg">{presenter.human_score.toFixed(1)}</p>
                     </motion.div>
                   ))}
                 </div>
@@ -485,70 +538,56 @@ export default function AllSummaryPage() {
         >
           <h2 className="text-3xl font-bold text-white text-center mb-8">세부 항목 점수</h2>
 
-          {/* Tab buttons for AI/Onsite evaluation */}
-          <div className="flex justify-center gap-4 mb-6">
-            <Button
-              onClick={() => setDetailedTab("ai")}
-              variant={detailedTab === "ai" ? "default" : "outline"}
-              className={`gap-2 ${
-                detailedTab === "ai"
-                  ? "bg-cyan-500/20 border-cyan-400 text-cyan-400 hover:bg-cyan-500/30"
-                  : "border-cyan-500/30 text-slate-400 hover:bg-slate-800/50 hover:text-white"
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              AI 평가 세부항목
-            </Button>
-            <Button
-              onClick={() => setDetailedTab("onsite")}
-              variant={detailedTab === "onsite" ? "default" : "outline"}
-              className={`gap-2 ${
-                detailedTab === "onsite"
-                  ? "bg-cyan-500/20 border-cyan-400 text-cyan-400 hover:bg-cyan-500/30"
-                  : "border-cyan-500/30 text-slate-400 hover:bg-slate-800/50 hover:text-white"
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              현장 평가 세부항목
-            </Button>
-          </div>
 
-          {/* Criterion selection buttons */}
-          <div className="flex flex-wrap justify-center gap-3 mb-8">
-            {criteria.map((criterion) => (
-              <Button
-                key={criterion}
-                onClick={() => setSelectedCriterion(criterion)}
-                variant="outline"
-                size="sm"
-                className={`${
-                  selectedCriterion === criterion
-                    ? "bg-cyan-500/20 border-cyan-400 text-cyan-400"
-                    : "border-cyan-500/30 text-slate-400 hover:bg-slate-800/50 hover:text-white"
-                }`}
-              >
-                [{criterion}]
-              </Button>
-            ))}
-          </div>
+           {/* Criterion selection buttons */}
+           <div className="flex flex-wrap justify-center gap-3 mb-8">
+             {criteria.map((criterion) => {
+               const isAI = aiCriteria.includes(criterion)
+               const isHuman = humanCriteria.includes(criterion)
+               
+               return (
+                 <Button
+                   key={criterion}
+                   onClick={() => setSelectedCriterion(criterion)}
+                   variant="outline"
+                   size="sm"
+                   className={`${
+                     selectedCriterion === criterion
+                       ? "bg-cyan-500/20 border-cyan-400 text-cyan-400"
+                       : "border-cyan-500/30 text-slate-400 hover:bg-slate-800/50 hover:text-white"
+                   }`}
+                 >
+                   [{criterion}]
+                   {isAI && <span className="ml-1 text-xs text-cyan-300">(AI)</span>}
+                   {isHuman && <span className="ml-1 text-xs text-orange-300">(현장)</span>}
+                 </Button>
+               )
+             })}
+           </div>
 
           {/* Horizontal bar chart for selected criterion */}
           <Card className="bg-slate-900/40 backdrop-blur-sm border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
             <CardHeader>
               <CardTitle className="text-2xl text-cyan-400 flex items-center gap-2">
-                <div className="w-1 h-8 bg-cyan-400 rounded-full" />[{selectedCriterion}]
+                <div className="w-1 h-8 bg-cyan-400 rounded-full" />
+                [{selectedCriterion}]
+                {isAICriterion && <span className="text-sm text-cyan-300">(AI)</span>}
+                {isHumanCriterion && <span className="text-sm text-orange-300">(현장)</span>}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {criterionSorted.map((presenter, idx) => {
-                  const score = presenter.detailedScores[selectedCriterion]
+                  const mappedKey = categoryMapping[selectedCriterion] || selectedCriterion
+                  const score = presenter.detailed_scores[mappedKey] || 0
                   const maxScore = 10
                   const percentage = (score / maxScore) * 100
+                  
+                  console.log(`발표자 ${presenter.presenter_name}, 기준 ${selectedCriterion} -> ${mappedKey}, 점수:`, score, "상세점수:", presenter.detailed_scores)
 
                   return (
                     <motion.div
-                      key={presenter.company}
+                      key={`${presenter.presentation_id}-${idx}`}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 1, delay: idx * 0.05 }}
