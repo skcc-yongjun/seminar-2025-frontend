@@ -584,10 +584,31 @@ export interface QnAQuestionResponse {
   answer_text: string | null
   answer_korean_caption: string | null
   is_selected: boolean
+  is_used: boolean
   created_by: number // 1: 자동생성, 2: 수동생성
   created_at: string
   video_created: boolean
   character_name: string | null // 매핑된 캐릭터 이름
+}
+
+export interface QnAQuestionWithVideoResponse {
+  question_id: number
+  presentation_id: string
+  title: string | null
+  keyword: string | null
+  question_text: string
+  question_korean_caption: string | null
+  answer_text: string | null
+  answer_korean_caption: string | null
+  is_selected: boolean
+  is_used: boolean
+  created_by: number
+  created_at: string
+
+  // QuestionCharacter 조인 정보
+  video_result: string | null
+  answer_video_result: string | null
+  character_id: string | null
 }
 
 export interface QnAQuestionList {
@@ -882,6 +903,25 @@ export interface AIEvaluationScoreList {
   items: AIEvaluationScoreResponse[]
 }
 
+/**
+ * AI 평가 점수 조회
+ * @param presentationId 발표 ID
+ * @returns AI 평가 점수 목록
+ */
+export async function fetchAIEvaluationScores(
+  presentationId: string
+): Promise<AIEvaluationScoreResponse[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/ai-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`AI 평가 점수 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as AIEvaluationScoreList
+  return data.items
+}
 
 // Human Evaluation Score Average API Types
 export interface HumanEvaluationScoreStats {
@@ -915,254 +955,6 @@ export async function fetchHumanEvaluationAverageScores(
 }
 
 // QnA Categories API Types (더 이상 사용하지 않음 - 고정된 카테고리 사용)
-
-// Full Transcript API Types
-export interface FullTranscriptResponse {
-  full_transcript_id: string
-  presentation_id: string
-  full_text: string
-  word_count: number
-  created_at: string
-  updated_at: string | null
-}
-
-export interface FullTranscriptList {
-  total: number
-  items: FullTranscriptResponse[]
-}
-
-/**
- * 전체 트랜스크립트 조회
- * @param presentationId 발표 ID
- * @returns 전체 트랜스크립트
- */
-export async function fetchFullTranscript(
-  presentationId: string
-): Promise<FullTranscriptResponse | null> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/full-transcripts?presentation_id=${encodeURIComponent(presentationId)}`
-  )
-  
-  if (!response.ok) {
-    if (response.status === 404) {
-      return null
-    }
-    throw new Error(`전체 트랜스크립트 조회 실패: ${response.status}`)
-  }
-  
-  const data = await response.json() as FullTranscriptList
-  return data.items.length > 0 ? data.items[0] : null
-}
-
-// Presentation Summary API Types
-export interface PresentationSummaryResponse {
-  summary_id: string
-  presentation_id: string
-  summary_text: string
-  key_points: string[] | null
-  created_at: string
-  updated_at: string | null
-}
-
-export interface PresentationSummaryList {
-  total: number
-  items: PresentationSummaryResponse[]
-}
-
-/**
- * 프레젠테이션 요약 조회
- * @param presentationId 발표 ID
- * @returns 프레젠테이션 요약
- */
-export async function fetchPresentationSummary(
-  presentationId: string
-): Promise<PresentationSummaryResponse | null> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/presentation-summaries?presentation_id=${encodeURIComponent(presentationId)}`
-  )
-  
-  if (!response.ok) {
-    if (response.status === 404) {
-      return null
-    }
-    throw new Error(`프레젠테이션 요약 조회 실패: ${response.status}`)
-  }
-  
-  const data = await response.json() as PresentationSummaryList
-  return data.items.length > 0 ? data.items[0] : null
-}
-
-// AI Comments API Types
-export interface AICommentResponse {
-  comment_id: number
-  presentation_id: string
-  comment_text: string
-  created_at: string
-  timestamp_seconds: number
-}
-
-export interface AICommentList {
-  total: number
-  items: AICommentResponse[]
-}
-
-/**
- * AI 코멘트를 타임스탬프 이후로 조회
- * @param presentationId 발표 ID
- * @param timestampSeconds 타임스탬프 (초)
- * @returns AI 코멘트 목록
- */
-export async function fetchAICommentsAfterTimestamp(
-  presentationId: string,
-  timestampSeconds: number
-): Promise<AICommentResponse[]> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/ai-comments/presentation/${encodeURIComponent(presentationId)}/after-timestamp?timestamp_seconds=${timestampSeconds}`
-  )
-  
-  if (!response.ok) {
-    if (response.status === 404) {
-      return []
-    }
-    throw new Error(`AI 코멘트 조회 실패: ${response.status}`)
-  }
-  
-  const data = await response.json() as AICommentList
-  return data.items
-}
-
-// AI Evaluation Scores API Types
-export interface AIEvaluationScoreResponse {
-  score_id: number
-  presentation_id: string
-  category: string
-  score: number
-  score_type: string
-  evaluated_at: string
-  created_at: string
-}
-
-export interface AIEvaluationScoreList {
-  total: number
-  items: AIEvaluationScoreResponse[]
-}
-
-/**
- * AI 평가 점수 조회
- * @param presentationId 발표 ID (옵션)
- * @returns AI 평가 점수 목록
- */
-export async function fetchAIEvaluationScores(
-  presentationId?: string
-): Promise<AIEvaluationScoreResponse[]> {
-  const url = presentationId 
-    ? `${API_BASE_URL}/seminar/api/ai-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
-    : `${API_BASE_URL}/seminar/api/ai-evaluation-scores`
-  
-  const response = await fetch(url)
-  
-  if (!response.ok) {
-    throw new Error(`AI 평가 점수 조회 실패: ${response.status}`)
-  }
-  
-  const data = await response.json() as AIEvaluationScoreList
-  return data.items
-}
-
-// Human Evaluation Scores API Types
-export interface HumanEvaluationScoreResponse {
-  score_id: number
-  presentation_id: string
-  category: string
-  score: number
-  evaluator_id: string
-  created_at: string
-  updated_at: string | null
-}
-
-export interface HumanEvaluationScoreList {
-  total: number
-  items: HumanEvaluationScoreResponse[]
-}
-
-/**
- * 사람 평가 점수 조회
- * @param presentationId 발표 ID (옵션)
- * @returns 사람 평가 점수 목록
- */
-export async function fetchHumanEvaluationScores(
-  presentationId?: string
-): Promise<HumanEvaluationScoreResponse[]> {
-  const url = presentationId 
-    ? `${API_BASE_URL}/seminar/api/human-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
-    : `${API_BASE_URL}/seminar/api/human-evaluation-scores`
-  
-  const response = await fetch(url)
-  
-  if (!response.ok) {
-    throw new Error(`사람 평가 점수 조회 실패: ${response.status}`)
-  }
-  
-  const data = await response.json() as HumanEvaluationScoreList
-  return data.items
-}
-
-// Combined Summary Data Type
-export interface PresentationSummaryData {
-  presentation_id: string
-  presenter_name: string
-  company: string
-  topic: string
-  ai_score: number
-  human_score: number
-  final_score: number
-  detailed_scores: Record<string, number>
-  summary_text?: string
-  key_points?: string[]
-}
-
-// Category Rankings API Types
-export interface CategoryRankingItem {
-  rank: number
-  presenter_id: string
-  name: string
-  company: string
-  presentation_id: string
-  topic: string
-  score: number
-}
-
-export interface CategoryRankingList {
-  ranking_type: string
-  total: number
-  items: CategoryRankingItem[]
-}
-
-export interface CategoryRankingsResponse {
-  ai_category_rankings: CategoryRankingList[]
-  human_category_rankings: CategoryRankingList[]
-}
-
-/**
- * 카테고리별 세부 랭킹 조회
- * @param sessionType 세션 타입 (세션1, 세션2)
- * @param limit 조회할 최대 개수
- * @returns 카테고리별 랭킹 정보
- */
-export async function fetchCategoryRankings(
-  sessionType: string,
-  limit: number = 100
-): Promise<CategoryRankingsResponse> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/rankings/${encodeURIComponent(sessionType)}/detail?limit=${limit}`
-  )
-  
-  if (!response.ok) {
-    throw new Error(`카테고리별 랭킹 조회 실패: ${response.status}`)
-  }
-  
-  return await response.json() as CategoryRankingsResponse
-}
 
 /**
  * QnA 카테고리 목록 조회 (한글-영어 키워드 쌍)
@@ -1257,198 +1049,182 @@ export async function createPanelPresentation(data: PanelPresentationCreate): Pr
 }
 
 /**
+ * 키워드별 미사용 질문 랜덤 조회 및 사용 표시
+ * @param keyword 키워드
+ * @returns 비디오 URL이 포함된 질문 정보
+ */
+export async function fetchRandomUnusedQuestionByKeyword(
+  keyword: string
+): Promise<QnAQuestionWithVideoResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/qna-questions/keyword/${encodeURIComponent(keyword)}/unused-random`
+  )
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error(`AI가 카테고리 '${keyword}'에 해당하는 질문을 준비중입니다.`)
+    }
+    throw new Error(`질문 조회 실패: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+/**
  * 키워드별 선택된 질문 랜덤 조회 및 선택 해제
  * @param keyword 검색할 키워드
  * @returns 랜덤으로 선택된 질문 정보
  */
 export async function fetchRandomSelectedQuestionByKeyword(keyword: string): Promise<QnAQuestionResponse> {
   const response = await fetch(`${API_BASE_URL}/seminar/api/qna-questions/keyword/${encodeURIComponent(keyword)}/selected`)
-  
+
   if (!response.ok) {
     if (response.status === 404) {
       throw new Error(`AI가 카테고리 '${keyword}'에 해당하는 질문을 생성중입니다.`)
     }
     throw new Error(`질문 조회 실패: ${response.status}`)
   }
-  
+
   return response.json()
 }
 
-// ============================================================================
-// Session 1 & Session 2 Operation 관련 API
-// ============================================================================
+// ==================== Live Q&A API ====================
 
 /**
- * AI 평가 결과 인터페이스
+ * Live Q&A 세션 상태 타입
  */
-export interface AIEvaluationResult {
-  presentation_id: string
-  image_count: number
-  transcript_count: number
-  feedback_count: number
-  score_count: number
-  evaluation_time: number
-  raw_response: string
-}
+export type LiveQAStatus = 'intro' | 'recording' | 'generating' | 'playing' | 'completed' | 'error'
 
 /**
- * [Session1] 발표 AI 평가 생성
- * @param presentationId 발표 ID
- * @returns AI 평가 결과
+ * Live Q&A 세션 정보
  */
-export async function generateAIEvaluation(presentationId: string): Promise<AIEvaluationResult> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/presentations/${presentationId}/ai-evaluation`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-  
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`AI 평가 생성 실패: ${response.status} - ${errorText}`)
-  }
-  
-  return response.json()
-}
-
-/**
- * 총점 계산 결과 인터페이스
- */
-export interface PresentationSummaryResult {
-  summary_id: string
-  presentation_id: string
-  total_score: number
-  ai_score: number
-  human_score: number
-  calculation_details: {
-    ai_evaluation: {
-      score: number
-      weights: Record<string, number>
-      multiplier: number
-    }
-    human_evaluation: {
-      score: number
-      weights: Record<string, number>
-      multiplier: number
-    }
-    total_calculation: {
-      ai_weight: number
-      human_weight: number
-    }
-  }
-}
-
-/**
- * [Session1] 발표 총점 계산 및 요약 생성
- * @param presentationId 발표 ID
- * @returns 총점 계산 결과
- */
-export async function calculatePresentationSummary(presentationId: string): Promise<PresentationSummaryResult> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/presentation-summaries/calculate/${presentationId}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  )
-  
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`총점 계산 실패: ${response.status} - ${errorText}`)
-  }
-  
-  return response.json()
-}
-
-/**
- * AI 질문 생성 결과 인터페이스
- */
-export interface QnAGenerationResult {
-  question_id: number
-  presentation_id: string
-  title: string | null
-  keyword: string | null
-  question_text: string
-  answer_text: string | null
-  created_by: number
-  is_selected: boolean
+export interface LiveQASession {
+  session_id: string
+  status: LiveQAStatus
+  character_id?: string
   created_at: string
 }
 
 /**
- * [Session2] 발표 AI 질문 생성 (2단계 방식)
- * @param presentationId 발표 ID
- * @returns 생성된 첫 번째 질문
+ * Live Q&A 세션 상태 정보 (폴링용)
  */
-export async function generateQnAQuestions(presentationId: string): Promise<QnAGenerationResult> {
-  const formData = new FormData()
-  formData.append('presentation_id', presentationId)
-  
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/qna-questions`,
-    {
-      method: 'POST',
-      body: formData,
-    }
-  )
-  
-  if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`Q&A 질문 생성 실패: ${response.status} - ${errorText}`)
-  }
-  
-  return response.json()
-}
-
-/**
- * 아바타 비디오 생성 입력 인터페이스
- */
-export interface AvatarVideoInput {
-  character_name: string
-  text: string
-  is_question: boolean
-}
-
-/**
- * 아바타 비디오 생성 결과 인터페이스
- */
-export interface AvatarVideoResult {
-  video_url: string
-  character_name: string
-  text: string
-  is_question: boolean
-  processing_time_seconds: number
-  status: string
+export interface LiveQASessionState {
+  session_id: string
+  status: LiveQAStatus
+  generation_progress: number
+  question_text?: string
+  answer_text?: string
+  answer_video_url?: string
   error_message?: string
+  created_at: string
+  started_recording_at?: string
+  stopped_recording_at?: string
+  started_generating_at?: string
+  completed_at?: string
 }
 
 /**
- * [Session2] 아바타 비디오 생성
- * @param data 아바타 비디오 생성 데이터
- * @returns 생성된 비디오 정보
+ * 새로운 Live Q&A 세션 시작
+ * @returns 생성된 세션 정보
  */
-export async function generateAvatarVideo(data: AvatarVideoInput): Promise<AvatarVideoResult> {
-  const response = await fetch(
-    `${API_BASE_URL}/seminar/api/avatar-video/generate`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    }
-  )
-  
+export async function startLiveQASession(): Promise<LiveQASession> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/live-qa/session/start`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({})
+  })
+
   if (!response.ok) {
-    const errorText = await response.text()
-    throw new Error(`아바타 비디오 생성 실패: ${response.status} - ${errorText}`)
+    const error = await response.json()
+    if (response.status === 409) {
+      throw new Error('이미 진행 중인 세션이 있습니다')
+    }
+    throw new Error(error.message || 'Live Q&A 세션 시작 실패')
   }
-  
+
   return response.json()
+}
+
+/**
+ * 현재 Live Q&A 세션 상태 조회 (폴링용)
+ * @returns 세션 상태 정보
+ */
+export async function getLiveQAStatus(): Promise<LiveQASessionState> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/live-qa/session/current/status`)
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new Error('활성 세션이 없습니다')
+    }
+    throw new Error('세션 상태 조회 실패')
+  }
+
+  return response.json()
+}
+
+/**
+ * STT 녹음 시작
+ * @param sessionId 세션 ID
+ */
+export async function startRecording(sessionId: string): Promise<LiveQASession> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/live-qa/session/${sessionId}/start-recording`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({})
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.message || 'STT 녹음 시작 실패')
+  }
+
+  return response.json()
+}
+
+/**
+ * STT 녹음 중지 및 답변 생성
+ * @param sessionId 세션 ID
+ * @param manualText 수동 입력 텍스트 (테스트용)
+ * @param audioFilePath 오디오 파일 경로
+ */
+export async function stopRecording(
+  sessionId: string,
+  manualText?: string,
+  audioFilePath?: string
+): Promise<LiveQASession> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/live-qa/session/${sessionId}/stop-recording`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      manual_text: manualText,
+      audio_file_path: audioFilePath
+    })
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.message || 'STT 녹음 중지 실패')
+  }
+
+  return response.json()
+}
+
+/**
+ * Live Q&A 세션 종료
+ * @param sessionId 세션 ID
+ */
+export async function endLiveQASession(sessionId: string): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/live-qa/session/${sessionId}`, {
+    method: 'DELETE'
+  })
+
+  if (!response.ok && response.status !== 404) {
+    throw new Error('세션 종료 실패')
+  }
 }

@@ -34,7 +34,7 @@ export default function QnACategories() {
   const handleCategoryClick = async (keyword: string) => {
     try {
       setClickedCategory(keyword)
-      
+
       // 생성 중 화면을 보여주기 위해 약간의 딜레이 후 category 페이지로 이동
       setTimeout(() => {
         router.push(`/qna/${encodeURIComponent(keyword)}`)
@@ -44,6 +44,12 @@ export default function QnACategories() {
       setError(err instanceof Error ? err.message : '카테고리로 이동하는데 실패했습니다.')
       setClickedCategory(null)
     }
+  }
+
+  const handleBrainClick = () => {
+    console.log('🧠 [LIVE QA] Brain 아이콘 클릭 - User 화면으로 이동')
+    // Live Q&A User 화면으로 이동 (활성 세션을 자동으로 감지)
+    router.push('/qna/live/active')
   }
 
 
@@ -342,8 +348,10 @@ export default function QnACategories() {
               ))}
 
               {/* Brain 아이콘 */}
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <motion.div
+                  onClick={handleBrainClick}
+                  className="cursor-pointer pointer-events-auto relative z-10"
                   animate={{
                     scale: [1, 1.1, 1],
                     rotate: [0, 5, -5, 0],
@@ -360,14 +368,19 @@ export default function QnACategories() {
                       ease: "easeInOut",
                     },
                   }}
+                  whileHover={{ scale: 1.15 }}
+                  whileTap={{ scale: 0.95 }}
                 >
-                  <Brain 
-                    className="w-32 h-32 text-cyan-400" 
+                  <Brain
+                    className="w-32 h-32 text-cyan-400"
                     strokeWidth={1.5}
                     style={{
                       filter: "drop-shadow(0 0 20px rgba(34, 211, 238, 0.8))",
                     }}
                   />
+                  <div className="absolute top-full mt-2 text-center text-cyan-300 text-sm font-medium whitespace-nowrap">
+                    실시간 질문하기
+                  </div>
                 </motion.div>
               </div>
 
@@ -785,10 +798,13 @@ export default function QnACategories() {
                 }}
               />
 
-              <foreignObject x="320" y="320" width="160" height="160">
-                <div className="w-full h-full flex items-center justify-center">
+              <foreignObject x="300" y="300" width="200" height="220">
+                <div className="w-full h-full flex flex-col items-center justify-center gap-2">
                   <motion.div
-                    className="relative"
+                    onClick={handleBrainClick}
+                    className="relative cursor-pointer"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
                     animate={{
                       filter: [
                         "drop-shadow(0 0 12px rgba(59, 130, 246, 0.9)) drop-shadow(0 0 25px rgba(34, 211, 238, 0.6))",
@@ -809,6 +825,9 @@ export default function QnACategories() {
                     />
                     <Brain className="w-28 h-28 text-blue-200/30 absolute top-0 left-0" strokeWidth={1} />
                   </motion.div>
+                  <div className="text-cyan-300 text-sm font-medium whitespace-nowrap">
+                    실시간 질문하기
+                  </div>
                 </div>
               </foreignObject>
             </motion.g>
