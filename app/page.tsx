@@ -237,7 +237,52 @@ export default function SessionEntry() {
           </motion.div>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <Link href="/panel-discussion" className="block group">
+            <Link href="/panel-live" className="block group">
+              <motion.div
+                className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <motion.div
+                  className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-purple-500/40 to-purple-500/20 blur-xl"
+                  initial={{ opacity: 0 }}
+                  whileHover={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                />
+
+                <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-xl border border-purple-500/30 rounded-xl group-hover:border-purple-500/60 group-hover:bg-slate-900/80 transition-all duration-300">
+                  <motion.div
+                    className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-500/20 to-transparent h-8"
+                    initial={{ top: "-2rem" }}
+                    whileHover={{
+                      top: "100%",
+                      transition: { duration: 1, ease: "linear" },
+                    }}
+                  />
+                </div>
+
+                <div className="relative h-full flex items-center justify-center gap-3 px-6">
+                  <motion.div 
+                    className="w-3 h-3 bg-red-500 rounded-full"
+                    animate={{
+                      opacity: [1, 0.3, 1],
+                      scale: [1, 1.2, 1],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Number.POSITIVE_INFINITY,
+                    }}
+                  />
+                  <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-purple-400 transition-colors duration-300">
+                    실시간 토론 요약 AI
+                  </span>
+                </div>
+              </motion.div>
+            </Link>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <Link href="/single-presenter?session=패널토의" className="block group">
               <motion.div
                 className="relative w-full h-24 rounded-xl overflow-hidden transition-all duration-300 active:scale-[0.98]"
                 whileHover={{ scale: 1.02 }}
@@ -263,15 +308,16 @@ export default function SessionEntry() {
 
                 <div className="relative h-full flex items-center justify-center gap-3 px-6">
                   <motion.div whileHover={{ rotate: [0, -10, 10, -10, 0], scale: 1.1 }} transition={{ duration: 0.5 }}>
-                    <Users className="w-6 h-6 text-purple-400 group-hover:text-purple-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
+                    <Headphones className="w-6 h-6 text-purple-400 group-hover:text-purple-300 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
                   </motion.div>
                   <span className="text-xl font-semibold text-white text-center text-balance group-hover:text-purple-400 transition-colors duration-300">
-                    실시간 토론 요약 AI
+                    [패널토의] 듣기
                   </span>
                 </div>
               </motion.div>
             </Link>
           </motion.div>
+
 
           {/* Session 1 Divider */}
           <motion.div 

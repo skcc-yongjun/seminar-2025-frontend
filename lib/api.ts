@@ -935,6 +935,121 @@ export async function fetchHumanEvaluationAverageScores(
 
 // QnA Categories API Types (더 이상 사용하지 않음 - 고정된 카테고리 사용)
 
+// Full Transcript API Types
+export interface FullTranscriptResponse {
+  full_transcript_id: string
+  presentation_id: string
+  full_text: string
+  word_count: number
+  created_at: string
+  updated_at: string | null
+}
+
+export interface FullTranscriptList {
+  total: number
+  items: FullTranscriptResponse[]
+}
+
+/**
+ * 전체 트랜스크립트 조회
+ * @param presentationId 발표 ID
+ * @returns 전체 트랜스크립트
+ */
+export async function fetchFullTranscript(
+  presentationId: string
+): Promise<FullTranscriptResponse | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/full-transcripts?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null
+    }
+    throw new Error(`전체 트랜스크립트 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as FullTranscriptList
+  return data.items.length > 0 ? data.items[0] : null
+}
+
+// Presentation Summary API Types
+export interface PresentationSummaryResponse {
+  summary_id: string
+  presentation_id: string
+  summary_text: string
+  key_points: string[] | null
+  created_at: string
+  updated_at: string | null
+}
+
+export interface PresentationSummaryList {
+  total: number
+  items: PresentationSummaryResponse[]
+}
+
+/**
+ * 프레젠테이션 요약 조회
+ * @param presentationId 발표 ID
+ * @returns 프레젠테이션 요약
+ */
+export async function fetchPresentationSummary(
+  presentationId: string
+): Promise<PresentationSummaryResponse | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentation-summaries?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null
+    }
+    throw new Error(`프레젠테이션 요약 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as PresentationSummaryList
+  return data.items.length > 0 ? data.items[0] : null
+}
+
+// AI Comments API Types
+export interface AICommentResponse {
+  comment_id: number
+  presentation_id: string
+  comment_text: string
+  created_at: string
+  timestamp_seconds: number
+}
+
+export interface AICommentList {
+  total: number
+  items: AICommentResponse[]
+}
+
+/**
+ * AI 코멘트를 타임스탬프 이후로 조회
+ * @param presentationId 발표 ID
+ * @param timestampSeconds 타임스탬프 (초)
+ * @returns AI 코멘트 목록
+ */
+export async function fetchAICommentsAfterTimestamp(
+  presentationId: string,
+  timestampSeconds: number
+): Promise<AICommentResponse[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/ai-comments/presentation/${encodeURIComponent(presentationId)}/after-timestamp?timestamp_seconds=${timestampSeconds}`
+  )
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return []
+    }
+    throw new Error(`AI 코멘트 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as AICommentList
+  return data.items
+}
+
 /**
  * QnA 카테고리 목록 조회 (한글-영어 키워드 쌍)
  * @returns QnA 키워드 쌍 목록 (제목 업데이트용)
