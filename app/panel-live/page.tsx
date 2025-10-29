@@ -80,13 +80,16 @@ function PanelLiveContent() {
     setIsClient(true)
   }, [])
 
-  // 패널토의 프레젠테이션 ID 로드 (첫 번째 발표자의 presentation_id 사용)
+  // 패널토의 프레젠테이션 ID 로드 (session_type이 "패널토의"인 presentation_id 사용)
   useEffect(() => {
     const loadPresentationId = async () => {
       try {
-        const data = await fetchPresentationsWithPresenters(sessionParam)
+        const data = await fetchPresentationsWithPresenters("패널토의")
         if (data.length > 0) {
           setCurrentPresentationId(data[0].presentation_id)
+          console.log("패널토의 presentation_id 로드됨:", data[0].presentation_id)
+        } else {
+          setError("패널토의 세션을 찾을 수 없습니다.")
         }
       } catch (err) {
         console.error("패널토의 프레젠테이션 ID 로드 실패:", err)
@@ -94,7 +97,7 @@ function PanelLiveContent() {
       }
     }
     loadPresentationId()
-  }, [sessionParam])
+  }, [])
 
   // DB에서 AI Comments 폴링 (타임스탬프 기반)
   const pollData = async () => {
