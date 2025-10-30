@@ -39,6 +39,8 @@ export interface UseSTTReturn {
   clearInsights: () => void
 }
 
+export const API_WS_URL = process.env.NEXT_PUBLIC_WS_BASE_URL || "wss://ceo-seminar-2025.skax.co.kr"
+
 /**
  * 실시간 STT를 위한 커스텀 Hook
  * 
@@ -49,7 +51,7 @@ export interface UseSTTReturn {
 export function useSTT(
   presentationId: string,
   // 로컬 개발: ws://localhost:8000
-  backendUrl: string = "ws://localhost:8000"
+  backendUrl: string = API_WS_URL
   // 배포 (HTTPS): wss://ceo-seminar-2025.skax.co.kr
   // backendUrl: string = "wss://ceo-seminar-2025.skax.co.kr"
 ): UseSTTReturn {

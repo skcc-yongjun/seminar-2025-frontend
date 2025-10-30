@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
+import { RefreshButton } from "@/components/ui/refresh-button"
 import {
   fetchQnAQuestions,
   fetchPresentations,
@@ -89,8 +90,10 @@ export default function QnaPage() {
       setPresentations(presentationsData)
       setCharacters(charactersData)
       
-      // 세션2 발표만 필터링
-      const session2Only = presentationsData.filter((p) => p.session_type === "세션2")
+      // 세션2 발표만 필터링 + presentation_order 순 정렬
+      const session2Only = presentationsData
+        .filter((p) => p.session_type === "세션2")
+        .sort((a, b) => a.presentation_order - b.presentation_order)
       setSession2Presentations(session2Only)
       
       // 첫 번째 세션2 발표를 자동 선택
@@ -106,6 +109,41 @@ export default function QnaPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  /**
+   * QnA 목록만 새로고침 (presentations/characters는 호출하지 않음)
+   */
+  const refreshQnasOnly = async () => {
+    try {
+      const qnasData = await fetchQnAQuestions()
+      setAllQnas(qnasData)
+      if (selectedPresentationId) {
+        const filtered = qnasData.filter((qna) => qna.presentation_id === selectedPresentationId)
+        setQnas(filtered)
+      }
+    } catch (error) {
+      console.error("QnA만 새로고침 실패:", error)
+    }
+  }
+
+  /**
+   * 사용 여부 토글
+   * @param questionId 질문 ID
+   */
+  const handleToggleUsed = async (questionId: number, currentUsed: boolean, event: React.MouseEvent) => {
+    event.stopPropagation()
+    try {
+      await updateQnAQuestion(questionId, { is_used: !currentUsed })
+      await refreshQnasOnly()
+    } catch (error) {
+      console.error("사용 상태 토글 실패:", error)
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "사용 상태 변경에 실패했습니다.",
+      })
     }
   }
 
@@ -158,7 +196,7 @@ export default function QnaPage() {
         description: "Q&A가 삭제되었습니다.",
       })
       // 목록 다시 로드
-      await loadData()
+      await refreshQnasOnly()
     } catch (error) {
       console.error("Q&A 삭제 실패:", error)
       toast({
@@ -253,7 +291,7 @@ export default function QnaPage() {
       })
 
       // 목록 다시 로드
-      await loadData()
+      await refreshQnasOnly()
     } catch (error) {
       console.error("Q&A 저장 실패:", error)
       toast({
@@ -291,7 +329,7 @@ export default function QnaPage() {
     try {
       await toggleQnAQuestionSelect(questionId)
       // 목록 다시 로드
-      await loadData()
+      await refreshQnasOnly()
     } catch (error) {
       console.error("선택 상태 토글 실패:", error)
       toast({
@@ -359,7 +397,7 @@ export default function QnaPage() {
       <div className="max-w-[1600px] mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Link
-            href="/operation/common"
+            href="/operation/session2"
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-sk-red transition-colors mb-6"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -370,14 +408,17 @@ export default function QnaPage() {
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">Q&A 관리</h1>
               <p className="text-muted-foreground">Session 2 Q&A를 관리합니다</p>
             </div>
-            <Button 
-              onClick={handleAdd} 
-              className="bg-sk-red hover:bg-sk-red/90"
-              disabled={!selectedPresentationId}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Q&A 추가
-            </Button>
+            <div className="flex items-center gap-3">
+              <RefreshButton onRefresh={refreshQnasOnly} autoRefreshInterval={8000} />
+              <Button 
+                onClick={handleAdd} 
+                className="bg-sk-red hover:bg-sk-red/90"
+                disabled={!selectedPresentationId}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Q&A 추가
+              </Button>
+            </div>
           </div>
         </motion.div>
 
@@ -514,6 +555,19 @@ export default function QnaPage() {
                               disabled={isSaving}
                             >
                               {qna.is_selected ? "선택됨 ✓" : "선택"}
+                            </Button>
+                            <Button
+                              onClick={(e) => handleToggleUsed(qna.question_id, qna.is_used, e)}
+                              variant="outline"
+                              size="sm"
+                              className={`min-w-[80px] transition-all ${
+                                qna.is_used
+                                  ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              }`}
+                              disabled={isSaving}
+                            >
+                              {qna.is_used ? "사용됨 ✓" : "사용"}
                             </Button>
                             <Button
                               onClick={() => handleEdit(qna)}

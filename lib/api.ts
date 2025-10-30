@@ -652,6 +652,7 @@ export interface QnAQuestionUpdate {
   answer_text?: string
   answer_korean_caption?: string
   is_selected?: boolean
+  is_used?: boolean
   created_by?: number
 }
 
