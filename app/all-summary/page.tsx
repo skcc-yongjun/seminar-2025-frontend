@@ -224,6 +224,25 @@ export default function AllSummaryPage() {
       )
     : []
 
+  // AI 평가
+  const aiDisplay = [
+    ...aiRanked.slice(0, 6),
+    ...Array(Math.max(0, 6 - aiRanked.length)).fill(null).map((_, idx) => ({
+      company: `샘플회사${idx+1+aiRanked.length}`,
+      ai_score: 0,
+      presentation_id: `dummy-ai-${idx}`
+    }))
+  ];
+  // 경영진 평가
+  const onsiteDisplay = [
+    ...onsiteRanked.slice(0, 6),
+    ...Array(Math.max(0, 6 - onsiteRanked.length)).fill(null).map((_, idx) => ({
+      company: `샘플회사${idx+1+onsiteRanked.length}`,
+      human_score: 0,
+      presentation_id: `dummy-onsite-${idx}`
+    }))
+  ];
+
   return (
     <div
       className="min-h-screen p-4 md:p-6 relative overflow-x-hidden"
@@ -342,54 +361,62 @@ export default function AllSummaryPage() {
 
         {/* Main Ranking Section */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-          <h2 className="text-3xl font-bold text-white text-center mb-8">전체 랭킹</h2>
+          <h2 className="text-4xl md:text-5xl font-extrabold text-white text-center mb-8">전체 랭킹</h2>
           <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
             {/* AI Ranking - 2 columns */}
             <Card className="lg:col-span-2 bg-slate-900/40 backdrop-blur-sm border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
               <CardHeader>
                 <CardTitle className="text-xl text-center text-white">AI 평가</CardTitle>
-                <p className="text-xs text-center text-slate-400">멤버사</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {aiRanked.map((presenter, idx) => (
-                    <motion.div
-                      key={`${presenter.presentation_id}-${idx}`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + idx * 0.05 }}
+                  {aiDisplay.map((presenter, idx) => (
+                    <div
+                      key={presenter.presentation_id || idx}
                       className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 border border-cyan-500/20"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center text-cyan-400 font-bold">
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{presenter.company}</p>
-                          <p className="text-xs text-slate-400">{presenter.presenter_name}</p>
-                        </div>
+                      <div>
+                        <p className="text-white font-medium">{presenter.company}</p>
                       </div>
-                      <p className="text-cyan-400 font-bold text-lg">{presenter.ai_score.toFixed(1)}</p>
-                    </motion.div>
+                      <p className="text-cyan-400 font-bold text-lg">
+                        {presenter.ai_score.toFixed ? presenter.ai_score.toFixed(1) : presenter.ai_score}
+                      </p>
+                    </div>
                   ))}
                 </div>
               </CardContent>
             </Card>
 
             {/* Final Ranking - 3 columns (Center, highlighted) */}
-            <Card className="lg:col-span-3 bg-slate-900/60 backdrop-blur-md border-cyan-400/50 shadow-[0_0_60px_rgba(6,182,212,0.4)] relative overflow-hidden">
-              {/* Animated background effects */}
+            <Card
+              className="lg:col-span-3 bg-slate-900/60 backdrop-blur-md border-cyan-400/80 shadow-[0_0_120px_40px_rgba(6,182,212,0.8)] relative overflow-hidden animate-strong-glow"
+              style={{ zIndex: 2 }}
+            >
+              {/* 훨씬 더 진하고 큰 흰색 글로우 오버레이 */}
+              <motion.div
+                className="absolute -inset-10 rounded-2xl pointer-events-none"
+                style={{
+                  zIndex: 1,
+                  background: "radial-gradient(circle at 50% 50%, rgba(255,255,255,0.78) 0%, rgba(255,255,255,0.35) 40%, transparent 80%)",
+                  filter: "blur(30px)"
+                }}
+                animate={{
+                  opacity: [0.84, 1, 0.84],
+                  boxShadow: [
+                    '0 0 350px 110px #fff, 0 0 260px 90px #fff8',
+                    '0 0 420px 160px #fff, 0 0 320px 140px #ffffff',
+                    '0 0 350px 110px #fff, 0 0 260px 90px #fff8',
+                  ],
+                }}
+                transition={{ duration: 3.2, repeat: Number.POSITIVE_INFINITY, repeatType: 'reverse', ease: 'easeInOut' }}
+              />
+              {/* 기존 오로라/그라데이션 배경 효과 */}
               <motion.div
                 className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 via-blue-500/10 to-purple-500/20"
-                animate={{
-                  opacity: [0.3, 0.6, 0.3],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Number.POSITIVE_INFINITY,
-                  ease: "easeInOut",
-                }}
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 3, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
               />
+              {/* === 이하 패널 내부 내용은 그대로 유지 === */}
 
               {/* Rotating gradient border effect */}
               <motion.div
@@ -420,10 +447,7 @@ export default function AllSummaryPage() {
               />
 
               <CardHeader className="relative z-10">
-                <CardTitle className="text-2xl text-center text-white drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]">
-                  최종 순위
-                </CardTitle>
-                <p className="text-sm text-center text-cyan-300/80">멤버사</p>
+                <CardTitle className="text-2xl text-center text-white drop-shadow-[0_0_25px_cyan] font-extrabold animate-pulse">최종 순위</CardTitle>
               </CardHeader>
               <CardContent className="relative z-10">
                 <div className="space-y-3">
@@ -433,59 +457,24 @@ export default function AllSummaryPage() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: 0.3 + idx * 0.05 }}
-                      whileHover={{ scale: 1.02 }}
-                      className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border-2 border-cyan-500/30 hover:border-cyan-400/60 transition-all relative overflow-hidden group"
+                      whileHover={{ scale: 1.04 }}
+                      className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border-2 border-cyan-400/60 transition-all relative overflow-hidden group shadow-[0_0_60px_10px_rgba(6,182,212,0.7)]"
                     >
-                      {/* Hover glow effect */}
+                      {/* 강한 글로우 순위원(circle) */}
                       <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-cyan-500/0 via-cyan-500/20 to-cyan-500/0 opacity-0 group-hover:opacity-100"
-                        animate={{
-                          x: ["-100%", "100%"],
-                        }}
-                        transition={{
-                          duration: 1.5,
-                          repeat: Number.POSITIVE_INFINITY,
-                        }}
-                      />
-
-                      <div className="flex items-center gap-4 relative z-10">
-                        <motion.div
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl"
-                          style={{
-                            background: `linear-gradient(135deg, ${colors[idx % colors.length]}, ${colors[(idx + 1) % colors.length]})`,
-                            boxShadow: `0 0 30px ${colors[idx % colors.length]}80`,
-                          }}
-                          animate={{
-                            boxShadow: [
-                              `0 0 30px ${colors[idx % colors.length]}80`,
-                              `0 0 40px ${colors[idx % colors.length]}`,
-                              `0 0 30px ${colors[idx % colors.length]}80`,
-                            ],
-                          }}
-                          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-                        >
-                          {idx + 1}
-                        </motion.div>
-                        <div>
-                          <p className="text-white font-bold text-lg group-hover:text-cyan-300 transition-colors">
-                            {presenter.company}
-                          </p>
-                          <p className="text-slate-400 text-sm">{presenter.presenter_name}</p>
-                        </div>
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-extrabold text-xl shadow-[0_0_30px_10px_cyan] bg-gradient-to-br from-cyan-400 via-blue-400 to-purple-400 border-cyan-300 border-2 animate-pulse-glow"
+                        style={{ boxShadow: `0 0 50px 10px cyan, 0 0 80px 18px #3b82f6` }}
+                      >
+                        {idx + 1}
+                      </motion.div>
+                      <div>
+                        <p className="text-white font-bold text-lg group-hover:text-cyan-300 transition-colors">
+                          {presenter.company}
+                        </p>
                       </div>
                       <motion.p
-                        className="text-cyan-400 font-bold text-2xl relative z-10"
-                        style={{
-                          textShadow: "0 0 20px rgba(6, 182, 212, 0.8)",
-                        }}
-                        animate={{
-                          textShadow: [
-                            "0 0 20px rgba(6, 182, 212, 0.8)",
-                            "0 0 30px rgba(6, 182, 212, 1)",
-                            "0 0 20px rgba(6, 182, 212, 0.8)",
-                          ],
-                        }}
-                        transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
+                        className="text-cyan-300 font-extrabold text-2xl drop-shadow-[0_0_18px_cyan] animate-pulse"
+                        style={{ textShadow: "0 0 40px cyan, 0 0 6px #06b6d4" }}
                       >
                         {presenter.final_score.toFixed(1)}
                       </motion.p>
@@ -499,29 +488,21 @@ export default function AllSummaryPage() {
             <Card className="lg:col-span-2 bg-slate-900/40 backdrop-blur-sm border-cyan-500/30 shadow-[0_0_30px_rgba(6,182,212,0.15)]">
               <CardHeader>
                 <CardTitle className="text-xl text-center text-white">경영진 평가</CardTitle>
-                <p className="text-xs text-center text-slate-400">멤버사</p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {onsiteRanked.map((presenter, idx) => (
-                    <motion.div
-                      key={`${presenter.presentation_id}-${idx}`}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.3 + idx * 0.05 }}
+                  {onsiteDisplay.map((presenter, idx) => (
+                    <div
+                      key={presenter.presentation_id || idx}
                       className="flex items-center justify-between p-3 rounded-lg bg-slate-800/30 border border-cyan-500/20"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center text-cyan-400 font-bold">
-                          {idx + 1}
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{presenter.company}</p>
-                          <p className="text-xs text-slate-400">{presenter.presenter_name}</p>
-                        </div>
+                      <div>
+                        <p className="text-white font-medium">{presenter.company}</p>
                       </div>
-                      <p className="text-cyan-400 font-bold text-lg">{presenter.human_score.toFixed(1)}</p>
-                    </motion.div>
+                      <p className="text-cyan-400 font-bold text-lg">
+                        {presenter.human_score?.toFixed ? presenter.human_score.toFixed(1) : presenter.human_score}
+                      </p>
+                    </div>
                   ))}
                 </div>
               </CardContent>

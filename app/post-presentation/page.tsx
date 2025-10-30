@@ -633,7 +633,7 @@ export default function PostPresentationPage() {
         >
           {loadingStage === "revealed" && (
             <div className="mb-8">
-              <h3 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">AI 종합 분석</h3>
+              <h3 className="text-4xl md:text-5xl font-bold text-white flex items-center gap-3 justify-center text-center">AI 종합 분석</h3>
             </div>
           )}
 
@@ -742,7 +742,7 @@ export default function PostPresentationPage() {
 
           <div className="relative min-h-[600px]">
             {loadingStage === "revealed" && (
-              <div className="space-y-8 max-w-5xl mx-auto">
+              <div className="space-y-8 w-full">
                 {isAnalyzingImplication && analyzingLine && (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -757,18 +757,18 @@ export default function PostPresentationPage() {
                 )}
 
                 {/* Strengths Section */}
-                <div className="w-full">
+                <div className="w-full flex gap-6 items-start">
+                  <h4 className="text-5xl font-bold whitespace-nowrap pt-8" style={{ color: "#ec4899", minWidth: "150px" }}>
+                    강점
+                  </h4>
                   <div
-                    className="rounded-xl p-8 min-h-[200px]"
+                    className="flex-1 rounded-xl p-8 min-h-[200px]"
                     style={{
                       border: "2px solid rgba(59, 130, 246, 0.5)",
                       background: "rgba(10, 20, 40, 0.95)",
                       boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
                     }}
                   >
-                    <h4 className="text-3xl font-bold text-center mb-8" style={{ color: "#ec4899" }}>
-                      강점
-                    </h4>
                       {isLoadingAnalysis ? (
                         <p className="text-muted-foreground">로딩 중...</p>
                       ) : strengths.length === 0 ? (
@@ -782,7 +782,7 @@ export default function PostPresentationPage() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="text-lg font-medium text-white leading-relaxed"
+                                className="text-3xl font-medium text-white leading-relaxed"
                               >
                                 <div className="flex items-start gap-3">
                                   <span className="text-white">•</span>
@@ -825,18 +825,18 @@ export default function PostPresentationPage() {
                 </div>
 
                 {/* Weaknesses Section */}
-                <div className="w-full">
+                <div className="w-full flex gap-6 items-start">
+                  <h4 className="text-5xl font-bold whitespace-nowrap pt-8" style={{ color: "#ec4899", minWidth: "150px" }}>
+                    약점
+                  </h4>
                   <div
-                    className="rounded-xl p-8 min-h-[200px]"
+                    className="flex-1 rounded-xl p-8 min-h-[200px]"
                     style={{
                       border: "2px solid rgba(59, 130, 246, 0.5)",
                       background: "rgba(10, 20, 40, 0.95)",
                       boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
                     }}
                   >
-                    <h4 className="text-3xl font-bold text-center mb-8" style={{ color: "#ec4899" }}>
-                      약점
-                    </h4>
                       {isLoadingAnalysis ? (
                         <p className="text-muted-foreground">로딩 중...</p>
                       ) : improvements.length === 0 ? (
@@ -850,7 +850,7 @@ export default function PostPresentationPage() {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="text-lg font-medium text-white leading-relaxed"
+                                className="text-3xl font-medium text-white leading-relaxed"
                               >
                                 <div className="flex items-start gap-3">
                                   <span className="text-white">•</span>
@@ -893,18 +893,18 @@ export default function PostPresentationPage() {
                 </div>
 
                 {/* Summary Section */}
-                <div className="w-full">
+                <div className="w-full flex gap-6 items-start">
+                  <h4 className="text-5xl font-bold whitespace-nowrap pt-8" style={{ color: "#ec4899", minWidth: "150px" }}>
+                    총평
+                  </h4>
                   <div
-                    className="rounded-xl p-8 min-h-[150px]"
+                    className="flex-1 rounded-xl p-8 min-h-[150px]"
                     style={{
                       border: "2px solid rgba(59, 130, 246, 0.5)",
                       background: "rgba(10, 20, 40, 0.95)",
                       boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
                     }}
                   >
-                    <h4 className="text-3xl font-bold text-center mb-8" style={{ color: "#ec4899" }}>
-                      총평
-                    </h4>
                       {isLoadingAnalysis ? (
                         <p className="text-muted-foreground">로딩 중...</p>
                       ) : summaryLines.length === 0 ? (
@@ -918,7 +918,7 @@ export default function PostPresentationPage() {
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ duration: 0.3, ease: "easeOut" }}
-                                  className="text-lg font-medium text-white leading-relaxed"
+                                  className="text-3xl font-medium text-white leading-relaxed"
                                 >
                                   <div className="flex items-start gap-3">
                                     <span className="text-white">•</span>

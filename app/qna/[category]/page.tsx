@@ -17,9 +17,9 @@ function TypingText({ text, delay = 0, className = "", scrollContainerRef }: { t
   useEffect(() => {
     // 초기화
     setDisplayedText("")
-    setCurrentIndex(0)
+    setCurrentIndex(-1) // -1로 시작해서 delay 후 0으로
 
-    // 지연 후 타이핑 시작
+    // delay 시간 후 타이핑 시작
     const startTimeout = setTimeout(() => {
       setCurrentIndex(0)
     }, delay)
@@ -28,7 +28,7 @@ function TypingText({ text, delay = 0, className = "", scrollContainerRef }: { t
   }, [text, delay])
 
   useEffect(() => {
-    if (currentIndex < text.length) {
+    if (currentIndex >= 0 && currentIndex < text.length) {
       // 이전 글자가 마침표, 물음표, 느낌표, 쉼표이면 다음 글자 출력 전에 딜레이
       const prevChar = currentIndex > 0 ? text[currentIndex - 1] : ''
       let typingDelay = 30 // 기본: 30ms
@@ -667,7 +667,7 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
                 <p className="text-4xl text-white leading-relaxed font-medium">
                   <TypingText
                     text={questionData.question_korean_caption!}
-                    delay={300 + (questionData.title || questionData.question_text).length * 30 + 3500}
+                    delay={300 + (questionData.title || questionData.question_text).length * 30 + 500}
                     scrollContainerRef={scrollContainerRef}
                     className=""
                   />
