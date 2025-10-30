@@ -9,8 +9,8 @@ import { fetchRandomUnusedQuestionByKeyword, type QnAQuestionWithVideoResponse }
 // 비디오 자동 재생 설정 (쉽게 변경 가능)
 const AUTO_PLAY_VIDEO = true
 
-// 타이핑 효과 컴포넌트
-function TypingText({ text, delay = 0, className = "" }: { text: string; delay?: number; className?: string }) {
+// 타이핑 효과 컴포넌트 (자동 스크롤 기능 + 마침표 딜레이)
+function TypingText({ text, delay = 0, className = "", scrollContainerRef }: { text: string; delay?: number; className?: string; scrollContainerRef?: React.RefObject<HTMLDivElement | null> }) {
   const [displayedText, setDisplayedText] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -29,14 +29,29 @@ function TypingText({ text, delay = 0, className = "" }: { text: string; delay?:
 
   useEffect(() => {
     if (currentIndex < text.length) {
+      // 이전 글자가 마침표, 물음표, 느낌표, 쉼표이면 다음 글자 출력 전에 딜레이
+      const prevChar = currentIndex > 0 ? text[currentIndex - 1] : ''
+      let typingDelay = 30 // 기본: 30ms
+
+      if (prevChar === '.' || prevChar === '?' || prevChar === '!') {
+        typingDelay = 750 // 마침표, 물음표, 느낌표 후: 750ms
+      } else if (prevChar === ',') {
+        typingDelay = 300 // 쉼표 후: 300ms
+      }
+
       const timeout = setTimeout(() => {
         setDisplayedText(prev => prev + text[currentIndex])
         setCurrentIndex(prev => prev + 1)
-      }, 30) // 30ms 간격으로 한 글자씩
+
+        // 스크롤 컨테이너가 있으면 자동으로 하단으로 스크롤
+        if (scrollContainerRef?.current) {
+          scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight
+        }
+      }, typingDelay)
 
       return () => clearTimeout(timeout)
     }
-  }, [currentIndex, text])
+  }, [currentIndex, text, scrollContainerRef])
 
   return <span className={className}>{displayedText}</span>
 }
@@ -52,6 +67,9 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
   // React Strict Mode에서 중복 API 호출 방지를 위한 ref
   const hasFetchedRef = useRef(false)
   const currentCategoryRef = useRef(category)
+
+  // 스크롤 컨테이너 ref (자동 스크롤용)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
 
   console.log('[DEBUG] Component rendered', {
     category,
@@ -254,8 +272,13 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
 
   // 에러 상태 UI
   if (!questionData || error) {
-    // "준비중" 또는 "생성중" 메시지인 경우 특별한 UI 표시
-    const isGenerating = error && (error.includes('준비중') || error.includes('생성중'))
+    // "준비중", "생성중", "찾을 수 없습니다" 메시지인 경우 또는 404 에러인 경우 "생성 중" UI 표시
+    const isGenerating = error && (
+      error.includes('준비중') ||
+      error.includes('생성중') ||
+      error.includes('찾을 수 없습니다') ||
+      error.includes('404')
+    )
 
     if (isGenerating) {
       return (
@@ -528,15 +551,15 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-8 items-stretch">
+        <div className="grid lg:grid-cols-[400px_1fr] gap-8 items-start">
 
-          {/* 왼쪽: 질문 비디오 */}
+          {/* 왼쪽: 질문 비디오 - 상단 고정 */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="relative flex items-center"
+            className="relative"
           >
-            <div className="relative aspect-[9/16] max-w-md mx-auto rounded-2xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm shadow-2xl shadow-cyan-500/10">
+            <div className="relative aspect-[9/16] w-full rounded-2xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm shadow-2xl shadow-cyan-500/10">
               {questionData.video_result ? (
                 <video
                   src={questionData.video_result}
@@ -591,11 +614,12 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
             </div>
           </motion.div>
 
-          {/* 오른쪽: 질문 정보 */}
+          {/* 오른쪽: 질문 정보 - 비디오 높이와 동일하게 제한 */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col gap-6 h-full"
+            className="flex flex-col gap-6"
+            style={{ height: 'calc(400px * 16 / 9)' }}
           >
             {/* 질문 제목 카드 */}
             <div className="relative rounded-2xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-sm p-8 shadow-2xl shadow-cyan-500/10">
@@ -621,48 +645,30 @@ export default function QnAQuestions({ params }: { params: Promise<{ category: s
               <div className="absolute bottom-0 right-0 w-20 h-20 border-b border-r border-cyan-500/50" />
             </div>
 
-            {/* 질문 자막 카드 */}
-            <div className="relative rounded-xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-sm p-10 shadow-lg shadow-cyan-500/10">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5" />
+            {/* 질문 자막 카드 - 비디오 하단 맞춤 + 자동 스크롤 */}
+            <div className="relative rounded-xl border border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-sm shadow-lg shadow-cyan-500/10 flex-1 min-h-0 flex flex-col overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5 pointer-events-none" />
 
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-4">
+              <div
+                ref={scrollContainerRef}
+                className="relative p-16 overflow-y-auto flex-1 [&::-webkit-scrollbar]:hidden"
+                style={{
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
+              >
+
+                <div className="flex items-center gap-2 mb-6">
                   <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-cyan-400/70">질문 자막</span>
+                  <span className="text-base font-medium text-cyan-400/70">질문</span>
                 </div>
 
-                {/* question_korean_caption 표시 - 타이핑 효과 */}
-                <p className="text-2xl text-white leading-relaxed">
+                {/* question_korean_caption 표시 - 타이핑 효과 (크게) + 자동 스크롤 */}
+                <p className="text-4xl text-white leading-relaxed font-medium">
                   <TypingText
-                    text={questionData.question_korean_caption || questionData.question_text}
-                    delay={300 + (questionData.title || questionData.question_text).length * 30 + 500}
-                    className=""
-                  />
-                </p>
-              </div>
-            </div>
-
-            {/* 질문 본문 카드 */}
-            <div className="relative rounded-xl overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-sm p-10 shadow-lg shadow-cyan-500/10 flex-1 flex flex-col justify-center">
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-blue-500/5 to-purple-500/5" />
-
-              <div className="relative">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" />
-                  <span className="text-sm font-medium text-cyan-400/70">질문 내용</span>
-                </div>
-
-                {/* question_text 표시 - 타이핑 효과 */}
-                <p className="text-2xl text-white/90 leading-relaxed">
-                  <TypingText
-                    text={questionData.question_text}
-                    delay={
-                      300 +
-                      (questionData.title || questionData.question_text).length * 30 +
-                      500 +
-                      (questionData.question_korean_caption || questionData.question_text).length * 30 +
-                      500
-                    }
+                    text={questionData.question_korean_caption!}
+                    delay={300 + (questionData.title || questionData.question_text).length * 30 + 3500}
+                    scrollContainerRef={scrollContainerRef}
                     className=""
                   />
                 </p>

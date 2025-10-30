@@ -153,10 +153,10 @@ export default function QnACategories() {
             </div>
 
             <h2 className="text-4xl font-bold text-white mb-4">
-              AI가 열심히 질문을 생성 중입니다
+              카테고리 목록을 불러오는 중입니다
             </h2>
             <p className="text-blue-300 text-xl mb-2">
-              {clickedCategory ? `${clickedCategory} 카테고리의 맞춤형 질문을 만들고 있어요` : '키워드를 불러오고 있어요'}
+              잠시만 기다려주세요
             </p>
             <p className="text-blue-400/70 text-base">
               잠시만 기다려주세요...
@@ -239,13 +239,13 @@ export default function QnACategories() {
           </div>
 
           <h2 className="text-4xl font-bold text-white mb-4">
-            AI가 열심히 질문을 생성 중입니다
+            카테고리를 불러올 수 없습니다
           </h2>
           <p className="text-blue-300 text-xl mb-2">
-            {clickedCategory} 카테고리의 맞춤형 질문을 만들고 있어요
+            오류가 발생했습니다
           </p>
           <p className="text-blue-400/70 text-base mb-6">
-            잠시만 기다려주세요...
+            다시 시도해주세요
           </p>
 
           <button 
