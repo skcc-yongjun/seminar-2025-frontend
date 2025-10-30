@@ -57,6 +57,9 @@ export default function PostPresentationPage() {
   const searchParams = useSearchParams()
   const presentationIdFromQuery = searchParams.get("presentationId")
 
+  // Hydration 에러 방지: 클라이언트 마운트 체크
+  const [isMounted, setIsMounted] = useState(false)
+
   const [presentations, setPresentations] = useState<PresentationWithPresenter[]>([])
   const [selectedPresentationId, setSelectedPresentationId] = useState<string>("")
   const selectedPresentation = presentations.find((p) => p.presentation_id === selectedPresentationId)
@@ -65,6 +68,7 @@ export default function PostPresentationPage() {
   const [strengths, setStrengths] = useState<StrengthItem[]>([])
   const [improvements, setImprovements] = useState<ImprovementItem[]>([])
   const [summary, setSummary] = useState<string>("")
+  const [summaryLines, setSummaryLines] = useState<string[]>([]) // 총평을 줄바꿈으로 분리
   const [isLoadingAnalysis, setIsLoadingAnalysis] = useState(false)
 
   const [isAnalyzingImplication, setIsAnalyzingImplication] = useState(false)
@@ -77,6 +81,7 @@ export default function PostPresentationPage() {
 
   const [visibleStrengthItems, setVisibleStrengthItems] = useState<number[]>([])
   const [visibleWeaknessItems, setVisibleWeaknessItems] = useState<number[]>([])
+  const [visibleSummaryItems, setVisibleSummaryItems] = useState<number[]>([])
 
   const [analyzingLine, setAnalyzingLine] = useState<string>("")
 
@@ -90,6 +95,7 @@ export default function PostPresentationPage() {
 
   const [completedStrengthItems, setCompletedStrengthItems] = useState<number[]>([])
   const [completedWeaknessItems, setCompletedWeaknessItems] = useState<number[]>([])
+  const [completedSummaryItems, setCompletedSummaryItems] = useState<number[]>([])
   const [completedSummary, setCompletedSummary] = useState(false)
 
   // 평가 완료 상태 polling을 위한 state
@@ -136,6 +142,13 @@ export default function PostPresentationPage() {
       const summaryComments = comments.filter(c => c.type === '총평')
       const combinedSummary = summaryComments.map(c => c.comment).join('\n\n')
       setSummary(combinedSummary || "")
+      
+      // 총평을 줄바꿈으로 분리 (불릿 처리를 위해)
+      const lines = combinedSummary
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+      setSummaryLines(lines)
 
     } catch (error) {
       console.error("분석 데이터 로딩 실패:", error)
@@ -143,6 +156,7 @@ export default function PostPresentationPage() {
       setStrengths([])
       setImprovements([])
       setSummary("")
+      setSummaryLines([])
     } finally {
       setIsLoadingAnalysis(false)
     }
@@ -187,17 +201,26 @@ export default function PostPresentationPage() {
       }
 
       // 모든 강점/약점 표시 후 총평 표시 (마지막 아이템의 타이핑 시간 고려하여 추가 대기)
-      // 마지막 아이템의 타이핑 애니메이션이 완료될 때까지 충분히 대기
       setTimeout(() => {
         setAnalyzingLine("총평 작성 중...")
         setShowSummary(true)  // 이제 총평 표시
+        
+        // 총평 항목들을 순차적으로 표시
+        let summaryTime = 500
+        summaryLines.forEach((_, idx) => {
+          setTimeout(() => {
+            setVisibleSummaryItems(prev => [...prev, idx])
+          }, summaryTime)
+          summaryTime += 1400 // 각 총평 항목마다 1.4초 간격
+        })
 
+        // 모든 총평 표시 완료 후
         setTimeout(() => {
           setAnalyzingLine("")
           setIsAnalyzingImplication(false)
           setIsImplicationAnalysisComplete(true)
           setShowScores(true)
-        }, 2000)
+        }, summaryTime + 1500) // 마지막 총평 아이템의 타이핑 완료 대기
       }, currentTime + 2500)  // 2500ms 추가하여 마지막 아이템의 타이핑 완료 대기
     }
 
@@ -209,6 +232,11 @@ export default function PostPresentationPage() {
     handleImplicationAnalysis()
   }
 
+
+  // 클라이언트 마운트 확인
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   // 발표 목록 로딩
   useEffect(() => {
@@ -252,8 +280,10 @@ export default function PostPresentationPage() {
       setShowSummary(false)
       setVisibleStrengthItems([])
       setVisibleWeaknessItems([])
+      setVisibleSummaryItems([])
       setCompletedStrengthItems([])
       setCompletedWeaknessItems([])
+      setCompletedSummaryItems([])
       setCompletedSummary(false)
       setIsEvaluationComplete(false)
       setAnalyzingLine("")
@@ -353,7 +383,7 @@ export default function PostPresentationPage() {
     }
 
     // 데이터가 없으면 경고
-    if (strengths.length === 0 && improvements.length === 0 && !summary) {
+    if (strengths.length === 0 && improvements.length === 0 && summaryLines.length === 0) {
       console.warn('⚠️ [애니메이션] 분석 데이터가 없습니다')
       return
     }
@@ -362,10 +392,10 @@ export default function PostPresentationPage() {
     console.log('🎬 [애니메이션] 분석 시작', { 
       strengths: strengths.length, 
       improvements: improvements.length, 
-      hasSummary: !!summary 
+      summaryLines: summaryLines.length 
     })
     handleImplicationAnalysis()
-  }, [loadingStage, isLoadingAnalysis, strengths, improvements, summary])
+  }, [loadingStage, isLoadingAnalysis, strengths, improvements, summaryLines])
 
   // 평가 완료 상태 polling
   useEffect(() => {
@@ -476,8 +506,8 @@ export default function PostPresentationPage() {
         }}
       />
 
-      {/* Floating particles */}
-      {[...Array(15)].map((_, i) => (
+      {/* Floating particles - 클라이언트에서만 렌더링하여 Hydration 에러 방지 */}
+      {isMounted && [...Array(15)].map((_, i) => (
         <motion.div
           key={`particle-${i}`}
           className="fixed w-1 h-1 bg-cyan-400 rounded-full pointer-events-none"
@@ -877,25 +907,36 @@ export default function PostPresentationPage() {
                     </h4>
                       {isLoadingAnalysis ? (
                         <p className="text-muted-foreground">로딩 중...</p>
-                      ) : !summary ? (
+                      ) : summaryLines.length === 0 ? (
                         <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
                       ) : (
-                        <AnimatePresence>
-                          {showSummary && (
-                            <motion.p
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.3 }}
-                              className="text-lg font-medium text-white leading-relaxed text-center"
-                            >
-                              <TypewriterText
-                                text={summary}
-                                delay={50}
-                                onComplete={() => setCompletedSummary(true)}
-                              />
-                            </motion.p>
-                          )}
-                        </AnimatePresence>
+                        <ul className="space-y-6">
+                          {summaryLines.map((line, idx) => (
+                            <AnimatePresence key={idx}>
+                              {visibleSummaryItems.includes(idx) && (
+                                <motion.li
+                                  initial={{ opacity: 0, y: 10 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.3, ease: "easeOut" }}
+                                  className="text-lg font-medium text-white leading-relaxed"
+                                >
+                                  <div className="flex items-start gap-3">
+                                    <span className="text-white">•</span>
+                                    <span className="flex-1">
+                                      <TypewriterText
+                                        text={line}
+                                        delay={50}
+                                        onComplete={() => {
+                                          setCompletedSummaryItems((prev) => [...prev, idx])
+                                        }}
+                                      />
+                                    </span>
+                                  </div>
+                                </motion.li>
+                              )}
+                            </AnimatePresence>
+                          ))}
+                        </ul>
                       )}
                   </div>
                 </div>
