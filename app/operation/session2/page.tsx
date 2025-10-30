@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowLeft, MessageSquare, RefreshCw, Video, Loader2 } from "lucide-react"
+import { ArrowLeft, MessageSquare, Video, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useState, useEffect } from "react"
@@ -22,7 +22,6 @@ export default function Session2OperationPage() {
   const [presenters, setPresenters] = useState<PresenterResponse[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isGeneratingQnA, setIsGeneratingQnA] = useState(false)
-  const [isReplacingQnA, setIsReplacingQnA] = useState(false)
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
   const { toast } = useToast()
 
@@ -89,34 +88,7 @@ export default function Session2OperationPage() {
     }
   }
 
-  const handleReplaceQnA = async () => {
-    if (!window.confirm("Q&A를 준비된 것으로 대체하시겠습니까?\n(영상도 함께 생성됩니다)")) {
-      return
-    }
-
-    try {
-      setIsReplacingQnA(true)
-      // TODO: Q&A 대체 기능 요구사항 확인 필요
-      // 1. 수동으로 준비된 Q&A를 불러오는 건지
-      // 2. AI 생성 Q&A를 선택된 것으로 변경하는 건지
-      // 3. 특정 Q&A 세트를 교체하는 건지 백엔드 팀 확인 필요
-      
-      toast({
-        variant: "destructive",
-        title: "알림",
-        description: "Q&A 대체 기능은 요구사항 확인이 필요합니다.",
-      })
-    } catch (error) {
-      console.error("Q&A 대체 실패:", error)
-      toast({
-        variant: "destructive",
-        title: "오류",
-        description: error instanceof Error ? error.message : "Q&A 대체에 실패했습니다.",
-      })
-    } finally {
-      setIsReplacingQnA(false)
-    }
-  }
+  
 
   const handleGenerateVideo = async () => {
     if (!window.confirm("영상을 생성하시겠습니까?\n선택된 Q&A들의 아바타 비디오를 생성합니다.")) {
@@ -248,35 +220,7 @@ export default function Session2OperationPage() {
             </div>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-            <div className="corporate-card rounded-xl p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                    <RefreshCw className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-foreground mb-1">Q&A 대체</h3>
-                    <p className="text-sm text-muted-foreground">준비된 Q&A로 대체 (영상도 함께 생성)</p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleReplaceQnA}
-                  disabled={!selectedPresentation || isReplacingQnA}
-                  className="bg-purple-500 hover:bg-purple-600"
-                >
-                  {isReplacingQnA ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      대체 중...
-                    </>
-                  ) : (
-                    "대체"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </motion.div>
+          
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
             <div className="corporate-card rounded-xl p-6">

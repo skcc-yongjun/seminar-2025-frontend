@@ -670,6 +670,35 @@ export async function fetchQnAQuestions(presentationId?: string): Promise<QnAQue
 }
 
 /**
+ * QnA 질문 생성 (Direct Vision 방식)
+ * - 백엔드: POST /seminar/api/qna-questions/direct-vision
+ * - FormData로 presentation_id를 전달해야 함
+ * @param presentationId 발표 ID
+ * @returns 생성된 첫 번째 QnA 질문
+ */
+export async function generateQnAQuestions(
+  presentationId: string
+): Promise<QnAQuestionResponse> {
+  const formData = new FormData()
+  formData.append('presentation_id', presentationId)
+
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/qna-questions/direct-vision`,
+    {
+      method: 'POST',
+      body: formData,
+    }
+  )
+
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`Q&A 생성 실패: ${response.status} - ${errorText}`)
+  }
+
+  return response.json()
+}
+
+/**
  * QnA 질문 생성 (아바타 비디오 생성 포함)
  * @param question QnA 질문 생성 데이터
  * @returns 생성된 QnA 질문 및 아바타 비디오 정보
@@ -1227,4 +1256,371 @@ export async function endLiveQASession(sessionId: string): Promise<void> {
   if (!response.ok && response.status !== 404) {
     throw new Error('세션 종료 실패')
   }
+}
+
+
+// (수동 머지) 사라진 것들 모두 추가
+
+// Full Transcript API Types
+export interface FullTranscriptResponse {
+  full_transcript_id: string
+  presentation_id: string
+  full_text: string
+  word_count: number
+  created_at: string
+  updated_at: string | null
+}
+
+export interface FullTranscriptList {
+  total: number
+  items: FullTranscriptResponse[]
+}
+
+/**
+ * 전체 트랜스크립트 조회
+ * @param presentationId 발표 ID
+ * @returns 전체 트랜스크립트
+ */
+export async function fetchFullTranscript(
+  presentationId: string
+): Promise<FullTranscriptResponse | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/full-transcripts?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null
+    }
+    throw new Error(`전체 트랜스크립트 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as FullTranscriptList
+  return data.items.length > 0 ? data.items[0] : null
+}
+
+// Presentation Summary API Types
+export interface PresentationSummaryResponse {
+  summary_id: string
+  presentation_id: string
+  summary_text: string
+  key_points: string[] | null
+  created_at: string
+  updated_at: string | null
+}
+
+export interface PresentationSummaryList {
+  total: number
+  items: PresentationSummaryResponse[]
+}
+
+/**
+ * 프레젠테이션 요약 조회
+ * @param presentationId 발표 ID
+ * @returns 프레젠테이션 요약
+ */
+export async function fetchPresentationSummary(
+  presentationId: string
+): Promise<PresentationSummaryResponse | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentation-summaries?presentation_id=${encodeURIComponent(presentationId)}`
+  )
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null
+    }
+    throw new Error(`프레젠테이션 요약 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as PresentationSummaryList
+  return data.items.length > 0 ? data.items[0] : null
+}
+
+// AI Comments API Types
+export interface AICommentResponse {
+  comment_id: number
+  presentation_id: string
+  comment_text: string
+  created_at: string
+  timestamp_seconds: number
+}
+
+export interface AICommentList {
+  total: number
+  items: AICommentResponse[]
+}
+
+/**
+ * AI 코멘트를 타임스탬프 이후로 조회
+ * @param presentationId 발표 ID
+ * @param timestampSeconds 타임스탬프 (초)
+ * @returns AI 코멘트 목록
+ */
+export async function fetchAICommentsAfterTimestamp(
+  presentationId: string,
+  timestampSeconds: number
+): Promise<AICommentResponse[]> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/ai-comments/presentation/${encodeURIComponent(presentationId)}/after-timestamp?timestamp_seconds=${timestampSeconds}`
+  )
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return []
+    }
+    throw new Error(`AI 코멘트 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as AICommentList
+  return data.items
+}
+
+// Human Evaluation Scores API Types
+export interface HumanEvaluationScoreResponse {
+  score_id: number
+  presentation_id: string
+  category: string
+  score: number
+  evaluator_id: string
+  created_at: string
+  updated_at: string | null
+}
+
+export interface HumanEvaluationScoreList {
+  total: number
+  items: HumanEvaluationScoreResponse[]
+}
+
+/**
+ * 사람 평가 점수 조회
+ * @param presentationId 발표 ID (옵션)
+ * @returns 사람 평가 점수 목록
+ */
+export async function fetchHumanEvaluationScores(
+  presentationId?: string
+): Promise<HumanEvaluationScoreResponse[]> {
+  const url = presentationId 
+    ? `${API_BASE_URL}/seminar/api/human-evaluation-scores?presentation_id=${encodeURIComponent(presentationId)}`
+    : `${API_BASE_URL}/seminar/api/human-evaluation-scores`
+  
+  const response = await fetch(url)
+  
+  if (!response.ok) {
+    throw new Error(`사람 평가 점수 조회 실패: ${response.status}`)
+  }
+  
+  const data = await response.json() as HumanEvaluationScoreList
+  return data.items
+}
+
+// Combined Summary Data Type
+export interface PresentationSummaryData {
+  presentation_id: string
+  presenter_name: string
+  company: string
+  topic: string
+  ai_score: number
+  human_score: number
+  final_score: number
+  detailed_scores: Record<string, number>
+  summary_text?: string
+  key_points?: string[]
+}
+
+// Category Rankings API Types
+export interface CategoryRankingItem {
+  rank: number
+  presenter_id: string
+  name: string
+  company: string
+  presentation_id: string
+  topic: string
+  score: number
+}
+
+export interface CategoryRankingList {
+  ranking_type: string
+  total: number
+  items: CategoryRankingItem[]
+}
+
+export interface CategoryRankingsResponse {
+  ai_category_rankings: CategoryRankingList[]
+  human_category_rankings: CategoryRankingList[]
+}
+
+/**
+ * 카테고리별 세부 랭킹 조회
+ * @param sessionType 세션 타입 (세션1, 세션2)
+ * @param limit 조회할 최대 개수
+ * @returns 카테고리별 랭킹 정보
+ */
+export async function fetchCategoryRankings(
+  sessionType: string,
+  limit: number = 100
+): Promise<CategoryRankingsResponse> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/rankings/${encodeURIComponent(sessionType)}/detail?limit=${limit}`
+  )
+  
+  if (!response.ok) {
+    throw new Error(`카테고리별 랭킹 조회 실패: ${response.status}`)
+  }
+  
+  return await response.json() as CategoryRankingsResponse
+}
+
+// ============================================================================
+// Session 1 & Session 2 Operation 관련 API
+// ============================================================================
+
+/**
+ * AI 평가 결과 인터페이스
+ */
+export interface AIEvaluationResult {
+  presentation_id: string
+  image_count: number
+  transcript_count: number
+  feedback_count: number
+  score_count: number
+  evaluation_time: number
+  raw_response: string
+}
+
+/**
+ * [Session1] 발표 AI 평가 생성
+ * @param presentationId 발표 ID
+ * @returns AI 평가 결과
+ */
+export async function generateAIEvaluation(presentationId: string): Promise<AIEvaluationResult> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentations/${presentationId}/ai-evaluation`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`AI 평가 생성 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 총점 계산 결과 인터페이스
+ */
+export interface PresentationSummaryResult {
+  summary_id: string
+  presentation_id: string
+  total_score: number
+  ai_score: number
+  human_score: number
+  calculation_details: {
+    ai_evaluation: {
+      score: number
+      weights: Record<string, number>
+      multiplier: number
+    }
+    human_evaluation: {
+      score: number
+      weights: Record<string, number>
+      multiplier: number
+    }
+    total_calculation: {
+      ai_weight: number
+      human_weight: number
+    }
+  }
+}
+
+/**
+ * [Session1] 발표 총점 계산 및 요약 생성
+ * @param presentationId 발표 ID
+ * @returns 총점 계산 결과
+ */
+export async function calculatePresentationSummary(presentationId: string): Promise<PresentationSummaryResult> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentation-summaries/calculate/${presentationId}`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`총점 계산 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * AI 질문 생성 결과 인터페이스
+ */
+export interface QnAGenerationResult {
+  question_id: number
+  presentation_id: string
+  title: string | null
+  keyword: string | null
+  question_text: string
+  answer_text: string | null
+  created_by: number
+  is_selected: boolean
+  created_at: string
+}
+
+/**
+ * 아바타 비디오 생성 입력 인터페이스
+ */
+export interface AvatarVideoInput {
+  character_name: string
+  text: string
+  is_question: boolean
+}
+
+/**
+ * 아바타 비디오 생성 결과 인터페이스
+ */
+export interface AvatarVideoResult {
+  video_url: string
+  character_name: string
+  text: string
+  is_question: boolean
+  processing_time_seconds: number
+  status: string
+  error_message?: string
+}
+
+/**
+ * [Session2] 아바타 비디오 생성
+ * @param data 아바타 비디오 생성 데이터
+ * @returns 생성된 비디오 정보
+ */
+export async function generateAvatarVideo(data: AvatarVideoInput): Promise<AvatarVideoResult> {
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/avatar-video/generate`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`아바타 비디오 생성 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
 }

@@ -13,6 +13,7 @@ import {
   fetchPresentation, 
   fetchPresentationsWithPresenters, 
   fetchPresentationAnalysisComments,
+  fetchAIEvaluationScores,
   PresentationWithPresenter,
   PresentationAnalysisCommentResponse
 } from "@/lib/api"
@@ -97,6 +98,10 @@ export default function PostPresentationPage() {
   const [presentationStatus, setPresentationStatus] = useState<string>("")
   const [isEvaluationComplete, setIsEvaluationComplete] = useState<boolean>(false)
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // AI 분석 결과 polling을 위한 state
+  const [isAIAnalysisReady, setIsAIAnalysisReady] = useState<boolean>(false)
+  const aiAnalysisPollingRef = useRef<NodeJS.Timeout | null>(null)
 
   // 발표 목록 로딩
   const [isLoadingPresentations, setIsLoadingPresentations] = useState(true)
@@ -253,26 +258,75 @@ export default function PostPresentationPage() {
       setIsEvaluationComplete(false)
       setAnalyzingLine("")
       
+      // AI 분석 결과 상태 초기화
+      setIsAIAnalysisReady(false)
+      
       // 항상 analyzing부터 시작 (정상적인 플로우)
       console.log('🔄 [상태] analyzing으로 초기화')
       setLoadingStage("analyzing")
     }
   }, [selectedPresentationId])
 
+  // AI 분석 결과 polling
+  useEffect(() => {
+    // analyzing 상태이고 선택된 발표가 있을 때만 polling 시작
+    if (loadingStage !== "analyzing" || !selectedPresentationId) {
+      return
+    }
+
+    console.log('🔍 [AI Polling] 시작:', selectedPresentationId)
+
+    const checkAIAnalysisReady = async () => {
+      try {
+        console.log('🔄 [AI Polling] AI 분석 결과 확인 중...')
+        
+        // AI 평가 점수 조회
+        const aiScores = await fetchAIEvaluationScores(selectedPresentationId)
+        
+        console.log(`📊 [AI Polling] AI 점수 개수: ${aiScores.length}`)
+
+        // AI 점수가 있으면 분석 완료
+        if (aiScores.length > 0) {
+          console.log('✅ [AI Polling] AI 분석 완료! ready 상태로 전환')
+          setIsAIAnalysisReady(true)
+          
+          // polling 중지
+          if (aiAnalysisPollingRef.current) {
+            clearInterval(aiAnalysisPollingRef.current)
+            aiAnalysisPollingRef.current = null
+          }
+          
+          // ready 상태로 전환
+          setLoadingStage("ready")
+        } else {
+          console.log('⏳ [AI Polling] AI 분석 진행 중...')
+          setIsAIAnalysisReady(false)
+        }
+      } catch (error) {
+        console.error("❌ [AI Polling] AI 분석 상태 조회 실패:", error)
+      }
+    }
+
+    // 즉시 한번 실행
+    checkAIAnalysisReady()
+
+    // 3초마다 polling 시작
+    aiAnalysisPollingRef.current = setInterval(checkAIAnalysisReady, 3000)
+    console.log('⏰ [AI Polling] Interval 설정됨 (3초마다)')
+
+    // cleanup
+    return () => {
+      console.log('🛑 [AI Polling] Cleanup - Interval 정리')
+      if (aiAnalysisPollingRef.current) {
+        clearInterval(aiAnalysisPollingRef.current)
+        aiAnalysisPollingRef.current = null
+      }
+    }
+  }, [loadingStage, selectedPresentationId])
+
   // loadingStage에 따른 애니메이션 타이머 설정
   useEffect(() => {
-    if (loadingStage === "analyzing") {
-      // analyzing → ready (3초 후)
-      console.log('⏱️ [타이머] analyzing 상태 시작')
-      const timer = setTimeout(() => {
-        console.log('⏱️ [타이머] ready 상태로 전환')
-        setLoadingStage("ready")
-      }, 3000)
-
-      return () => {
-        clearTimeout(timer)
-      }
-    } else if (loadingStage === "ready") {
+    if (loadingStage === "ready") {
       // ready → button (2.5초 후)
       console.log('⏱️ [타이머] ready 상태 시작')
       const timer = setTimeout(() => {
