@@ -314,7 +314,7 @@ function EvaluationsContent() {
           <div className="grid grid-cols-2 gap-8">
             <div className="space-y-4 min-h-[500px]">
               <div className="flex items-center justify-between border-b-2 border-blue-500/30 pb-2">
-                <h3 className="text-xl font-semibold text-white">AI 평가</h3>
+                <h3 className="text-4xl font-semibold text-white w-full text-center justify-center flex">AI 평가</h3>
               </div>
               <div className="relative min-h-[450px]">
                 {Object.keys(aiScores).length === 0 ? (
@@ -334,8 +334,8 @@ function EvaluationsContent() {
                       transition={{ duration: 0.5 }}
                       className="flex items-center gap-4"
                     >
-                      <div className="text-base font-bold text-white min-w-[180px] shrink-0">{key}</div>
-                      <div className="flex-1 h-10 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
+                      <div className="text-2xl font-bold text-white min-w-[240px] shrink-0">{key}</div>
+                      <div className="flex-1 h-14 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(value / 10) * 100}%` }}
@@ -365,7 +365,7 @@ function EvaluationsContent() {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.5 }}
-                        className="text-xl font-bold text-cyan-400 min-w-[50px] text-right"
+                        className="text-3xl font-bold text-cyan-400 min-w-[80px] text-right"
                       >
                         {typeof animatedAIScores[key] === 'number' ? animatedAIScores[key].toFixed(1) : "0.0"}
                       </motion.span>
@@ -378,7 +378,7 @@ function EvaluationsContent() {
 
             <div className="space-y-4 min-h-[500px]">
               <div className="flex items-center justify-between border-b-2 border-blue-500/30 pb-2">
-                <h3 className="text-xl font-semibold text-white">경영진 평가</h3>
+                <h3 className="text-4xl font-semibold text-white w-full text-center justify-center flex">경영진 평가</h3>
               </div>
               <div className="relative min-h-[450px]">
                 {Object.keys(humanScores).length === 0 ? (
@@ -398,8 +398,8 @@ function EvaluationsContent() {
                       transition={{ duration: 0.5 }}
                       className="flex items-center gap-4"
                     >
-                      <div className="text-base font-bold text-white min-w-[180px] shrink-0">{key}</div>
-                      <div className="flex-1 h-10 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
+                      <div className="text-2xl font-bold text-white min-w-[240px] shrink-0">{key}</div>
+                      <div className="flex-1 h-14 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${(value / 10) * 100}%` }}
@@ -429,7 +429,7 @@ function EvaluationsContent() {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.5 }}
-                        className="text-xl font-bold text-cyan-400 min-w-[50px] text-right"
+                        className="text-3xl font-bold text-cyan-400 min-w-[80px] text-right"
                       >
                         {typeof animatedOnsiteScores[key] === 'number' ? animatedOnsiteScores[key].toFixed(1) : "0.0"}
                       </motion.span>
