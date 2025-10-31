@@ -813,11 +813,11 @@ export default function PostPresentationPage() {
             )}
           </AnimatePresence>
 
-            <div className="relative min-h-[600px]">
+              <div className="relative min-h-[600px]">
               {loadingStage === "revealed" && (
-                <div className="flex w-full justify-center items-stretch gap-4 mt-6">
+                <div className="flex w-full justify-center items-stretch gap-3 mt-6">
                   {/* 좌측: 강점/약점 */}
-                  <div className="flex flex-col gap-4" style={{ width: 800 }}>
+                  <div className="flex flex-col gap-4" style={{ width: 700 }}>
                     {/* 강점 카드 */}
                     <div className="rounded-xl p-6 bg-slate-900/40 backdrop-blur-sm border border-cyan-500/30 shadow-lg flex-1" style={{ boxShadow: '0 0 30px rgba(6,182,212,0.2)', height: 320 }}>
                       <h4 className="text-3xl md:text-4xl font-bold text-pink-400 mb-3">강점</h4>
@@ -926,32 +926,33 @@ export default function PostPresentationPage() {
                     </div>
                   </div>
                   
-                  {/* 중간: 주황 화살표 */}
+                  {/* 중간: 화살표 */}
                   <motion.div 
                     className="flex items-center justify-center"
                     animate={{
-                      opacity: [0.7, 1, 0.7],
+                      opacity: [0.6, 1, 0.6],
                     }}
                     transition={{
-                      duration: 2,
+                      duration: 2.5,
                       repeat: Number.POSITIVE_INFINITY,
                       ease: "easeInOut"
                     }}
-                    style={{ filter: 'drop-shadow(0 0 20px rgba(251,146,60,0.5))' }}
+                    style={{ filter: 'drop-shadow(0 0 15px rgba(34,211,238,0.4))' }}
                   >
-                    <svg width="80" height="620" viewBox="0 0 80 620" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10 20 L50 20 L70 310 L50 600 L10 600 L30 310 Z" fill="url(#orangeGradient)" stroke="rgba(251,146,60,0.8)" strokeWidth="2"/>
+                    <svg width="60" height="620" viewBox="0 0 60 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 20 L40 20 L55 310 L40 600 L10 600 L25 310 Z" fill="url(#cyanGradient)" stroke="rgba(34,211,238,0.6)" strokeWidth="1.5"/>
                       <defs>
-                        <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                          <stop offset="0%" stopColor="#fb923c" />
-                          <stop offset="100%" stopColor="#f97316" />
+                        <linearGradient id="cyanGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" stopColor="rgba(34,211,238,0.3)" />
+                          <stop offset="50%" stopColor="rgba(59,130,246,0.4)" />
+                          <stop offset="100%" stopColor="rgba(34,211,238,0.3)" />
                         </linearGradient>
                       </defs>
                     </svg>
                   </motion.div>
                   
                   {/* 우측: 총평 */}
-                  <div style={{ width: 850 }}>
+                  <div style={{ width: 750 }}>
                     <motion.div 
                       className="rounded-xl p-6 backdrop-blur-sm border-2 shadow-lg relative overflow-hidden" 
                       style={{ 
@@ -1042,14 +1043,24 @@ export default function PostPresentationPage() {
                 onClick={() => router.push(`/post-presentation/evaluations?presentationId=${selectedPresentationId}`)}
                 disabled={!isEvaluationComplete}
                 size="lg"
-                variant="outline"
-                className={`px-6 py-3 text-base font-semibold rounded-lg transition-all gap-2 ${
-                  isEvaluationComplete
-                    ? "bg-slate-900/60 backdrop-blur-sm border-cyan-500/50 text-cyan-400 hover:bg-slate-800/80 hover:border-cyan-400 hover:shadow-[0_0_30px_rgba(6,182,212,0.4)]"
-                    : "bg-slate-900/30 border-slate-700/50 text-slate-500 cursor-not-allowed"
+                className={`px-8 py-6 text-lg font-semibold rounded-lg shadow-xl hover:shadow-2xl transition-all gap-3 border-2 ${
+                  isEvaluationComplete ? "" : "opacity-50 cursor-not-allowed"
                 }`}
+                style={isEvaluationComplete ? {
+                  background: "rgba(15, 31, 58, 0.8)",
+                  backdropFilter: "blur(12px)",
+                  borderColor: "rgba(34, 211, 238, 0.5)",
+                  color: "#22d3ee",
+                  boxShadow: "0 0 20px rgba(34, 211, 238, 0.3)",
+                } : {
+                  background: "rgba(15, 31, 58, 0.5)",
+                  backdropFilter: "blur(12px)",
+                  borderColor: "rgba(100, 116, 139, 0.3)",
+                  color: "#64748b",
+                  boxShadow: "none",
+                }}
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-5 h-5" />
                 결과 확인하기
               </Button>
             </motion.div>
