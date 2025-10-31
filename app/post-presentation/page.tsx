@@ -696,7 +696,7 @@ export default function PostPresentationPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="p-8 rounded-lg border-2 shadow-lg relative"
+          className="p-4 rounded-lg border-2 shadow-lg relative"
           style={{
             background: "rgba(10, 20, 40, 0.95)",
             backdropFilter: "blur(24px)",
@@ -705,8 +705,22 @@ export default function PostPresentationPage() {
           }}
         >
           {loadingStage === "revealed" && (
-            <div className="mb-8">
+            <div className="mb-4 relative">
               <h3 className="text-4xl md:text-5xl font-bold text-white flex items-center gap-3 justify-center text-center">AI 종합 분석</h3>
+              {isImplicationAnalysisComplete && !isEvaluationComplete && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="absolute top-0 right-0 flex items-center gap-2 text-sm font-semibold text-cyan-400"
+                >
+                  <div className="h-6 w-6 animate-pulse">
+                    <Brain3D className="w-full h-full" />
+                  </div>
+                  <span className="animate-pulse">
+                    평가집계중... ({evaluatorCount}/{totalEvaluatorCount})
+                  </span>
+                </motion.div>
+              )}
             </div>
           )}
 
@@ -795,11 +809,12 @@ export default function PostPresentationPage() {
                         <Button
                           onClick={handleRevealResults}
                           size="lg"
-                          className="px-8 py-6 text-lg font-semibold rounded-lg shadow-xl hover:shadow-2xl transition-all gap-3"
+                          className="px-8 py-6 text-lg font-semibold rounded-xl backdrop-blur-sm border-2 transition-all gap-3 hover:border-cyan-400 hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] hover:text-cyan-300"
                           style={{
-                            background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-                            color: "white",
-                            boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+                            background: "rgba(10, 20, 40, 0.95)",
+                            borderColor: "rgba(34, 211, 238, 0.5)",
+                            color: "rgba(34, 211, 238, 0.9)",
+                            boxShadow: "0 0 30px rgba(34, 211, 238, 0.3), 0 8px 32px rgba(0, 0, 0, 0.6)",
                           }}
                         >
                           <Sparkles className="w-5 h-5" />
@@ -815,22 +830,23 @@ export default function PostPresentationPage() {
 
               <div className="relative min-h-[600px]">
               {loadingStage === "revealed" && (
-                <div className="flex w-full justify-center items-stretch gap-3 mt-6">
+                <div className="flex w-full justify-center items-center gap-2 mt-2">
                   {/* 좌측: 강점/약점 */}
-                  <div className="flex flex-col gap-4" style={{ width: 700 }}>
+                  <div className="flex flex-col gap-3" style={{ width: 1050 }}>
                     {/* 강점 카드 */}
-                    <div className="rounded-xl p-6 bg-slate-900/40 backdrop-blur-sm border border-cyan-500/30 shadow-lg flex-1" style={{ boxShadow: '0 0 30px rgba(6,182,212,0.2)', height: 320 }}>
-                      <h4 className="text-3xl md:text-4xl font-bold text-pink-400 mb-3">강점</h4>
+                    <div className="rounded-xl p-4 bg-slate-900/40 backdrop-blur-sm border border-cyan-500/30 shadow-lg flex-1" style={{ boxShadow: '0 0 30px rgba(6,182,212,0.2)', minHeight: 320, maxHeight: 420 }}>
+                      <h4 className="text-3xl md:text-4xl font-bold text-pink-400 mb-4 text-center">강점</h4>
                       {isLoadingAnalysis ? <p className="text-muted-foreground">로딩 중...</p>
                         : strengths.length === 0 ? <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
-                        : <ul className="space-y-4">{strengths.map((strength, idx) => (
+                        : <ul className="space-y-3">{strengths.map((strength, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleStrengthItems.includes(idx) && (
                               <motion.li
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="text-3xl font-medium text-white leading-relaxed"
+                                className="text-3xl font-medium text-white leading-snug"
+                                style={{ wordBreak: 'keep-all', lineHeight: '1.5' }}
                               >
                                 <span className="text-pink-300 font-bold mr-2">•</span>
                                 {strength.title && (
@@ -838,17 +854,19 @@ export default function PostPresentationPage() {
                                     <TypewriterText 
                                       text={strength.title} 
                                       delay={30} 
-                                      className="text-pink-400 font-bold"
+                                      className="text-pink-400 font-bold text-3xl"
                                       onComplete={() => setCompletedStrengthTitles((prev) => [...prev, idx])} 
                                     />
                                     {completedStrengthTitles.includes(idx) && (
                                       <>
-                                        <span className="text-white">: </span>
-                                        <TypewriterText 
-                                          text={strength.text} 
-                                          delay={30} 
-                                          onComplete={() => setCompletedStrengthItems((prev) => [...prev, idx])} 
-                                        />
+                                        <br />
+                                        <span className="inline-block ml-6 text-2xl mt-1">
+                                          <TypewriterText 
+                                            text={strength.text} 
+                                            delay={30} 
+                                            onComplete={() => setCompletedStrengthItems((prev) => [...prev, idx])} 
+                                          />
+                                        </span>
                                       </>
                                     )}
                                   </>
@@ -872,18 +890,19 @@ export default function PostPresentationPage() {
                         ))}</ul>}
                     </div>
                     {/* 약점 카드 */}
-                    <div className="rounded-xl p-6 bg-slate-900/40 backdrop-blur-sm border border-cyan-500/30 shadow-lg flex-1" style={{ boxShadow: '0 0 30px rgba(34,211,238,0.2)', height: 320 }}>
-                      <h4 className="text-3xl md:text-4xl font-bold text-cyan-400 mb-3">약점</h4>
+                    <div className="rounded-xl p-4 bg-slate-900/40 backdrop-blur-sm border border-cyan-500/30 shadow-lg flex-1" style={{ boxShadow: '0 0 30px rgba(34,211,238,0.2)', minHeight: 320, maxHeight: 420 }}>
+                      <h4 className="text-3xl md:text-4xl font-bold text-cyan-400 mb-4 text-center">약점</h4>
                       {isLoadingAnalysis ? <p className="text-muted-foreground">로딩 중...</p>
                         : improvements.length === 0 ? <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
-                        : <ul className="space-y-4">{improvements.map((item, idx) => (
+                        : <ul className="space-y-3">{improvements.map((item, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleWeaknessItems.includes(idx) && (
                               <motion.li
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, ease: "easeOut" }}
-                                className="text-3xl font-medium text-white leading-relaxed"
+                                className="text-3xl font-medium text-white leading-snug"
+                                style={{ wordBreak: 'keep-all', lineHeight: '1.5' }}
                               >
                                 <span className="text-cyan-300 font-bold mr-2">•</span>
                                 {item.title && (
@@ -891,17 +910,19 @@ export default function PostPresentationPage() {
                                     <TypewriterText 
                                       text={item.title} 
                                       delay={30} 
-                                      className="text-cyan-400 font-bold"
+                                      className="text-cyan-400 font-bold text-3xl"
                                       onComplete={() => setCompletedWeaknessTitles((prev) => [...prev, idx])} 
                                     />
                                     {completedWeaknessTitles.includes(idx) && (
                                       <>
-                                        <span className="text-white">: </span>
-                                        <TypewriterText 
-                                          text={item.text} 
-                                          delay={30} 
-                                          onComplete={() => setCompletedWeaknessItems((prev) => [...prev, idx])} 
-                                        />
+                                        <br />
+                                        <span className="inline-block ml-6 text-2xl mt-1">
+                                          <TypewriterText 
+                                            text={item.text} 
+                                            delay={30} 
+                                            onComplete={() => setCompletedWeaknessItems((prev) => [...prev, idx])} 
+                                          />
+                                        </span>
                                       </>
                                     )}
                                   </>
@@ -952,14 +973,15 @@ export default function PostPresentationPage() {
                   </motion.div>
                   
                   {/* 우측: 총평 */}
-                  <div style={{ width: 750 }}>
+                  <div style={{ width: 800 }}>
                     <motion.div 
-                      className="rounded-xl p-6 backdrop-blur-sm border-2 shadow-lg relative overflow-hidden" 
+                      className="rounded-xl pt-8 px-4 pb-4 backdrop-blur-sm border-2 shadow-lg relative overflow-hidden" 
                       style={{ 
                         background: 'linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(99,102,241,0.25) 50%, rgba(139,92,246,0.25) 100%)',
                         borderColor: 'rgba(59,130,246,0.8)',
                         boxShadow: '0 0 60px rgba(59,130,246,0.6), 0 0 100px rgba(99,102,241,0.4), inset 0 0 80px rgba(59,130,246,0.2)', 
-                        height: 648 
+                        minHeight: 648,
+                        maxHeight: 820 
                       }}
                       animate={{
                         boxShadow: [
@@ -992,17 +1014,18 @@ export default function PostPresentationPage() {
                         }}
                       />
                       <div className="relative z-10">
-                        <h4 className="text-3xl md:text-4xl font-bold text-blue-300 mb-3 text-center drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]">총평</h4>
+                        <h4 className="text-3xl md:text-4xl font-bold text-blue-300 mb-10 text-center drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]">총평</h4>
                       {isLoadingAnalysis ? <p className="text-muted-foreground">로딩 중...</p>
                       : summaryLines.length === 0 ? <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
-                      : <ul className="space-y-4">{summaryLines.map((line, idx) => (
+                      : <ul className="space-y-10">{summaryLines.map((line, idx) => (
                         <AnimatePresence key={idx}>
                           {visibleSummaryItems.includes(idx) && (
                             <motion.li
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ duration: 0.3, ease: "easeOut" }}
-                              className="text-3xl font-medium text-white leading-relaxed"
+                              className="text-3xl font-medium text-white leading-loose"
+                              style={{ wordBreak: 'keep-all', lineHeight: '1.9' }}
                             >
                               <span className="text-blue-300 font-bold mr-2">•</span>
                               <TypewriterText text={line} delay={30} onComplete={() => setCompletedSummaryItems((prev) => [...prev, idx])} />
@@ -1024,21 +1047,6 @@ export default function PostPresentationPage() {
               transition={{ delay: 0.3 }}
               className="mt-6 flex flex-col items-center gap-4"
             >
-              {!isEvaluationComplete && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center gap-3 text-lg font-semibold text-cyan-400"
-                >
-                  <div className="h-10 w-10 animate-pulse">
-                    <Brain3D className="w-full h-full" />
-                  </div>
-                  <span className="animate-pulse">
-                    평가집계중... ({evaluatorCount}/{totalEvaluatorCount})
-                  </span>
-                </motion.div>
-              )}
-              
               <Button
                 onClick={() => router.push(`/post-presentation/evaluations?presentationId=${selectedPresentationId}`)}
                 disabled={!isEvaluationComplete}

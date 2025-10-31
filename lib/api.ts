@@ -1076,18 +1076,26 @@ export interface HumanEvaluationScoreStats {
   score_count: number
 }
 
+export interface HumanEvaluationScoreAverage {
+  id: number
+  presentation_id: string
+  category: string
+  average_score: number | string  // Decimal은 문자열로 반환될 수 있음 (100점 만점)
+  created_at: string
+}
+
 /**
- * 사람 평가 평균 점수 조회
+ * 사람 평가 평균 점수 조회 (human_evaluation_score_average 테이블)
+ * multiplier가 적용된 100점 만점 평균 점수를 반환합니다.
+ * 
  * @param presentationId 발표 ID
- * @param scoreType 점수 타입 (기본값: '최종')
- * @returns 카테고리별 평균 점수
+ * @returns 카테고리별 평균 점수 (100점 만점)
  */
 export async function fetchHumanEvaluationAverageScores(
-  presentationId: string,
-  scoreType: string = '최종'
-): Promise<HumanEvaluationScoreStats[]> {
+  presentationId: string
+): Promise<HumanEvaluationScoreAverage[]> {
   const response = await fetch(
-    `${API_BASE_URL}/seminar/api/human-evaluation-scores/presentation/${presentationId}/average?score_type=${encodeURIComponent(scoreType)}`
+    `${API_BASE_URL}/seminar/api/human-evaluation-score-averages/presentation/${presentationId}`
   )
   
   if (!response.ok) {
