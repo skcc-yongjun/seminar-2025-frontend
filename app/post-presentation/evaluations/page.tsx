@@ -13,7 +13,7 @@ import {
   fetchHumanEvaluationAverageScores,
   PresentationWithPresenter,
   AIEvaluationScoreResponse,
-  HumanEvaluationScoreStats
+  HumanEvaluationScoreAverage
 } from "@/lib/api"
 
 function EvaluationsContent() {
@@ -77,13 +77,13 @@ function EvaluationsContent() {
         })
         setAIScores(aiScoreMap)
 
-        // 사람 평가 평균 점수 조회
+        // 사람 평가 평균 점수 조회 (human_evaluation_score_average 테이블, 100점 만점)
         try {
           const humanScoreData = await fetchHumanEvaluationAverageScores(selectedPresentationId)
           const humanScoreMap: Record<string, number> = {}
           humanScoreData.forEach(score => {
             // Decimal이 문자열로 반환될 수 있으므로 숫자로 변환
-            const numericScore = typeof score.avg_score === 'string' ? parseFloat(score.avg_score) : score.avg_score
+            const numericScore = typeof score.average_score === 'string' ? parseFloat(score.average_score) : score.average_score
             humanScoreMap[score.category] = numericScore
           })
           setHumanScores(humanScoreMap)
