@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, Home, RefreshCw, AlertCircle } from "lucide-react"
 import { useEffect, useState, Suspense } from "react"
@@ -9,45 +9,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { fetchAICommentsAfterTimestamp, fetchPresentationsWithPresenters } from "@/lib/api"
 
-// 타이핑 애니메이션 컴포넌트
-function TypingText({ text }: { text: string }) {
-  const [displayedText, setDisplayedText] = useState("")
-  const [currentIndex, setCurrentIndex] = useState(0)
-
-  useEffect(() => {
-    if (currentIndex < text.length) {
-      const timeout = setTimeout(() => {
-        setDisplayedText(text.substring(0, currentIndex + 1))
-        setCurrentIndex(currentIndex + 1)
-      }, 50) // 50ms마다 한 글자씩
-
-      return () => clearTimeout(timeout)
-    }
-  }, [currentIndex, text])
-
-  // 텍스트가 변경되면 타이핑 재시작
-  useEffect(() => {
-    setDisplayedText("")
-    setCurrentIndex(0)
-  }, [text])
-
-  return (
-    <p className="text-white text-2xl md:text-3xl leading-relaxed">
-      {displayedText}
-      <motion.span
-        animate={{ opacity: [1, 0, 1] }}
-        transition={{ duration: 0.8, repeat: Number.POSITIVE_INFINITY }}
-        className="inline-block w-1 h-8 bg-cyan-400 ml-1"
-      />
-    </p>
-  )
-}
-
 function PanelLiveContent() {
   const searchParams = useSearchParams()
   const sessionParam = searchParams.get('session') || "패널토의"
   
   const [displayedText, setDisplayedText] = useState("")
+  const [messages, setMessages] = useState<Array<{ id: number; text: string }>>([])
+  const [messageId, setMessageId] = useState(0)
   const [isLiveActive, setIsLiveActive] = useState(false)
   const [currentPresentationId, setCurrentPresentationId] = useState<string>("")
   const [lastUpdate, setLastUpdate] = useState<string>("")
@@ -116,9 +84,14 @@ function PanelLiveContent() {
       )
       
       if (comments.length > 0) {
-        // 새로운 코멘트가 있으면 기존 텍스트를 완전히 교체
+        // 새로운 코멘트를 박스 형태로 추가 (최근 3개 유지)
         const latestComment = comments[comments.length - 1]
-        setDisplayedText(latestComment.comment_text)
+        const newMsg = { id: messageId, text: latestComment.comment_text }
+        setMessages((prev) => {
+          const updated = [...prev, newMsg]
+          return updated.slice(-3)
+        })
+        setMessageId((prev) => prev + 1)
         setLastUpdate(new Date().toLocaleTimeString('ko-KR'))
         
         // 가장 최근 코멘트의 타임스탬프를 저장
@@ -469,17 +442,46 @@ function PanelLiveContent() {
                 </div>
               )}
 
-              <div className="min-h-[280px] mb-12">
+              <div className="min-h-[280px] mb-12 space-y-4 flex flex-col justify-end">
                 {!isLiveActive ? (
                   <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic">
                     라이브 시작 버튼을 눌러 AI 코멘트 폴링을 시작하세요...
                   </p>
-                ) : displayedText ? (
-                  <TypingText text={displayedText} />
-                ) : (
+                ) : messages.length === 0 ? (
                   <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic">
                     AI 코멘트가 여기에 표시됩니다...
                   </p>
+                ) : (
+                  <AnimatePresence mode="popLayout">
+                    {messages.map((message, index) => (
+                      <motion.div
+                        key={message.id}
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{
+                          opacity: index === 0 ? 0.5 : index === 1 ? 0.8 : 1,
+                          y: 0,
+                          scale: 1,
+                        }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{
+                          duration: 0.5,
+                          ease: "easeOut",
+                        }}
+                        className="relative"
+                      >
+                        <div
+                          className={`
+                          bg-gradient-to-r from-cyan-500/10 to-blue-500/10 
+                          backdrop-blur-sm border-2 border-cyan-500/30 
+                          rounded-2xl p-6 shadow-lg
+                          ${index === messages.length - 1 ? "border-cyan-500/50 shadow-cyan-500/20" : ""}
+                        `}
+                        >
+                          <p className="text-white text-xl md:text-2xl leading-relaxed">{message.text}</p>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 )}
               </div>
 
