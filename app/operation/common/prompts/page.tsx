@@ -796,6 +796,11 @@ export default function PromptsPage() {
                                       <div key={idx} className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg">
                                         {typeof strength === 'object' ? (
                                           <div className="space-y-1">
+                                            {/* 제목 */}
+                                            {strength.title && (
+                                              <div className="text-sm text-green-900 dark:text-green-100 font-bold mb-1">{strength.title}</div>
+                                            )}
+                                            {/* 본문 */}
                                             <div className="text-sm text-green-900 dark:text-green-100 font-medium">{strength.text}</div>
                                             {strength.source && (
                                               <div className="text-xs text-green-700 dark:text-green-300 mt-2 p-2 bg-green-100/50 dark:bg-green-950/50 rounded flex gap-2">
@@ -828,6 +833,11 @@ export default function PromptsPage() {
                                       <div key={idx} className="p-3 bg-orange-50 dark:bg-orange-900/30 border border-orange-200 dark:border-orange-700 rounded-lg">
                                         {typeof weakness === 'object' ? (
                                           <div className="space-y-1">
+                                            {/* 제목 */}
+                                            {weakness.title && (
+                                              <div className="text-sm text-orange-900 dark:text-orange-100 font-bold mb-1">{weakness.title}</div>
+                                            )}
+                                            {/* 본문 */}
                                             <div className="text-sm text-orange-900 dark:text-orange-100 font-medium">{weakness.text}</div>
                                             {weakness.source && (
                                               <div className="text-xs text-orange-700 dark:text-orange-300 mt-2 p-2 bg-orange-100/50 dark:bg-orange-950/50 rounded flex gap-2">
@@ -858,7 +868,14 @@ export default function PromptsPage() {
                                   <div className="space-y-2">
                                     {testResult.parsed_result.feedback.overall.map((item: any, idx: number) => (
                                       <div key={idx} className="p-3 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg">
-                                        <div className="text-sm text-purple-900 dark:text-purple-100 font-medium whitespace-pre-wrap">{item.text}</div>
+                                        <div className="space-y-1">
+                                          {/* 제목 */}
+                                          {item.title && (
+                                            <div className="text-sm text-purple-900 dark:text-purple-100 font-bold mb-1">{item.title}</div>
+                                          )}
+                                          {/* 본문 */}
+                                          <div className="text-sm text-purple-900 dark:text-purple-100 font-medium whitespace-pre-wrap">{item.text}</div>
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
