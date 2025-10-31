@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowLeft, Plus, Edit, Trash2, Loader2, RefreshCw } from "lucide-react"
+import { ArrowLeft, Plus, Edit, Trash2, Loader2, RefreshCw, FileImage } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -24,18 +24,48 @@ import {
   updatePresentation,
   deletePresentation,
   resetPresentationToInProgress,
+  fetchPresentationPngCount,
   type PresentationResponse,
   type PresenterResponse,
+  type PresentationPngCountResponse,
 } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
 
+/**
+ * 발표 관리 페이지
+ * 
+ * 세션별로 발표를 관리하고 Azure Blob Storage에 저장된 PNG 자료 개수를 표시합니다.
+ * 
+ * 주요 기능:
+ * - 세션별 발표 목록 표시 (세션1, 세션2, 패널토의)
+ * - 발표 추가/수정/삭제
+ * - 발표 상태 초기화 (진행중으로)
+ * - PDF 파일 업로드 (새 발표 생성 시)
+ * - Azure Blob Storage PNG 파일 개수 표시
+ */
 export default function PresentationsPage() {
+  // ============================================================================
   // 상태 관리
+  // ============================================================================
+  
+  // 발표 및 발표자 목록
   const [presentations, setPresentations] = useState<PresentationResponse[]>([])
   const [presenters, setPresenters] = useState<PresenterResponse[]>([])
+  
+  // PNG 개수 캐시 (presentation_id -> png_count)
+  const [pngCountCache, setPngCountCache] = useState<Record<string, number>>({})
+  
+  // 선택된 세션
+  const [selectedSession, setSelectedSession] = useState<string | null>(null)
+  
+  // 로딩 상태
   const [isLoading, setIsLoading] = useState(true)
+  
+  // 다이얼로그 상태
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPresentation, setEditingPresentation] = useState<PresentationResponse | null>(null)
+  
+  // 폼 데이터
   const [formData, setFormData] = useState({
     session_type: "세션1",
     presenter_id: "",
@@ -43,13 +73,22 @@ export default function PresentationsPage() {
     presentation_order: 1,
     status: "대기",
   })
+  
+  // PDF 파일
   const [pdfFile, setPdfFile] = useState<File | null>(null)
+  
+  // 저장 중 상태
   const [isSaving, setIsSaving] = useState(false)
+  
   const { toast } = useToast()
 
+  // ============================================================================
+  // 초기 데이터 로드
+  // ============================================================================
+  
   /**
    * 초기 데이터 로드
-   * 발표 목록과 발표자 목록을 동시에 조회
+   * 발표 목록과 발표자 목록을 동시에 조회하고, 첫 번째 세션을 선택합니다.
    */
   useEffect(() => {
     loadData()
@@ -67,6 +106,15 @@ export default function PresentationsPage() {
       ])
       setPresentations(presentationsData)
       setPresenters(presentersData)
+      
+      // PNG 개수 로드
+      await loadPngCounts(presentationsData)
+      
+      // 초기 선택: 첫 번째 세션으로 시작
+      const availableSessions = Array.from(new Set(presentationsData.map((p) => p.session_type))).sort()
+      if (availableSessions.length > 0 && !selectedSession) {
+        setSelectedSession(availableSessions[0])
+      }
     } catch (error) {
       console.error("데이터 조회 실패:", error)
       toast({
@@ -78,14 +126,42 @@ export default function PresentationsPage() {
       setIsLoading(false)
     }
   }
+  
+  /**
+   * 모든 발표의 PNG 개수 로드
+   * @param presentationsData 발표 목록
+   */
+  const loadPngCounts = async (presentationsData: PresentationResponse[]) => {
+    const counts: Record<string, number> = {}
+    
+    // 모든 발표에 대해 PNG 개수 조회 (병렬 처리)
+    await Promise.all(
+      presentationsData.map(async (presentation) => {
+        try {
+          const result = await fetchPresentationPngCount(presentation.presentation_id)
+          counts[presentation.presentation_id] = result.png_count
+        } catch (error) {
+          // PNG 개수 조회 실패 시 0으로 설정
+          console.error(`PNG 개수 조회 실패: ${presentation.presentation_id}`, error)
+          counts[presentation.presentation_id] = 0
+        }
+      })
+    )
+    
+    setPngCountCache(counts)
+  }
 
+  // ============================================================================
+  // 다이얼로그 핸들러
+  // ============================================================================
+  
   /**
    * 발표 추가 다이얼로그 열기
    */
   const handleAdd = () => {
     setEditingPresentation(null)
     setFormData({
-      session_type: "세션1",
+      session_type: selectedSession || "세션1",
       presenter_id: "",
       topic: "",
       presentation_order: 1,
@@ -249,6 +325,10 @@ export default function PresentationsPage() {
     }
   }
 
+  // ============================================================================
+  // 유틸리티 함수
+  // ============================================================================
+  
   /**
    * 발표자 ID로 발표자 이름 찾기
    * @param presenterId 발표자 ID
@@ -262,22 +342,17 @@ export default function PresentationsPage() {
   /**
    * 세션별로 발표 목록 분리 및 정렬
    */
-  const getPresentationsBySession = () => {
-    const session1 = presentations
-      .filter(p => p.session_type === "세션1")
+  const getPresentationsBySession = (session: string) => {
+    return presentations
+      .filter(p => p.session_type === session)
       .sort((a, b) => a.presentation_order - b.presentation_order)
-    
-    const session2 = presentations
-      .filter(p => p.session_type === "세션2")
-      .sort((a, b) => a.presentation_order - b.presentation_order)
-    
-    const panel = presentations
-      .filter(p => p.session_type === "패널토의")
-      .sort((a, b) => a.presentation_order - b.presentation_order)
-
-    return { session1, session2, panel }
   }
 
+  /**
+   * 발표 상태별 색상 반환
+   * @param status 발표 상태
+   * @returns 색상 클래스
+   */
   const getStatusColor = (status: string) => {
     switch (status) {
       case "완료":
@@ -292,15 +367,48 @@ export default function PresentationsPage() {
         return "bg-gray-500/20 text-gray-400 border-gray-500/30"
     }
   }
+  
+  /**
+   * 사용 가능한 세션 목록 조회
+   * @returns 세션 타입 배열
+   */
+  const getAvailableSessions = (): string[] => {
+    const sessions = new Set(presentations.map((p) => p.session_type))
+    return Array.from(sessions).sort()
+  }
+  
+  /**
+   * 세션별 발표 개수 조회
+   * @param session 세션 타입
+   * @returns 발표 개수
+   */
+  const getPresentationCountBySession = (session: string): number => {
+    return presentations.filter((p) => p.session_type === session).length
+  }
+  
+  /**
+   * PNG 파일 개수 조회
+   * @param presentationId 발표 ID
+   * @returns PNG 파일 개수
+   */
+  const getPngCount = (presentationId: string): number => {
+    return pngCountCache[presentationId] || 0
+  }
 
+  // ============================================================================
+  // 렌더링
+  // ============================================================================
+  
   return (
     <div className="min-h-screen p-4 md:p-6 relative overflow-hidden">
+      {/* 배경 효과 */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-sk-red/5 rounded-full blur-3xl" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sk-red/3 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-[1600px] mx-auto relative z-10">
+        {/* 헤더 */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Link
             href="/operation/common"
@@ -335,104 +443,85 @@ export default function PresentationsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative">
-            {/* 세션1 */}
-            <div className="space-y-4 relative lg:pr-6 lg:border-r lg:border-gray-200 dark:lg:border-gray-700">
-              <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-xl font-semibold text-foreground">세션1</h2>
-                <Badge variant="outline" className="border-sk-red/30 text-sk-red">
-                  {getPresentationsBySession().session1.length}개
-                </Badge>
-              </div>
-              {getPresentationsBySession().session1.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  세션1에 등록된 발표가 없습니다.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {getPresentationsBySession().session1.map((presentation, index) => (
-                    <motion.div
-                      key={presentation.presentation_id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * index }}
-                    >
-                      <div className="corporate-card rounded-xl p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Badge variant="outline" className={getStatusColor(presentation.status)}>
-                                {presentation.status}
-                              </Badge>
-                              <span className="text-sm text-muted-foreground">
-                                순서: {presentation.presentation_order}
-                              </span>
+          <div className="grid grid-cols-[320px_1fr] gap-6">
+            {/* 왼쪽: 세션 리스트 */}
+            <div className="space-y-3">
+              <div className="corporate-card rounded-xl p-4">
+                <h2 className="text-lg font-semibold text-foreground mb-4">세션 목록</h2>
+                <div className="space-y-2">
+                  {getAvailableSessions().length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      등록된 세션이 없습니다.
+                    </p>
+                  ) : (
+                    getAvailableSessions().map((session) => {
+                      const presentationCount = getPresentationCountBySession(session)
+                      const isSelected = selectedSession === session
+                      
+                      return (
+                        <button
+                          key={session}
+                          onClick={() => setSelectedSession(session)}
+                          className={`w-full text-left p-3 rounded-lg transition-all ${
+                            isSelected
+                              ? "bg-sk-red/20 border-2 border-sk-red"
+                              : "bg-card/50 border-2 border-transparent hover:border-sk-red/30"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium truncate ${
+                                isSelected ? "text-sk-red" : "text-foreground"
+                              }`}>
+                                {session}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                발표 {presentationCount}개
+                              </p>
                             </div>
-                            <h3 className="text-lg font-semibold text-foreground mb-2">{presentation.topic}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              발표자: {getPresenterName(presentation.presenter_id)}
-                            </p>
-                            <p className="text-xs text-muted-foreground/60 mt-1">
-                              ID: {presentation.presentation_id}
-                            </p>
+                            <Badge 
+                              variant="outline" 
+                              className={`shrink-0 ${
+                                isSelected 
+                                  ? "bg-sk-red text-white border-sk-red" 
+                                  : "bg-muted"
+                              }`}
+                            >
+                              {presentationCount}개
+                            </Badge>
                           </div>
-                          <div className="flex gap-2">
-                            <Button
-                              onClick={() => handleResetToInProgress(presentation.presentation_id)}
-                              variant="outline"
-                              size="sm"
-                              className="text-blue-500 hover:text-blue-600 border-blue-500/30 hover:border-blue-500/50"
-                              disabled={isSaving}
-                              title="상태를 '진행중'으로 초기화"
-                            >
-                              <RefreshCw className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleEdit(presentation)}
-                              variant="outline"
-                              size="sm"
-                              disabled={isSaving}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              onClick={() => handleDelete(presentation.presentation_id)}
-                              variant="outline"
-                              size="sm"
-                              className="text-destructive hover:text-destructive bg-transparent"
-                              disabled={isSaving}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                        </button>
+                      )
+                    })
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* 세션2 */}
-            <div className="space-y-4 relative lg:pl-6">
-              <div className="flex items-center gap-3 mb-4">
-                <h2 className="text-xl font-semibold text-foreground">세션2</h2>
-                <Badge variant="outline" className="border-sk-red/30 text-sk-red">
-                  {getPresentationsBySession().session2.length}개
-                </Badge>
-              </div>
-              {getPresentationsBySession().session2.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  세션2에 등록된 발표가 없습니다.
+            {/* 오른쪽: 선택된 세션의 발표 목록 */}
+            <div>
+              {!selectedSession ? (
+                <div className="corporate-card rounded-xl p-12 text-center">
+                  <p className="text-muted-foreground">왼쪽에서 세션을 선택해주세요.</p>
+                </div>
+              ) : getPresentationsBySession(selectedSession).length === 0 ? (
+                <div className="corporate-card rounded-xl p-12 text-center">
+                  <p className="text-muted-foreground mb-4">
+                    {selectedSession}에 등록된 발표가 없습니다.
+                  </p>
+                  <Button onClick={handleAdd} className="bg-sk-red hover:bg-sk-red/90">
+                    <Plus className="w-4 h-4 mr-2" />
+                    발표 추가
+                  </Button>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {getPresentationsBySession().session2.map((presentation, index) => (
+                  {getPresentationsBySession(selectedSession).map((presentation, index) => (
                     <motion.div
                       key={presentation.presentation_id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * index }}
+                      transition={{ delay: 0.05 * index }}
                     >
                       <div className="corporate-card rounded-xl p-6">
                         <div className="flex items-start justify-between">
@@ -444,6 +533,11 @@ export default function PresentationsPage() {
                               <span className="text-sm text-muted-foreground">
                                 순서: {presentation.presentation_order}
                               </span>
+                              {/* PNG 파일 개수 표시 */}
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <FileImage className="w-4 h-4" />
+                                <span>{getPngCount(presentation.presentation_id)}개</span>
+                              </div>
                             </div>
                             <h3 className="text-lg font-semibold text-foreground mb-2">{presentation.topic}</h3>
                             <p className="text-sm text-muted-foreground">
@@ -492,21 +586,25 @@ export default function PresentationsPage() {
           </div>
         )}
       </div>
-        <style>{`
-          /* Dialog 오버레이 불투명하게 */
-          [data-slot="dialog-overlay"] {
-            background-color: rgba(0, 0, 0, 0.85) !important;
-            backdrop-filter: blur(8px) !important;
-          }
-          
-          /* Dialog 콘텐츠 크기 확대 및 배경색 수정 */
-          [data-slot="dialog-content"] {
-            width: 1400px !important;
-            max-width: 90vw !important;
-            max-height: 85vh !important;
-            background-color: hsl(var(--background)) !important;
-          }
-        `}</style>
+      
+      {/* 다이얼로그 스타일 */}
+      <style>{`
+        /* Dialog 오버레이 불투명하게 */
+        [data-slot="dialog-overlay"] {
+          background-color: rgba(0, 0, 0, 0.85) !important;
+          backdrop-filter: blur(8px) !important;
+        }
+        
+        /* Dialog 콘텐츠 크기 확대 및 배경색 수정 */
+        [data-slot="dialog-content"] {
+          width: 1400px !important;
+          max-width: 90vw !important;
+          max-height: 85vh !important;
+          background-color: hsl(var(--background)) !important;
+        }
+      `}</style>
+      
+      {/* 발표 추가/수정 다이얼로그 */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
         <DialogContent className="max-w-md bg-background">
           <DialogHeader>
@@ -514,6 +612,7 @@ export default function PresentationsPage() {
             <DialogDescription>발표 정보를 입력해주세요.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            {/* 세션 선택 */}
             <div className="space-y-2">
               <Label htmlFor="session">
                 세션 <span className="text-red-500">*</span>
@@ -533,6 +632,8 @@ export default function PresentationsPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* 발표자 선택 */}
             <div className="space-y-2">
               <Label htmlFor="presenter">
                 발표자 <span className="text-red-500">*</span>
@@ -554,6 +655,8 @@ export default function PresentationsPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* 주제 입력 */}
             <div className="space-y-2">
               <Label htmlFor="topic">
                 주제 <span className="text-red-500">*</span>
@@ -566,6 +669,8 @@ export default function PresentationsPage() {
                 disabled={isSaving}
               />
             </div>
+            
+            {/* 순서 입력 */}
             <div className="space-y-2">
               <Label htmlFor="order">순서</Label>
               <Input
@@ -579,6 +684,8 @@ export default function PresentationsPage() {
                 disabled={isSaving}
               />
             </div>
+            
+            {/* 상태 선택 */}
             <div className="space-y-2">
               <Label htmlFor="status">상태</Label>
               <Select
@@ -599,6 +706,7 @@ export default function PresentationsPage() {
               </Select>
             </div>
             
+            {/* PDF 파일 업로드 (신규 발표만) */}
             {!editingPresentation && (
               <div className="space-y-2">
                 <Label htmlFor="pdf">PDF 자료 (선택)</Label>
@@ -636,6 +744,8 @@ export default function PresentationsPage() {
               </div>
             )}
           </div>
+          
+          {/* 다이얼로그 푸터 */}
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
               취소

@@ -571,6 +571,29 @@ export async function resetPresentationToInProgress(presentationId: string): Pro
   return response.json()
 }
 
+/**
+ * 발표 자료 PNG 파일 개수 조회 응답 인터페이스
+ */
+export interface PresentationPngCountResponse {
+  presentation_id: string
+  png_count: number
+}
+
+/**
+ * 발표 자료 PNG 파일 개수 조회
+ * @param presentationId 발표 ID
+ * @returns PNG 파일 개수 정보
+ */
+export async function fetchPresentationPngCount(presentationId: string): Promise<PresentationPngCountResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/presentations/${presentationId}/png-count`)
+  
+  if (!response.ok) {
+    throw new Error(`PNG 파일 개수 조회 실패: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
 // QnA Question API Types
 export interface QnAQuestionResponse {
   question_id: number
