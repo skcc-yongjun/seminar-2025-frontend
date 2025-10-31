@@ -2,15 +2,16 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowLeft, MessageSquare, Video, Loader2 } from "lucide-react"
+import { ArrowLeft, MessageSquare, Video, Loader2, Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import {
   fetchPresentations,
   fetchPresenters,
   generateQnAQuestions,
   fetchQnAQuestions,
+  uploadDocxTranscript,
   type PresentationResponse,
   type PresenterResponse,
 } from "@/lib/api"
@@ -23,6 +24,9 @@ export default function Session2OperationPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isGeneratingQnA, setIsGeneratingQnA] = useState(false)
   const [isGeneratingVideo, setIsGeneratingVideo] = useState(false)
+  const [isUploadingDocx, setIsUploadingDocx] = useState(false)
+  const [selectedDocxFile, setSelectedDocxFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
 
   // 발표 목록 로드
@@ -53,6 +57,62 @@ export default function Session2OperationPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDocxFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      // DOCX 파일인지 확인
+      if (!file.name.endsWith('.docx')) {
+        toast({
+          variant: "destructive",
+          title: "오류",
+          description: "DOCX 파일만 업로드 가능합니다.",
+        })
+        return
+      }
+      setSelectedDocxFile(file)
+    }
+  }
+
+  const handleUploadDocx = async () => {
+    if (!selectedPresentation || !selectedDocxFile) {
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: "발표와 DOCX 파일을 선택해주세요.",
+      })
+      return
+    }
+
+    if (!window.confirm(`선택된 DOCX 파일을 업로드하시겠습니까?\n파일명: ${selectedDocxFile.name}\n\n기존 STT 트랜스크립트가 있다면 삭제됩니다.`)) {
+      return
+    }
+
+    try {
+      setIsUploadingDocx(true)
+      const result = await uploadDocxTranscript(selectedPresentation, selectedDocxFile)
+      
+      toast({
+        title: "성공",
+        description: `DOCX 파일이 업로드되었습니다. (트랜스크립트: ${result.transcript_count}개, 총 시간: ${Math.floor(result.total_duration_ms / 60000)}분 ${Math.floor((result.total_duration_ms % 60000) / 1000)}초)`,
+      })
+      
+      // 파일 선택 초기화
+      setSelectedDocxFile(null)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    } catch (error) {
+      console.error("DOCX 파일 업로드 실패:", error)
+      toast({
+        variant: "destructive",
+        title: "오류",
+        description: error instanceof Error ? error.message : "DOCX 파일 업로드에 실패했습니다.",
+      })
+    } finally {
+      setIsUploadingDocx(false)
     }
   }
 
@@ -190,6 +250,64 @@ export default function Session2OperationPage() {
 
         {/* Operation Buttons */}
         <div className="space-y-4">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <div className="corporate-card rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                    <Upload className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">DOCX 트랜스크립트 업로드</h3>
+                    <p className="text-sm text-muted-foreground">DOCX 파일로 STT 트랜스크립트를 업로드합니다</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".docx"
+                    onChange={handleDocxFileSelect}
+                    className="hidden"
+                    id="docx-file-input-session2"
+                  />
+                  <label
+                    htmlFor="docx-file-input-session2"
+                    className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <span className="text-sm text-muted-foreground">
+                      {selectedDocxFile ? selectedDocxFile.name : "DOCX 파일 선택..."}
+                    </span>
+                  </label>
+                  <Button
+                    onClick={handleUploadDocx}
+                    disabled={!selectedPresentation || !selectedDocxFile || isUploadingDocx}
+                    className="bg-purple-500 hover:bg-purple-600"
+                  >
+                    {isUploadingDocx ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        업로드 중...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4 mr-2" />
+                        업로드
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <p>• 클로바노트 →  음성기록 다운로드 → word문서(포함정보 : 시간기록)</p>
+                  <p>• 업로드 시 기존 STT 트랜스크립트가 삭제됩니다</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
             <div className="corporate-card rounded-xl p-6">
               <div className="flex items-center justify-between">

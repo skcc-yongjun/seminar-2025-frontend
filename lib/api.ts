@@ -1738,3 +1738,52 @@ export async function generateAvatarVideo(data: AvatarVideoInput): Promise<Avata
   
   return response.json()
 }
+
+// ============================================================================
+// DOCX 트랜스크립트 업로드 관련 API
+// ============================================================================
+
+/**
+ * DOCX 트랜스크립트 업로드 결과 인터페이스
+ */
+export interface DocxTranscriptUploadResult {
+  presentation_id: string
+  transcript_count: number
+  total_duration_ms: number
+}
+
+/**
+ * [Operation] DOCX 파일 업로드 및 STT 트랜스크립트 저장
+ * 
+ * DOCX 파일 양식:
+ * - 첫 줄: 제목
+ * - 둘째 줄: 날짜 및 시간 정보
+ * - 셋째 줄: 사람 이름
+ * - 이후: mm:ss 형식의 타임스탬프와 음성 텍스트가 번갈아 나타남
+ * 
+ * @param presentationId 발표 ID
+ * @param docxFile DOCX 파일
+ * @returns 업로드 및 저장 결과
+ */
+export async function uploadDocxTranscript(
+  presentationId: string,
+  docxFile: File
+): Promise<DocxTranscriptUploadResult> {
+  const formData = new FormData()
+  formData.append('docx_file', docxFile)
+  
+  const response = await fetch(
+    `${API_BASE_URL}/seminar/api/presentations/${presentationId}/upload-docx-transcript`,
+    {
+      method: 'POST',
+      body: formData,
+    }
+  )
+  
+  if (!response.ok) {
+    const errorText = await response.text()
+    throw new Error(`DOCX 트랜스크립트 업로드 실패: ${response.status} - ${errorText}`)
+  }
+  
+  return response.json()
+}

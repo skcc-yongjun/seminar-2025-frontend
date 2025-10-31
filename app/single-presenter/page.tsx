@@ -151,14 +151,18 @@ function SinglePresenterViewContent() {
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  const handleStartPresentation = () => {
+  const handleStartPresentation = async () => {
     console.log("발표 시작 버튼 클릭")
     
-    // 발표 상태가 "대기" 또는 "진행중"인지 확인
-    const allowedStatuses = ["대기", "진행중"]
-    if (!allowedStatuses.includes(presenterInfo?.status || "")) {
-      alert(`발표 상태가 "${presenterInfo?.status}"입니다. "대기" 또는 "진행중" 상태일 때만 시작할 수 있습니다.`)
-      return
+    // 발표 상태 확인 - "평가" 또는 "QnA" 상태인 경우 확인 메시지
+    const alreadyProcessedStatuses = ["평가", "QnA", "완료"]
+    if (alreadyProcessedStatuses.includes(presenterInfo?.status || "")) {
+      const confirmed = window.confirm(
+        `이미 처리된 발표입니다 (상태: ${presenterInfo?.status}).\n이어서 들으시겠습니까?`
+      )
+      if (!confirmed) {
+        return
+      }
     }
     
     const newPresentationId = presenterInfo?.presentation_id || `${presenterInfo?.presenter?.name}_${Date.now()}`
@@ -547,9 +551,8 @@ function SinglePresenterViewContent() {
                       </div>
                     ) : (
                       presenters.map((presentation) => {
-                        const allowedStatuses = ["대기", "진행중"]
-                        const isAllowed = allowedStatuses.includes(presentation.status || "")
-                        const canSelect = !isPresentationStarted && isAllowed
+                        const canSelect = !isPresentationStarted
+                        const isProcessed = ["평가", "QnA", "완료"].includes(presentation.status || "")
                         
                         return (
                           <DropdownMenuItem
@@ -557,8 +560,6 @@ function SinglePresenterViewContent() {
                             onClick={() => {
                               if (canSelect) {
                                 setSelectedPresenterId(presentation.presentation_id)
-                              } else if (!isAllowed) {
-                                alert(`이 발표는 현재 "${presentation.status}" 상태입니다. "대기" 또는 "진행중" 상태의 발표만 선택할 수 있습니다.`)
                               }
                             }}
                             disabled={!canSelect}
@@ -599,8 +600,8 @@ function SinglePresenterViewContent() {
                               </div>
                             </div>
                             <span className="text-xs text-gray-400 pl-6">{presentation.topic}</span>
-                            {!isAllowed && (
-                              <span className="text-xs text-orange-400 pl-6">⚠️ "{presentation.status}" 상태 - 선택 불가</span>
+                            {isProcessed && (
+                              <span className="text-xs text-cyan-400 pl-6">💡 이미 처리된 발표 (재시작 가능)</span>
                             )}
                           </DropdownMenuItem>
                         )
@@ -611,7 +612,7 @@ function SinglePresenterViewContent() {
                     <DropdownMenuLabel className="text-xs" style={{ color: "rgba(34, 211, 238, 0.7)" }}>
                       {isPresentationStarted 
                         ? "⚠️ 발표 진행 중에는 발표자를 변경할 수 없습니다" 
-                        : "💡 '대기' 또는 '진행중' 상태의 발표만 선택 가능합니다"}
+                        : "💡 모든 상태의 발표를 선택할 수 있습니다. 이미 처리된 발표는 이어서 녹음됩니다."}
                     </DropdownMenuLabel>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -833,22 +834,19 @@ function SinglePresenterViewContent() {
                 {!isPresentationStarted ? (
                   <Button
                     onClick={handleStartPresentation}
-                    disabled={!["대기", "진행중"].includes(presenterInfo?.status || "")}
-                    className={`px-6 py-3 text-lg font-semibold rounded-lg gap-2 border transition-all ${
-                      ["대기", "진행중"].includes(presenterInfo?.status || "")
-                        ? "text-white"
-                        : "bg-slate-800/50 text-gray-400 cursor-not-allowed border-slate-700/50"
-                    }`}
-                    style={["대기", "진행중"].includes(presenterInfo?.status || "") ? {
+                    className="px-6 py-3 text-lg font-semibold rounded-lg gap-2 border transition-all text-white"
+                    style={{
                       background: "linear-gradient(135deg, #3b82f6, #2563eb)",
                       borderColor: "rgba(59, 130, 246, 0.5)",
                       boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
-                    } : {}}
+                    }}
                   >
                     <Mic className="w-5 h-5" />
-                    {["대기", "진행중"].includes(presenterInfo?.status || "") 
-                      ? (presenterInfo?.status === "진행중" ? "발표 재개" : "발표 시작")
-                      : `발표 불가 (${presenterInfo?.status || "상태 확인 필요"})`
+                    {["평가", "QnA", "완료"].includes(presenterInfo?.status || "")
+                      ? "발표 이어서 듣기"
+                      : presenterInfo?.status === "진행중"
+                      ? "발표 재개"
+                      : "발표 시작"
                     }
                   </Button>
                 ) : (
