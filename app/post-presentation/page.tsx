@@ -18,7 +18,7 @@ import {
   PresentationAnalysisCommentResponse
 } from "@/lib/api"
 
-function TypewriterText({ text, delay = 50, onComplete }: { text: string; delay?: number; onComplete?: () => void }) {
+function TypewriterText({ text, delay = 50, onComplete, className }: { text: string; delay?: number; onComplete?: () => void; className?: string }) {
   const [displayedText, setDisplayedText] = useState("")
   const [currentIndex, setCurrentIndex] = useState(0)
   const hasCompletedRef = useRef(false)
@@ -37,16 +37,18 @@ function TypewriterText({ text, delay = 50, onComplete }: { text: string; delay?
     }
   }, [currentIndex, text, delay, onComplete])
 
-  return <span>{displayedText}</span>
+  return <span className={className}>{displayedText}</span>
 }
 
 interface StrengthItem {
+  title: string
   text: string
   voiceAnalysis: string | null
   presentationMaterial: string | null
 }
 
 interface ImprovementItem {
+  title: string
   text: string
   voiceAnalysis: string | null
   presentationMaterial: string | null
@@ -97,6 +99,8 @@ export default function PostPresentationPage() {
   const [completedWeaknessItems, setCompletedWeaknessItems] = useState<number[]>([])
   const [completedSummaryItems, setCompletedSummaryItems] = useState<number[]>([])
   const [completedSummary, setCompletedSummary] = useState(false)
+  const [completedStrengthTitles, setCompletedStrengthTitles] = useState<number[]>([])
+  const [completedWeaknessTitles, setCompletedWeaknessTitles] = useState<number[]>([])
 
   // 평가 완료 상태 polling을 위한 state
   const [evaluatorCount, setEvaluatorCount] = useState<number>(0)
@@ -120,22 +124,88 @@ export default function PostPresentationPage() {
     try {
       const comments = await fetchPresentationAnalysisComments(presentationId)
       
+      // API 응답 확인용 로그
+      console.log('📊 [API 응답 확인] 전체 코멘트:', comments)
+      console.log('📊 [API 응답 확인] 코멘트 개수:', comments.length)
+      comments.forEach((c, idx) => {
+        console.log(`📊 [코멘트 ${idx + 1}]`, {
+          type: c.type,
+          title: c.title,
+          comment: c.comment?.substring(0, 50) + '...',
+          hasTitle: !!c.title
+        })
+      })
+      
       // 강점 추출
       const strengthComments = comments.filter(c => c.type === '강점')
-      const strengthItems: StrengthItem[] = strengthComments.map(c => ({
-        text: c.comment,
-        voiceAnalysis: c.source_type === '발표' ? c.source : null,
-        presentationMaterial: c.source_type === '자료' ? c.source : null,
-      }))
+      const strengthItems: StrengthItem[] = strengthComments.map(c => {
+        // API에서 가져온 title 필드 사용 (없으면 comment에서 추출)
+        let title = c.title || (() => {
+          const colonIndex = c.comment.indexOf(':')
+          return colonIndex > 0 ? c.comment.substring(0, colonIndex).trim() : ''
+        })()
+        // title 뒤에 붙는 . 제거
+        title = title.replace(/\.+$/, '')
+        
+        // title이 있으면 comment를 그대로 사용, 없으면 comment 전체를 text로 사용
+        let text = c.title ? c.comment : (() => {
+          const colonIndex = c.comment.indexOf(':')
+          return colonIndex > 0 ? c.comment.substring(colonIndex + 1).trim() : c.comment
+        })()
+        // text 앞에 있는 - 제거
+        text = text.replace(/^[-–—]\s*/, '')
+        
+        return {
+          title: title || '',
+          text,
+          voiceAnalysis: c.source_type === '발표' ? c.source : null,
+          presentationMaterial: c.source_type === '자료' ? c.source : null,
+        }
+      })
+      console.log('✅ [강점 처리] 처리된 강점 아이템:', strengthItems)
+      strengthItems.forEach((item, idx) => {
+        console.log(`✅ [강점 ${idx + 1}]`, {
+          title: item.title,
+          text: item.text?.substring(0, 50) + '...',
+          titleFromAPI: strengthComments[idx]?.title
+        })
+      })
       setStrengths(strengthItems)
 
       // 약점 추출
       const weaknessComments = comments.filter(c => c.type === '약점')
-      const improvementItems: ImprovementItem[] = weaknessComments.map(c => ({
-        text: c.comment,
-        voiceAnalysis: c.source_type === '발표' ? c.source : null,
-        presentationMaterial: c.source_type === '자료' ? c.source : null,
-      }))
+      const improvementItems: ImprovementItem[] = weaknessComments.map(c => {
+        // API에서 가져온 title 필드 사용 (없으면 comment에서 추출)
+        let title = c.title || (() => {
+          const colonIndex = c.comment.indexOf(':')
+          return colonIndex > 0 ? c.comment.substring(0, colonIndex).trim() : ''
+        })()
+        // title 뒤에 붙는 . 제거
+        title = title.replace(/\.+$/, '')
+        
+        // title이 있으면 comment를 그대로 사용, 없으면 comment 전체를 text로 사용
+        let text = c.title ? c.comment : (() => {
+          const colonIndex = c.comment.indexOf(':')
+          return colonIndex > 0 ? c.comment.substring(colonIndex + 1).trim() : c.comment
+        })()
+        // text 앞에 있는 - 제거
+        text = text.replace(/^[-–—]\s*/, '')
+        
+        return {
+          title: title || '',
+          text,
+          voiceAnalysis: c.source_type === '발표' ? c.source : null,
+          presentationMaterial: c.source_type === '자료' ? c.source : null,
+        }
+      })
+      console.log('✅ [약점 처리] 처리된 약점 아이템:', improvementItems)
+      improvementItems.forEach((item, idx) => {
+        console.log(`✅ [약점 ${idx + 1}]`, {
+          title: item.title,
+          text: item.text?.substring(0, 50) + '...',
+          titleFromAPI: weaknessComments[idx]?.title
+        })
+      })
       setImprovements(improvementItems)
 
       // 총평 추출 (여러 개 있을 수 있으므로 하나로 합침)
@@ -147,6 +217,7 @@ export default function PostPresentationPage() {
       const lines = combinedSummary
         .split('\n')
         .map(line => line.trim())
+        .map(line => line.replace(/^[-–—]\s*/, '')) // 앞의 - 제거
         .filter(line => line.length > 0)
       setSummaryLines(lines)
 
@@ -285,6 +356,8 @@ export default function PostPresentationPage() {
       setCompletedWeaknessItems([])
       setCompletedSummaryItems([])
       setCompletedSummary(false)
+      setCompletedStrengthTitles([])
+      setCompletedWeaknessTitles([])
       setIsEvaluationComplete(false)
       setAnalyzingLine("")
       
@@ -740,42 +813,17 @@ export default function PostPresentationPage() {
             )}
           </AnimatePresence>
 
-          <div className="relative min-h-[600px]">
-            {loadingStage === "revealed" && (
-              <div className="space-y-8 w-full">
-                {isAnalyzingImplication && analyzingLine && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center justify-center gap-3 text-lg font-semibold text-cyan-400"
-                  >
-                    <div className="h-10 w-10 animate-pulse">
-                      <Brain3D className="w-full h-full" />
-                    </div>
-                    <span className="animate-pulse">{analyzingLine}</span>
-                  </motion.div>
-                )}
-
-                {/* Strengths Section */}
-                <div className="w-full flex gap-6 items-start">
-                  <h4 className="text-5xl font-bold whitespace-nowrap pt-8" style={{ color: "#ec4899", minWidth: "150px" }}>
-                    강점
-                  </h4>
-                  <div
-                    className="flex-1 rounded-xl p-8 min-h-[200px]"
-                    style={{
-                      border: "2px solid rgba(59, 130, 246, 0.5)",
-                      background: "rgba(10, 20, 40, 0.95)",
-                      boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
-                    }}
-                  >
-                      {isLoadingAnalysis ? (
-                        <p className="text-muted-foreground">로딩 중...</p>
-                      ) : strengths.length === 0 ? (
-                        <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
-                      ) : (
-                        <ul className="space-y-6">
-                        {strengths.map((strength, idx) => (
+            <div className="relative min-h-[600px]">
+              {loadingStage === "revealed" && (
+                <div className="flex w-full justify-center items-stretch gap-4 mt-6">
+                  {/* 좌측: 강점/약점 */}
+                  <div className="flex flex-col gap-4" style={{ width: 800 }}>
+                    {/* 강점 카드 */}
+                    <div className="rounded-xl p-6 bg-slate-900/40 backdrop-blur-sm border border-cyan-500/30 shadow-lg flex-1" style={{ boxShadow: '0 0 30px rgba(6,182,212,0.2)', height: 320 }}>
+                      <h4 className="text-3xl md:text-4xl font-bold text-pink-400 mb-3">강점</h4>
+                      {isLoadingAnalysis ? <p className="text-muted-foreground">로딩 중...</p>
+                        : strengths.length === 0 ? <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
+                        : <ul className="space-y-4">{strengths.map((strength, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleStrengthItems.includes(idx) && (
                               <motion.li
@@ -784,66 +832,51 @@ export default function PostPresentationPage() {
                                 transition={{ duration: 0.3, ease: "easeOut" }}
                                 className="text-3xl font-medium text-white leading-relaxed"
                               >
-                                <div className="flex items-start gap-3">
-                                  <span className="text-white">•</span>
-                                  <span className="flex-1">
-                                    <TypewriterText
-                                      text={strength.text}
-                                      delay={50}
-                                      onComplete={() => {
-                                        setCompletedStrengthItems((prev) => [...prev, idx])
-                                      }}
+                                <span className="text-pink-300 font-bold mr-2">•</span>
+                                {strength.title && (
+                                  <>
+                                    <TypewriterText 
+                                      text={strength.title} 
+                                      delay={30} 
+                                      className="text-pink-400 font-bold"
+                                      onComplete={() => setCompletedStrengthTitles((prev) => [...prev, idx])} 
                                     />
-                                    {completedStrengthItems.includes(idx) && (
-                                      <motion.span
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="inline-flex items-center gap-2 ml-2"
-                                      >
-                                        {strength.voiceAnalysis && (
-                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                                            음성분석 {strength.voiceAnalysis}
-                                          </span>
-                                        )}
-                                        {strength.presentationMaterial && (
-                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                            발표자료 {strength.presentationMaterial}
-                                          </span>
-                                        )}
-                                      </motion.span>
+                                    {completedStrengthTitles.includes(idx) && (
+                                      <>
+                                        <span className="text-white">: </span>
+                                        <TypewriterText 
+                                          text={strength.text} 
+                                          delay={30} 
+                                          onComplete={() => setCompletedStrengthItems((prev) => [...prev, idx])} 
+                                        />
+                                      </>
                                     )}
-                                  </span>
-                                </div>
+                                  </>
+                                )}
+                                {!strength.title && (
+                                  <TypewriterText text={strength.text} delay={30} onComplete={() => setCompletedStrengthItems((prev) => [...prev, idx])} />
+                                )}
+                                {completedStrengthItems.includes(idx) && (
+                                  <motion.span className="inline-block ml-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                    {strength.voiceAnalysis && (
+                                      <span className="ml-1 text-xs font-semibold text-cyan-300">({strength.voiceAnalysis})</span>
+                                    )}
+                                    {strength.presentationMaterial && (
+                                      <span className="ml-1 text-xs font-semibold text-blue-300">({strength.presentationMaterial})</span>
+                                    )}
+                                  </motion.span>
+                                )}
                               </motion.li>
                             )}
                           </AnimatePresence>
-                        ))}
-                      </ul>
-                      )}
-                  </div>
-                </div>
-
-                {/* Weaknesses Section */}
-                <div className="w-full flex gap-6 items-start">
-                  <h4 className="text-5xl font-bold whitespace-nowrap pt-8" style={{ color: "#ec4899", minWidth: "150px" }}>
-                    약점
-                  </h4>
-                  <div
-                    className="flex-1 rounded-xl p-8 min-h-[200px]"
-                    style={{
-                      border: "2px solid rgba(59, 130, 246, 0.5)",
-                      background: "rgba(10, 20, 40, 0.95)",
-                      boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
-                    }}
-                  >
-                      {isLoadingAnalysis ? (
-                        <p className="text-muted-foreground">로딩 중...</p>
-                      ) : improvements.length === 0 ? (
-                        <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
-                      ) : (
-                        <ul className="space-y-6">
-                        {improvements.map((improvement, idx) => (
+                        ))}</ul>}
+                    </div>
+                    {/* 약점 카드 */}
+                    <div className="rounded-xl p-6 bg-slate-900/40 backdrop-blur-sm border border-cyan-500/30 shadow-lg flex-1" style={{ boxShadow: '0 0 30px rgba(34,211,238,0.2)', height: 320 }}>
+                      <h4 className="text-3xl md:text-4xl font-bold text-cyan-400 mb-3">약점</h4>
+                      {isLoadingAnalysis ? <p className="text-muted-foreground">로딩 중...</p>
+                        : improvements.length === 0 ? <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
+                        : <ul className="space-y-4">{improvements.map((item, idx) => (
                           <AnimatePresence key={idx}>
                             {visibleWeaknessItems.includes(idx) && (
                               <motion.li
@@ -852,96 +885,135 @@ export default function PostPresentationPage() {
                                 transition={{ duration: 0.3, ease: "easeOut" }}
                                 className="text-3xl font-medium text-white leading-relaxed"
                               >
-                                <div className="flex items-start gap-3">
-                                  <span className="text-white">•</span>
-                                  <span className="flex-1">
-                                    <TypewriterText
-                                      text={improvement.text}
-                                      delay={50}
-                                      onComplete={() => {
-                                        setCompletedWeaknessItems((prev) => [...prev, idx])
-                                      }}
+                                <span className="text-cyan-300 font-bold mr-2">•</span>
+                                {item.title && (
+                                  <>
+                                    <TypewriterText 
+                                      text={item.title} 
+                                      delay={30} 
+                                      className="text-cyan-400 font-bold"
+                                      onComplete={() => setCompletedWeaknessTitles((prev) => [...prev, idx])} 
                                     />
-                                    {completedWeaknessItems.includes(idx) && (
-                                      <motion.span
-                                        initial={{ opacity: 0, scale: 0.8 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ duration: 0.3 }}
-                                        className="inline-flex items-center gap-2 ml-2"
-                                      >
-                                        {improvement.voiceAnalysis && (
-                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                                            음성분석 {improvement.voiceAnalysis}
-                                          </span>
-                                        )}
-                                        {improvement.presentationMaterial && (
-                                          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                                            발표자료 {improvement.presentationMaterial}
-                                          </span>
-                                        )}
-                                      </motion.span>
+                                    {completedWeaknessTitles.includes(idx) && (
+                                      <>
+                                        <span className="text-white">: </span>
+                                        <TypewriterText 
+                                          text={item.text} 
+                                          delay={30} 
+                                          onComplete={() => setCompletedWeaknessItems((prev) => [...prev, idx])} 
+                                        />
+                                      </>
                                     )}
-                                  </span>
-                                </div>
+                                  </>
+                                )}
+                                {!item.title && (
+                                  <TypewriterText text={item.text} delay={30} onComplete={() => setCompletedWeaknessItems((prev) => [...prev, idx])} />
+                                )}
+                                {completedWeaknessItems.includes(idx) && (
+                                  <motion.span className="inline-block ml-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                                    {item.voiceAnalysis && (
+                                      <span className="ml-1 text-xs font-semibold text-cyan-300">({item.voiceAnalysis})</span>
+                                    )}
+                                    {item.presentationMaterial && (
+                                      <span className="ml-1 text-xs font-semibold text-blue-300">({item.presentationMaterial})</span>
+                                    )}
+                                  </motion.span>
+                                )}
                               </motion.li>
                             )}
                           </AnimatePresence>
-                        ))}
-                      </ul>
-                      )}
+                        ))}</ul>}
+                    </div>
                   </div>
-                </div>
-
-                {/* Summary Section */}
-                <div className="w-full flex gap-6 items-start">
-                  <h4 className="text-5xl font-bold whitespace-nowrap pt-8" style={{ color: "#ec4899", minWidth: "150px" }}>
-                    총평
-                  </h4>
-                  <div
-                    className="flex-1 rounded-xl p-8 min-h-[150px]"
-                    style={{
-                      border: "2px solid rgba(59, 130, 246, 0.5)",
-                      background: "rgba(10, 20, 40, 0.95)",
-                      boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)",
+                  
+                  {/* 중간: 주황 화살표 */}
+                  <motion.div 
+                    className="flex items-center justify-center"
+                    animate={{
+                      opacity: [0.7, 1, 0.7],
                     }}
+                    transition={{
+                      duration: 2,
+                      repeat: Number.POSITIVE_INFINITY,
+                      ease: "easeInOut"
+                    }}
+                    style={{ filter: 'drop-shadow(0 0 20px rgba(251,146,60,0.5))' }}
                   >
-                      {isLoadingAnalysis ? (
-                        <p className="text-muted-foreground">로딩 중...</p>
-                      ) : summaryLines.length === 0 ? (
-                        <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
-                      ) : (
-                        <ul className="space-y-6">
-                          {summaryLines.map((line, idx) => (
-                            <AnimatePresence key={idx}>
-                              {visibleSummaryItems.includes(idx) && (
-                                <motion.li
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ duration: 0.3, ease: "easeOut" }}
-                                  className="text-3xl font-medium text-white leading-relaxed"
-                                >
-                                  <div className="flex items-start gap-3">
-                                    <span className="text-white">•</span>
-                                    <span className="flex-1">
-                                      <TypewriterText
-                                        text={line}
-                                        delay={50}
-                                        onComplete={() => {
-                                          setCompletedSummaryItems((prev) => [...prev, idx])
-                                        }}
-                                      />
-                                    </span>
-                                  </div>
-                                </motion.li>
-                              )}
-                            </AnimatePresence>
-                          ))}
-                        </ul>
-                      )}
+                    <svg width="80" height="620" viewBox="0 0 80 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M10 20 L50 20 L70 310 L50 600 L10 600 L30 310 Z" fill="url(#orangeGradient)" stroke="rgba(251,146,60,0.8)" strokeWidth="2"/>
+                      <defs>
+                        <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="#fb923c" />
+                          <stop offset="100%" stopColor="#f97316" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </motion.div>
+                  
+                  {/* 우측: 총평 */}
+                  <div style={{ width: 850 }}>
+                    <motion.div 
+                      className="rounded-xl p-6 backdrop-blur-sm border-2 shadow-lg relative overflow-hidden" 
+                      style={{ 
+                        background: 'linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(99,102,241,0.25) 50%, rgba(139,92,246,0.25) 100%)',
+                        borderColor: 'rgba(59,130,246,0.8)',
+                        boxShadow: '0 0 60px rgba(59,130,246,0.6), 0 0 100px rgba(99,102,241,0.4), inset 0 0 80px rgba(59,130,246,0.2)', 
+                        height: 648 
+                      }}
+                      animate={{
+                        boxShadow: [
+                          '0 0 60px rgba(59,130,246,0.6), 0 0 100px rgba(99,102,241,0.4), inset 0 0 80px rgba(59,130,246,0.2)',
+                          '0 0 80px rgba(59,130,246,0.8), 0 0 120px rgba(99,102,241,0.6), inset 0 0 100px rgba(59,130,246,0.3)',
+                          '0 0 60px rgba(59,130,246,0.6), 0 0 100px rgba(99,102,241,0.4), inset 0 0 80px rgba(59,130,246,0.2)',
+                        ]
+                      }}
+                      transition={{
+                        duration: 3,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: "easeInOut"
+                      }}
+                    >
+                      {/* 하이라이팅 배경 효과 */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-purple-500/15 to-indigo-500/20 pointer-events-none" />
+                      {/* 추가 글로우 효과 */}
+                      <motion.div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: 'radial-gradient(circle at 50% 50%, rgba(59,130,246,0.3) 0%, transparent 70%)'
+                        }}
+                        animate={{
+                          opacity: [0.3, 0.6, 0.3]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Number.POSITIVE_INFINITY,
+                          ease: "easeInOut"
+                        }}
+                      />
+                      <div className="relative z-10">
+                        <h4 className="text-3xl md:text-4xl font-bold text-blue-300 mb-3 text-center drop-shadow-[0_0_15px_rgba(59,130,246,0.8)]">총평</h4>
+                      {isLoadingAnalysis ? <p className="text-muted-foreground">로딩 중...</p>
+                      : summaryLines.length === 0 ? <p className="text-muted-foreground">분석 데이터가 없습니다.</p>
+                      : <ul className="space-y-4">{summaryLines.map((line, idx) => (
+                        <AnimatePresence key={idx}>
+                          {visibleSummaryItems.includes(idx) && (
+                            <motion.li
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, ease: "easeOut" }}
+                              className="text-3xl font-medium text-white leading-relaxed"
+                            >
+                              <span className="text-blue-300 font-bold mr-2">•</span>
+                              <TypewriterText text={line} delay={30} onComplete={() => setCompletedSummaryItems((prev) => [...prev, idx])} />
+                            </motion.li>
+                          )}
+                        </AnimatePresence>
+                      ))}</ul>}
+                      </div>
+                    </motion.div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           {isImplicationAnalysisComplete && (
