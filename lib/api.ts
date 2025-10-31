@@ -583,12 +583,16 @@ export interface QnAQuestionResponse {
   question_korean_caption: string | null
   answer_text: string | null
   answer_korean_caption: string | null
+  source: string | null // 출처
+  source_korean_caption: string | null // 출처 한글 자막
   is_selected: boolean
   is_used: boolean
   created_by: number // 1: 자동생성, 2: 수동생성
   created_at: string
   video_created: boolean
   character_name: string | null // 매핑된 캐릭터 이름
+  video_result: string | null // 질문 비디오 URL
+  answer_video_result: string | null // 답변 비디오 URL
 }
 
 export interface QnAQuestionWithVideoResponse {
@@ -625,6 +629,8 @@ export interface QnAQuestionCreate {
   question_korean_caption?: string
   answer_text?: string
   answer_korean_caption?: string
+  source?: string
+  source_korean_caption?: string
   is_selected?: boolean
   created_by?: number
 }
@@ -651,9 +657,12 @@ export interface QnAQuestionUpdate {
   question_korean_caption?: string
   answer_text?: string
   answer_korean_caption?: string
+  source?: string
+  source_korean_caption?: string
   is_selected?: boolean
   is_used?: boolean
   created_by?: number
+  video_result?: string // 비디오 결과 URL
 }
 
 /**

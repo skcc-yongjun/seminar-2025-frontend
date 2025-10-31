@@ -50,7 +50,12 @@ export default function QnaPage() {
     title: "",
     keyword: "",
     question_text: "",
+    question_korean_caption: "",
     answer_text: "",
+    answer_korean_caption: "",
+    source: "",
+    source_korean_caption: "",
+    video_result: "",
   })
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
@@ -158,7 +163,12 @@ export default function QnaPage() {
       title: "",
       keyword: "",
       question_text: "",
+      question_korean_caption: "",
       answer_text: "",
+      answer_korean_caption: "",
+      source: "",
+      source_korean_caption: "",
+      video_result: "",
     })
     setIsDialogOpen(true)
   }
@@ -171,11 +181,16 @@ export default function QnaPage() {
     setEditingQna(qna)
     setFormData({
       presentation_id: qna.presentation_id,
-      character_name: characters.length > 0 ? characters[0].character_name : "",
+      character_name: qna.character_name || (characters.length > 0 ? characters[0].character_name : ""),
       title: qna.title || "",
       keyword: qna.keyword || "",
       question_text: qna.question_text,
+      question_korean_caption: qna.question_korean_caption || "",
       answer_text: qna.answer_text || "",
+      answer_korean_caption: qna.answer_korean_caption || "",
+      source: qna.source || "",
+      source_korean_caption: qna.source_korean_caption || "",
+      video_result: qna.video_result || "", // video_result를 QnAQuestionResponse에서 가져옴
     })
     setIsDialogOpen(true)
   }
@@ -211,17 +226,17 @@ export default function QnaPage() {
    * Q&A 저장 (생성 또는 수정)
    */
   const handleSave = async () => {
-    // 입력값 검증
-    if (!formData.presentation_id || !formData.question_text || !formData.answer_text) {
+    // 입력값 검증 - 답변은 선택사항으로 변경
+    if (!formData.presentation_id || !formData.question_text) {
       toast({
         variant: "destructive",
         title: "입력 오류",
-        description: "발표, 질문, 답변은 필수 입력 항목입니다.",
+        description: "발표와 질문은 필수 입력 항목입니다.",
       })
       return
     }
 
-    if (!editingQna && !formData.character_name) {
+    if (!formData.character_name) {
       toast({
         variant: "destructive",
         title: "입력 오류",
@@ -239,7 +254,12 @@ export default function QnaPage() {
           title: formData.title,
           keyword: formData.keyword,
           question_text: formData.question_text,
+          question_korean_caption: formData.question_korean_caption,
           answer_text: formData.answer_text,
+          answer_korean_caption: formData.answer_korean_caption,
+          source: formData.source,
+          source_korean_caption: formData.source_korean_caption,
+          video_result: formData.video_result || undefined, // 비디오 결과 URL (값이 있을 때만 전달)
         })
         toast({
           title: "성공",
@@ -254,8 +274,10 @@ export default function QnaPage() {
           keyword: formData.keyword,
           question_text: formData.question_text,
           answer_text: formData.answer_text,
-          question_korean_caption: formData.question_text, // 질문 자막 (질문과 동일)
-          answer_korean_caption: formData.answer_text, // 답변 자막 (답변과 동일)
+          question_korean_caption: formData.question_korean_caption || formData.question_text, // 질문 자막
+          answer_korean_caption: formData.answer_korean_caption || formData.answer_text, // 답변 자막
+          source: formData.source,
+          source_korean_caption: formData.source_korean_caption,
           created_by: 2, // 수동 생성
         })
 
@@ -287,7 +309,12 @@ export default function QnaPage() {
         title: "",
         keyword: "",
         question_text: "",
+        question_korean_caption: "",
         answer_text: "",
+        answer_korean_caption: "",
+        source: "",
+        source_korean_caption: "",
+        video_result: "",
       })
 
       // 목록 다시 로드
@@ -599,10 +626,50 @@ export default function QnaPage() {
                             <p className="text-xs text-muted-foreground mb-1">질문</p>
                             <p className="text-sm text-foreground">{qna.question_text}</p>
                           </div>
+                          {qna.question_korean_caption && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">질문 한글 자막</p>
+                              <p className="text-sm text-foreground/70">{qna.question_korean_caption}</p>
+                            </div>
+                          )}
                           {qna.answer_text && (
                             <div>
                               <p className="text-xs text-muted-foreground mb-1">답변</p>
                               <p className="text-sm text-muted-foreground">{qna.answer_text}</p>
+                            </div>
+                          )}
+                          {qna.answer_korean_caption && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">답변 한글 자막</p>
+                              <p className="text-sm text-muted-foreground/70">{qna.answer_korean_caption}</p>
+                            </div>
+                          )}
+                          {qna.video_result && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">질문 비디오 URL</p>
+                              <a href={qna.video_result} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline break-all">
+                                {qna.video_result}
+                              </a>
+                            </div>
+                          )}
+                          {qna.answer_video_result && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">답변 비디오 URL</p>
+                              <a href={qna.answer_video_result} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline break-all">
+                                {qna.answer_video_result}
+                              </a>
+                            </div>
+                          )}
+                          {qna.source && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">출처</p>
+                              <p className="text-sm text-foreground/70">{qna.source}</p>
+                            </div>
+                          )}
+                          {qna.source_korean_caption && (
+                            <div>
+                              <p className="text-xs text-muted-foreground mb-1">출처 한글 자막</p>
+                              <p className="text-sm text-foreground/70">{qna.source_korean_caption}</p>
                             </div>
                           )}
                           <div className="flex items-center gap-4 text-xs text-muted-foreground/60 pt-2 border-t">
@@ -619,28 +686,39 @@ export default function QnaPage() {
           </div>
         )}
       </div>
-        <style>{`
-          /* Dialog 오버레이 불투명하게 */
-          [data-slot="dialog-overlay"] {
-            background-color: rgba(0, 0, 0, 0.85) !important;
-            backdrop-filter: blur(8px) !important;
-          }
-          
-          /* Dialog 콘텐츠 크기 확대 및 배경색 수정 */
-          [data-slot="dialog-content"] {
-            width: 1400px !important;
-            max-width: 90vw !important;
-            max-height: 85vh !important;
-            background-color: hsl(var(--background)) !important;
-          }
-        `}</style>
+      <style jsx global>{`
+        /* 스크롤바 커스터마이징 */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: hsl(var(--muted));
+          border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: hsl(var(--muted-foreground) / 0.3);
+          border-radius: 4px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: hsl(var(--muted-foreground) / 0.5);
+        }
+        
+        /* Dialog 오버레이 불투명하게 */
+        [data-radix-dialog-overlay] {
+          background-color: rgba(0, 0, 0, 0.8) !important;
+          backdrop-filter: blur(4px) !important;
+        }
+      `}</style>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen} modal={true}>
-        <DialogContent className="max-w-2xl bg-background">
-          <DialogHeader>
+        <DialogContent className="max-w-5xl bg-background max-h-[85vh] flex flex-col gap-0">
+          <DialogHeader className="shrink-0 pb-4">
             <DialogTitle>{editingQna ? "Q&A 수정" : "Q&A 추가"}</DialogTitle>
             <DialogDescription>Q&A 정보를 입력해주세요.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 overflow-y-auto flex-1 pr-2 custom-scrollbar">
             <div className="space-y-2">
               <Label htmlFor="presentation">발표 *</Label>
               <Select
@@ -663,30 +741,30 @@ export default function QnaPage() {
                 현재 선택된 발표에 Q&A가 추가됩니다.
               </p>
             </div>
-            {!editingQna && (
-              <div className="space-y-2">
-                <Label htmlFor="character">캐릭터 * (아바타 비디오 생성용)</Label>
-                <Select
-                  value={formData.character_name || undefined}
-                  onValueChange={(value) => setFormData({ ...formData, character_name: value })}
-                  disabled={isSaving}
-                >
-                  <SelectTrigger className="bg-background">
-                    <SelectValue placeholder="캐릭터 선택" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background">
-                    {characters.map((character) => (
-                      <SelectItem key={character.character_id} value={character.character_name}>
-                        {character.character_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-muted-foreground">
-                  선택한 캐릭터로 질문과 답변 아바타 비디오가 자동 생성됩니다.
-                </p>
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="character">캐릭터 * {editingQna ? "(수정 시 변경 가능)" : "(아바타 비디오 생성용)"}</Label>
+              <Select
+                value={formData.character_name || undefined}
+                onValueChange={(value) => setFormData({ ...formData, character_name: value })}
+                disabled={isSaving}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue placeholder="캐릭터 선택" />
+                </SelectTrigger>
+                <SelectContent className="bg-background">
+                  {characters.map((character) => (
+                    <SelectItem key={character.character_id} value={character.character_name}>
+                      {character.character_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {editingQna 
+                  ? "캐릭터를 변경할 수 있습니다." 
+                  : "선택한 캐릭터로 질문과 답변 아바타 비디오가 자동 생성됩니다."}
+              </p>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="title">제목</Label>
               <Input
@@ -719,18 +797,75 @@ export default function QnaPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="answer">답변 *</Label>
+              <Label htmlFor="question_korean_caption">질문 한글 자막</Label>
+              <Textarea
+                id="question_korean_caption"
+                value={formData.question_korean_caption}
+                onChange={(e) => setFormData({ ...formData, question_korean_caption: e.target.value })}
+                placeholder="질문 한글 자막을 입력하세요 (선택사항)"
+                rows={2}
+                disabled={isSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="answer">답변</Label>
               <Textarea
                 id="answer"
                 value={formData.answer_text}
                 onChange={(e) => setFormData({ ...formData, answer_text: e.target.value })}
-                placeholder="답변 내용을 입력하세요"
+                placeholder="답변 내용을 입력하세요 (선택사항)"
                 rows={4}
                 disabled={isSaving}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="answer_korean_caption">답변 한글 자막</Label>
+              <Textarea
+                id="answer_korean_caption"
+                value={formData.answer_korean_caption}
+                onChange={(e) => setFormData({ ...formData, answer_korean_caption: e.target.value })}
+                placeholder="답변 한글 자막을 입력하세요 (선택사항)"
+                rows={2}
+                disabled={isSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="source">출처</Label>
+              <Input
+                id="source"
+                value={formData.source}
+                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+                placeholder="출처를 입력하세요 (선택사항)"
+                disabled={isSaving}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="source_korean_caption">출처 한글 자막</Label>
+              <Input
+                id="source_korean_caption"
+                value={formData.source_korean_caption}
+                onChange={(e) => setFormData({ ...formData, source_korean_caption: e.target.value })}
+                placeholder="출처 한글 자막을 입력하세요 (선택사항)"
+                disabled={isSaving}
+              />
+            </div>
+            {editingQna && (
+              <div className="space-y-2">
+                <Label htmlFor="video_result">비디오 결과 URL</Label>
+                <Input
+                  id="video_result"
+                  value={formData.video_result}
+                  onChange={(e) => setFormData({ ...formData, video_result: e.target.value })}
+                  placeholder="비디오 결과 URL을 입력하세요 (선택사항)"
+                  disabled={isSaving}
+                />
+                <p className="text-xs text-muted-foreground">
+                  수정 시 비디오 결과 URL을 직접 입력할 수 있습니다.
+                </p>
+              </div>
+            )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="shrink-0 border-t pt-4">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSaving}>
               취소
             </Button>
