@@ -27,19 +27,19 @@ function PanelLiveContent() {
   // 패널 참가자 정보 (하드코딩)
   const participants = [
     {
-      name: "박성중",
+      name: "박석중",
       title: "신한투자증권",
-      image: "/placeholder-user.jpg",
+      image: "/panels/parkseokjung.png",
     },
     {
-      name: "송승현",
+      name: "송승헌",
       title: "McKinsey Partner",
-      image: "/placeholder-user.jpg",
+      image: "/panels/songseungheon.png",
     },
     {
       name: "박종훈",
       title: "Moderator",
-      image: "/placeholder-user.jpg",
+      image: "/panels/parkjonghun.png",
     },
   ]
 
