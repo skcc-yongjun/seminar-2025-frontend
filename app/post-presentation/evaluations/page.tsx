@@ -293,154 +293,163 @@ function EvaluationsContent() {
           <div className="w-[88px]" />
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-8 rounded-lg border-2 shadow-lg relative"
-          style={{
-            background: "rgba(10, 20, 40, 0.95)",
-            backdropFilter: "blur(24px)",
-            borderColor: "rgba(59, 130, 246, 0.3)",
-            boxShadow: "0 0 30px rgba(59, 130, 246, 0.2), 0 8px 32px rgba(0, 0, 0, 0.6)",
-          }}
-        >
-          {isLoadingScores && (
-            <div className="flex items-center justify-center gap-3 mb-6 text-cyan-400">
-              <Brain className="w-5 h-5 animate-pulse" />
-              <span className="text-lg font-semibold animate-pulse">점수 데이터 로딩 중...</span>
-            </div>
-          )}
+        {isLoadingScores && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center justify-center gap-3 mb-6 text-cyan-400"
+          >
+            <Brain className="w-5 h-5 animate-pulse" />
+            <span className="text-lg font-semibold animate-pulse">점수 데이터 로딩 중...</span>
+          </motion.div>
+        )}
 
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4 min-h-[500px]">
-              <div className="flex items-center justify-between border-b-2 border-blue-500/30 pb-2">
-                <h3 className="text-4xl font-semibold text-white w-full text-center justify-center flex">AI 평가</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* AI 평가 카드 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-8 rounded-lg border-2 shadow-lg relative"
+              style={{
+                background: "rgba(10, 20, 40, 0.95)",
+                backdropFilter: "blur(24px)",
+                borderColor: "rgba(59, 130, 246, 0.3)",
+                boxShadow: "0 0 30px rgba(59, 130, 246, 0.2), 0 8px 32px rgba(0, 0, 0, 0.6)",
+              }}
+            >
+              <div className="flex items-center justify-between border-b-2 border-blue-500/30 pb-4 mb-6">
+                <h3 className="text-4xl font-semibold text-white w-full text-center">AI 평가</h3>
               </div>
-              <div className="relative min-h-[450px]">
+              <div className="relative">
                 {Object.keys(aiScores).length === 0 ? (
-                  <p className="text-muted-foreground">AI 평가 점수가 없습니다.</p>
+                  <p className="text-muted-foreground text-center">AI 평가 점수가 없습니다.</p>
                 ) : (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="space-y-5"
-                  >
+                  <div className="grid grid-cols-1 gap-6">
                     {Object.entries(aiScores).map(([key, value]) => (
-                    <motion.div
-                      key={key}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="flex items-center gap-4"
-                    >
-                      <div className="text-2xl font-bold text-white min-w-[240px] shrink-0">{key}</div>
-                      <div className="flex-1 h-14 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(value / 10) * 100}%` }}
-                          transition={{
-                            duration: 2.5,
-                            ease: "easeOut",
-                          }}
-                          className="h-full rounded-sm relative overflow-hidden"
-                          style={{
-                            background: "linear-gradient(90deg, #3b82f6, #22d3ee)",
-                          }}
-                        >
-                          <motion.div
-                            animate={{
-                              x: ["-100%", "100%"],
-                            }}
-                            transition={{
-                              duration: 1.5,
-                              repeat: 2,
-                              ease: "linear",
-                            }}
-                            className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                          />
-                        </motion.div>
-                      </div>
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                      <motion.div
+                        key={key}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="text-3xl font-bold text-cyan-400 min-w-[80px] text-right"
+                        className="space-y-2"
                       >
-                        {typeof animatedAIScores[key] === 'number' ? animatedAIScores[key].toFixed(1) : "0.0"}
-                      </motion.span>
-                    </motion.div>
-                  ))}
-                </motion.div>
+                        <div className="text-xl font-bold text-white">{key}</div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-12 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(value / 100) * 100}%` }}
+                              transition={{
+                                duration: 2.5,
+                                ease: "easeOut",
+                              }}
+                              className="h-full rounded-sm relative overflow-hidden"
+                              style={{
+                                background: "linear-gradient(90deg, #3b82f6, #22d3ee)",
+                              }}
+                            >
+                              <motion.div
+                                animate={{
+                                  x: ["-100%", "100%"],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: 2,
+                                  ease: "linear",
+                                }}
+                                className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                              />
+                            </motion.div>
+                          </div>
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="text-2xl font-bold text-cyan-400 min-w-[70px] text-right"
+                          >
+                            {typeof animatedAIScores[key] === 'number' ? Math.round(animatedAIScores[key]) : "0"}
+                          </motion.span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
+            </motion.div>
 
-            <div className="space-y-4 min-h-[500px]">
-              <div className="flex items-center justify-between border-b-2 border-blue-500/30 pb-2">
-                <h3 className="text-4xl font-semibold text-white w-full text-center justify-center flex">경영진 평가</h3>
+            {/* 경영진 평가 카드 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="p-8 rounded-lg border-2 shadow-lg relative"
+              style={{
+                background: "rgba(10, 20, 40, 0.95)",
+                backdropFilter: "blur(24px)",
+                borderColor: "rgba(59, 130, 246, 0.3)",
+                boxShadow: "0 0 30px rgba(59, 130, 246, 0.2), 0 8px 32px rgba(0, 0, 0, 0.6)",
+              }}
+            >
+              <div className="flex items-center justify-between border-b-2 border-blue-500/30 pb-4 mb-6">
+                <h3 className="text-4xl font-semibold text-white w-full text-center">경영진 평가</h3>
               </div>
-              <div className="relative min-h-[450px]">
+              <div className="relative">
                 {Object.keys(humanScores).length === 0 ? (
-                  <p className="text-muted-foreground">경영진 평가 점수가 없습니다.</p>
+                  <p className="text-muted-foreground text-center">경영진 평가 점수가 없습니다.</p>
                 ) : (
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="space-y-5"
-                  >
+                  <div className="grid grid-cols-1 gap-6">
                     {Object.entries(humanScores).map(([key, value]) => (
-                    <motion.div
-                      key={key}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ duration: 0.5 }}
-                      className="flex items-center gap-4"
-                    >
-                      <div className="text-2xl font-bold text-white min-w-[240px] shrink-0">{key}</div>
-                      <div className="flex-1 h-14 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
-                        <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(value / 10) * 100}%` }}
-                          transition={{
-                            duration: 2.5,
-                            ease: "easeOut",
-                          }}
-                          className="h-full rounded-sm relative overflow-hidden"
-                          style={{
-                            background: "linear-gradient(90deg, #3b82f6, #22d3ee)",
-                          }}
-                        >
-                          <motion.div
-                            animate={{
-                              x: ["-100%", "100%"],
-                            }}
-                            transition={{
-                              duration: 1.5,
-                              repeat: 2,
-                              ease: "linear",
-                            }}
-                            className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                          />
-                        </motion.div>
-                      </div>
-                      <motion.span
-                        initial={{ opacity: 0, scale: 0.5 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                      <motion.div
+                        key={key}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5 }}
-                        className="text-3xl font-bold text-cyan-400 min-w-[80px] text-right"
+                        className="space-y-2"
                       >
-                        {typeof animatedOnsiteScores[key] === 'number' ? animatedOnsiteScores[key].toFixed(1) : "0.0"}
-                      </motion.span>
-                    </motion.div>
-                  ))}
-                </motion.div>
+                        <div className="text-xl font-bold text-white">{key}</div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-12 bg-slate-800/50 rounded-sm overflow-hidden relative border border-blue-500/20">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(value / 100) * 100}%` }}
+                              transition={{
+                                duration: 2.5,
+                                ease: "easeOut",
+                              }}
+                              className="h-full rounded-sm relative overflow-hidden"
+                              style={{
+                                background: "linear-gradient(90deg, #3b82f6, #22d3ee)",
+                              }}
+                            >
+                              <motion.div
+                                animate={{
+                                  x: ["-100%", "100%"],
+                                }}
+                                transition={{
+                                  duration: 1.5,
+                                  repeat: 2,
+                                  ease: "linear",
+                                }}
+                                className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                              />
+                            </motion.div>
+                          </div>
+                          <motion.span
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.5 }}
+                            className="text-2xl font-bold text-cyan-400 min-w-[70px] text-right"
+                          >
+                            {typeof animatedOnsiteScores[key] === 'number' ? Math.round(animatedOnsiteScores[key]) : "0"}
+                          </motion.span>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           </div>
-        </motion.div>
 
         <motion.div
           initial={{ opacity: 0 }}

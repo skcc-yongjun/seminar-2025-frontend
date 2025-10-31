@@ -14,6 +14,26 @@ interface Particle {
 
 export function Brain3D({ className = "" }: { className?: string }) {
   const [particles, setParticles] = useState<Particle[]>([])
+  const [isMounted, setIsMounted] = useState(false)
+  const [ambientParticles, setAmbientParticles] = useState<Array<{
+    left: number
+    top: number
+    duration: number
+    delay: number
+  }>>([])
+
+  useEffect(() => {
+    setIsMounted(true)
+    // Ambient particles 위치 생성 (클라이언트에서만)
+    setAmbientParticles(
+      Array.from({ length: 12 }).map(() => ({
+        left: 15 + Math.random() * 70,
+        top: 15 + Math.random() * 70,
+        duration: 3.5 + Math.random() * 2,
+        delay: Math.random() * 3,
+      }))
+    )
+  }, [])
 
   useEffect(() => {
     const newParticles: Particle[] = []
@@ -249,13 +269,13 @@ export function Brain3D({ className = "" }: { className?: string }) {
       </motion.div>
 
       {/* Ambient neural activity particles */}
-      {[...Array(12)].map((_, i) => (
+      {isMounted && ambientParticles.map((particle, i) => (
         <motion.div
           key={`ambient-${i}`}
           className="absolute w-1 h-1 bg-cyan-400 rounded-full"
           style={{
-            left: `${15 + Math.random() * 70}%`,
-            top: `${15 + Math.random() * 70}%`,
+            left: `${particle.left}%`,
+            top: `${particle.top}%`,
             boxShadow: "0 0 4px rgba(34, 211, 238, 0.8)",
           }}
           animate={{
@@ -265,9 +285,9 @@ export function Brain3D({ className = "" }: { className?: string }) {
             scale: [0, 1.5, 0],
           }}
           transition={{
-            duration: 3.5 + Math.random() * 2,
+            duration: particle.duration,
             repeat: Number.POSITIVE_INFINITY,
-            delay: Math.random() * 3,
+            delay: particle.delay,
             ease: "easeInOut",
           }}
         />

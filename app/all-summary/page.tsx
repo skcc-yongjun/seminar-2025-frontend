@@ -31,9 +31,11 @@ export default function AllSummaryPage() {
   const categoryMapping: Record<string, string> = {
     "경쟁력 진단": "경쟁력 진단",
     "과제 구체성": "과제 구체성", 
-    "도전적 목표": "도전적 목표",
+    "도전적 목표": "도전적 목표(CbA)", // 백엔드에서 "도전적 목표"로 올 수 있음
+    "도전적 목표(CbA)": "도전적 목표(CbA)",
+    "지속 가능한 체계화": "지속 가능한 체계화", // 별도 항목
+    "지속가능성": "지속가능성", // 별도 항목 (지속 가능한 체계화와 다른 항목)
     "본원적 경쟁력": "본원적 경쟁력",
-    "지속가능성": "지속가능성",
     "혁신성": "혁신성"
   }
 
@@ -54,15 +56,26 @@ export default function AllSummaryPage() {
         // 평가 기준 추출 (AI + 사람 평가 카테고리 분리)
         const aiCategories = categoryData.ai_category_rankings.map(ranking => ranking.ranking_type)
         const humanCategories = categoryData.human_category_rankings.map(ranking => ranking.ranking_type)
-        const allCategories = [...aiCategories, ...humanCategories]
+        
+        // 카테고리명 정규화 (매핑 적용하여 통일된 이름으로 변환)
+        const normalizedAiCategories = aiCategories.map(cat => categoryMapping[cat] || cat)
+        const normalizedHumanCategories = humanCategories.map(cat => categoryMapping[cat] || cat)
+        
+        // "지속 가능한 체계화"를 AI 평가 항목으로 수동 추가 (백엔드에 없는 경우 대비)
+        if (!normalizedAiCategories.includes("지속 가능한 체계화")) {
+          normalizedAiCategories.push("지속 가능한 체계화")
+        }
+        
+        // 중복 제거하여 최종 카테고리 목록 생성
+        const allCategories = [...new Set([...normalizedAiCategories, ...normalizedHumanCategories])]
         
         setCriteria(allCategories)
-        setAiCriteria(aiCategories)
-        setHumanCriteria(humanCategories)
+        setAiCriteria(normalizedAiCategories)
+        setHumanCriteria(normalizedHumanCategories)
         
-        console.log("백엔드에서 가져온 카테고리:", allCategories)
-        console.log("AI 평가 카테고리:", aiCategories)
-        console.log("현장 평가 카테고리:", humanCategories)
+        console.log("백엔드에서 가져온 원본 카테고리:", { ai: aiCategories, human: humanCategories })
+        console.log("정규화된 카테고리:", { ai: normalizedAiCategories, human: normalizedHumanCategories })
+        console.log("최종 표시할 카테고리:", allCategories)
         
         // 첫 번째 기준을 기본 선택으로 설정
         if (allCategories.length > 0) {
@@ -101,18 +114,40 @@ export default function AllSummaryPage() {
             
             // AI 평가 점수 매핑
             aiScores.forEach(score => {
-              detailedScores[score.category] = Number(score.score)
+              const categoryKey = score.category
+              // 카테고리 매핑 적용 (예: "지속가능성" -> "지속 가능한 체계화")
+              const mappedCategory = categoryMapping[categoryKey] || categoryKey
+              detailedScores[mappedCategory] = Number(score.score)
+              // 원본 카테고리명도 유지 (역매핑을 위해)
+              if (mappedCategory !== categoryKey) {
+                detailedScores[categoryKey] = Number(score.score)
+              }
             })
             
             // 사람 평가 점수 매핑 (같은 카테고리가 있으면 평균값 사용)
             humanScores.forEach(score => {
-              const existingScore = detailedScores[score.category]
+              const categoryKey = score.category
+              // 카테고리 매핑 적용
+              const mappedCategory = categoryMapping[categoryKey] || categoryKey
+              
+              // 매핑된 카테고리로 점수 찾기
+              const existingScore = detailedScores[mappedCategory]
               if (existingScore !== undefined) {
                 // 이미 AI 점수가 있으면 평균값 사용
-                detailedScores[score.category] = (existingScore + Number(score.score)) / 2
+                detailedScores[mappedCategory] = (existingScore + Number(score.score)) / 2
               } else {
                 // AI 점수가 없으면 사람 점수만 사용
-                detailedScores[score.category] = Number(score.score)
+                detailedScores[mappedCategory] = Number(score.score)
+              }
+              
+              // 원본 카테고리명도 업데이트
+              if (mappedCategory !== categoryKey) {
+                const existingOriginalScore = detailedScores[categoryKey]
+                if (existingOriginalScore !== undefined) {
+                  detailedScores[categoryKey] = (existingOriginalScore + Number(score.score)) / 2
+                } else {
+                  detailedScores[categoryKey] = Number(score.score)
+                }
               }
             })
             
@@ -224,24 +259,11 @@ export default function AllSummaryPage() {
       )
     : []
 
-  // AI 평가
-  const aiDisplay = [
-    ...aiRanked.slice(0, 6),
-    ...Array(Math.max(0, 6 - aiRanked.length)).fill(null).map((_, idx) => ({
-      company: `샘플회사${idx+1+aiRanked.length}`,
-      ai_score: 0,
-      presentation_id: `dummy-ai-${idx}`
-    }))
-  ];
-  // 경영진 평가
-  const onsiteDisplay = [
-    ...onsiteRanked.slice(0, 6),
-    ...Array(Math.max(0, 6 - onsiteRanked.length)).fill(null).map((_, idx) => ({
-      company: `샘플회사${idx+1+onsiteRanked.length}`,
-      human_score: 0,
-      presentation_id: `dummy-onsite-${idx}`
-    }))
-  ];
+  // AI 평가 (전체 표시)
+  const aiDisplay = aiRanked;
+  
+  // 경영진 평가 (전체 표시)
+  const onsiteDisplay = onsiteRanked;
 
   return (
     <div
@@ -559,12 +581,44 @@ export default function AllSummaryPage() {
             <CardContent>
               <div className="space-y-4">
                 {criterionSorted.map((presenter, idx) => {
-                  const mappedKey = categoryMapping[selectedCriterion] || selectedCriterion
-                  const score = presenter.detailed_scores[mappedKey] || 0
-                  const maxScore = 10
+                  // 카테고리 매핑: 여러 가능한 키를 시도
+                  let mappedKey = categoryMapping[selectedCriterion] || selectedCriterion
+                  let score = presenter.detailed_scores[mappedKey] || 0
+                  
+                  // 매핑된 키로 찾지 못하면 원본 키로도 시도
+                  if (score === 0) {
+                    score = presenter.detailed_scores[selectedCriterion] || 0
+                  }
+                  
+                  // 역방향 매핑도 확인 (점수 키 -> 카테고리명)
+                  if (score === 0) {
+                    // 매핑 테이블의 모든 값을 확인
+                    for (const [mapKey, mapValue] of Object.entries(categoryMapping)) {
+                      if (mapValue === selectedCriterion || selectedCriterion.includes(mapValue) || mapValue.includes(selectedCriterion)) {
+                        score = presenter.detailed_scores[mapValue] || presenter.detailed_scores[mapKey] || 0
+                        if (score > 0) break
+                      }
+                    }
+                  }
+                  
+                  // 점수 키에 직접 카테고리명이 있는지 확인 (부분 일치)
+                  if (score === 0) {
+                    for (const [key, value] of Object.entries(presenter.detailed_scores)) {
+                      if (key === selectedCriterion || 
+                          key.includes(selectedCriterion) || 
+                          selectedCriterion.includes(key) ||
+                          key.replace(/\s/g, '') === selectedCriterion.replace(/\s/g, '') ||
+                          selectedCriterion.replace(/\s/g, '') === key.replace(/\s/g, '')) {
+                        score = value
+                        break
+                      }
+                    }
+                  }
+                  
+                  const maxScore = 100 // 100점 만점으로 변경
                   const percentage = (score / maxScore) * 100
                   
-                  console.log(`발표자 ${presenter.presenter_name}, 기준 ${selectedCriterion} -> ${mappedKey}, 점수:`, score, "상세점수:", presenter.detailed_scores)
+                  console.log(`발표자 ${presenter.company}, 기준 "${selectedCriterion}" -> 매핑 "${mappedKey}", 점수: ${score}`, "전체 상세점수:", presenter.detailed_scores)
 
                   return (
                     <motion.div

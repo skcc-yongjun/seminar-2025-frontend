@@ -795,11 +795,12 @@ export default function PostPresentationPage() {
                         <Button
                           onClick={handleRevealResults}
                           size="lg"
-                          className="px-8 py-6 text-lg font-semibold rounded-lg shadow-xl hover:shadow-2xl transition-all gap-3"
+                          className="px-8 py-6 text-lg font-semibold rounded-xl backdrop-blur-sm border-2 transition-all gap-3 hover:border-cyan-400 hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] hover:text-cyan-300"
                           style={{
-                            background: "linear-gradient(135deg, #3b82f6, #2563eb)",
-                            color: "white",
-                            boxShadow: "0 0 30px rgba(59, 130, 246, 0.5)",
+                            background: "rgba(10, 20, 40, 0.95)",
+                            borderColor: "rgba(34, 211, 238, 0.5)",
+                            color: "rgba(34, 211, 238, 0.9)",
+                            boxShadow: "0 0 30px rgba(34, 211, 238, 0.3), 0 8px 32px rgba(0, 0, 0, 0.6)",
                           }}
                         >
                           <Sparkles className="w-5 h-5" />

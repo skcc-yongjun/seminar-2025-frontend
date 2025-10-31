@@ -84,19 +84,29 @@ function PanelLiveContent() {
       )
       
       if (comments.length > 0) {
-        // 새로운 코멘트를 박스 형태로 추가 (최근 3개 유지)
-        const latestComment = comments[comments.length - 1]
-        const newMsg = { id: messageId, text: latestComment.comment_text }
+        const latestComment = comments[comments.length - 1];
+        
+        // 중복 체크: 이미 표시된 메시지와 같은지 확인
         setMessages((prev) => {
-          const updated = [...prev, newMsg]
-          return updated.slice(-3)
-        })
-        setMessageId((prev) => prev + 1)
-        setLastUpdate(new Date().toLocaleTimeString('ko-KR'))
+          // 마지막 메시지와 같은 내용이면 추가하지 않음
+          if (prev.length > 0 && prev[prev.length - 1].text === latestComment.comment_text) {
+            console.log('🔄 [Polling] 중복 메시지 무시:', latestComment.comment_text.substring(0, 30) + '...');
+            return prev;
+          }
+          
+          // 새로운 메시지 추가
+          console.log('✅ [Polling] 새 메시지 추가:', latestComment.comment_text.substring(0, 30) + '...');
+          const newMsg = { id: messageId, text: latestComment.comment_text };
+          const updated = [...prev, newMsg];
+          return updated.slice(-3); // 최근 3개만 유지
+        });
+        
+        setMessageId((prev) => prev + 1);
+        setLastUpdate(new Date().toLocaleTimeString('ko-KR'));
         
         // 가장 최근 코멘트의 타임스탬프를 저장
-        const timestampSeconds = Math.floor(new Date(latestComment.created_at).getTime() / 1000)
-        setLastTimestamp(timestampSeconds)
+        const timestampSeconds = Math.floor(new Date(latestComment.created_at).getTime() / 1000);
+        setLastTimestamp(timestampSeconds);
       }
     } catch (err) {
       console.error("데이터 폴링 실패:", err)
@@ -117,7 +127,7 @@ function PanelLiveContent() {
     // 10초마다 폴링
     const interval = setInterval(() => {
       pollData()
-    }, 10000)
+    }, 1000)
 
     return () => clearInterval(interval)
   }, [isLiveActive, currentPresentationId])
