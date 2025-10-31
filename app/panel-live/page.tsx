@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, Home, RefreshCw, AlertCircle } from "lucide-react"
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState, useRef, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -23,6 +23,9 @@ function PanelLiveContent() {
   const [error, setError] = useState<string | null>(null)
   const [isPolling, setIsPolling] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const leftContainerRef = useRef<HTMLDivElement | null>(null)
+  const rightPanelRef = useRef<HTMLDivElement | null>(null)
+  const [rightPanelHeight, setRightPanelHeight] = useState<number>(0)
 
   // 패널 참가자 정보 (하드코딩)
   const participants = [
@@ -37,6 +40,7 @@ function PanelLiveContent() {
       image: "/panels/songseungheon.png",
     },
     {
+      
       name: "박종훈",
       title: "Moderator",
       image: "/panels/parkjonghun.png",
@@ -105,6 +109,17 @@ function PanelLiveContent() {
       setIsPolling(false)
     }
   }
+
+  // 오른쪽 라이브 패널 높이를 측정해 왼쪽 컨테이너에 반영
+  useEffect(() => {
+    const measure = () => {
+      const h = rightPanelRef.current?.offsetHeight || 0
+      setRightPanelHeight(h)
+    }
+    measure()
+    window.addEventListener("resize", measure)
+    return () => window.removeEventListener("resize", measure)
+  }, [messages, isLiveActive, error])
 
 
   // 10초마다 DB 폴링
@@ -238,11 +253,13 @@ function PanelLiveContent() {
         </motion.p>
       </div>
 
-      <div className="relative z-10 flex gap-6 max-w-7xl mx-auto">
+      <div className="relative z-10 flex gap-8 max-w-screen-2xl mx-auto">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="w-80 flex-shrink-0 space-y-6 mt-16"
+          className="w-96 flex-shrink-0 mt-16 h-full flex flex-col justify-between"
+          ref={leftContainerRef}
+          style={{ height: rightPanelHeight ? `${rightPanelHeight}px` : undefined }}
         >
           {participants.map((participant, index) => (
             <motion.div
@@ -265,7 +282,7 @@ function PanelLiveContent() {
                       delay: index * 0.3,
                     }}
                   />
-                  <div className="relative w-32 h-32 rounded-full border-4 border-cyan-500/50 overflow-hidden bg-slate-800">
+                  <div className="relative w-40 h-40 rounded-full border-[5px] border-cyan-500/50 overflow-hidden bg-slate-800">
                     <img
                       src={participant.image || "/placeholder.svg"}
                       alt={participant.name}
@@ -274,8 +291,8 @@ function PanelLiveContent() {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-white font-bold text-2xl mb-1">{participant.name}</h3>
-                  <p className="text-cyan-400/70 text-base">{participant.title}</p>
+                  <h3 className="text-white font-bold text-3xl mb-1">{participant.name}</h3>
+                  <p className="text-cyan-400/70 text-lg">{participant.title}</p>
                 </div>
               </div>
             </motion.div>
@@ -319,7 +336,7 @@ function PanelLiveContent() {
                 ease: "easeInOut",
               }}
             />
-            <div className="relative bg-slate-900/70 backdrop-blur-xl rounded-2xl border-2 border-cyan-500/50 p-12 shadow-2xl">
+            <div ref={rightPanelRef} className="relative bg-slate-900/70 backdrop-blur-xl rounded-2xl border-2 border-cyan-500/50 p-12 shadow-2xl">
               <div className="flex items-center gap-3 mb-8">
                 <motion.div
                   className="relative flex items-center gap-2 bg-red-500/20 border-2 border-red-500/50 rounded-full px-6 py-2"
@@ -519,7 +536,7 @@ function PanelLiveContent() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
-        className="relative z-10 mt-16 flex items-center justify-between max-w-7xl mx-auto"
+        className="relative z-10 mt-16 flex items-center justify-between max-w-screen-2xl mx-auto"
       >
         <p className="text-xs text-cyan-400/60">
           © 2025 SK Group. All rights reserved.
