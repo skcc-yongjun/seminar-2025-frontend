@@ -886,7 +886,8 @@ export interface PresentationAnalysisCommentResponse {
   comment_id: number
   presentation_id: string
   type: string // '강점' | '약점' | '총평'
-  comment: string
+  title: string | null // 제목
+  comment: string // 본문
   source_type: string // '발표' | '자료'
   source: string | null
   created_at: string
@@ -915,6 +916,86 @@ export async function fetchPresentationAnalysisComments(
   
   const data = await response.json() as PresentationAnalysisCommentList
   return data.items
+}
+
+export interface PresentationAnalysisCommentCreate {
+  presentation_id: string
+  type: string // '강점' | '약점' | '총평'
+  title?: string | null // 제목
+  comment: string // 본문
+  source_type: string // '발표' | '자료'
+  source?: string | null
+}
+
+export interface PresentationAnalysisCommentUpdate {
+  type?: string
+  title?: string | null // 제목
+  comment?: string // 본문
+  source_type?: string
+  source?: string | null
+}
+
+/**
+ * 발표 분석 코멘트 생성
+ * @param data 생성할 코멘트 데이터
+ * @returns 생성된 코멘트
+ */
+export async function createPresentationAnalysisComment(
+  data: PresentationAnalysisCommentCreate
+): Promise<PresentationAnalysisCommentResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/presentation-analysis-comments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  
+  if (!response.ok) {
+    throw new Error(`분석 코멘트 생성 실패: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 발표 분석 코멘트 수정
+ * @param commentId 코멘트 ID
+ * @param data 수정할 데이터
+ * @returns 수정된 코멘트
+ */
+export async function updatePresentationAnalysisComment(
+  commentId: number,
+  data: PresentationAnalysisCommentUpdate
+): Promise<PresentationAnalysisCommentResponse> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/presentation-analysis-comments/${commentId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  
+  if (!response.ok) {
+    throw new Error(`분석 코멘트 수정 실패: ${response.status}`)
+  }
+  
+  return response.json()
+}
+
+/**
+ * 발표 분석 코멘트 삭제
+ * @param commentId 코멘트 ID
+ * @returns 삭제 성공 여부
+ */
+export async function deletePresentationAnalysisComment(commentId: number): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/seminar/api/presentation-analysis-comments/${commentId}`, {
+    method: 'DELETE',
+  })
+  
+  if (!response.ok) {
+    throw new Error(`분석 코멘트 삭제 실패: ${response.status}`)
+  }
 }
 
 // AI Evaluation Score API Types

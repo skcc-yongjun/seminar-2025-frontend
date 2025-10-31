@@ -39,8 +39,10 @@ import {
 export default function PromptsPage() {
   // 상태 관리
   const [prompts, setPrompts] = useState<PromptResponse[]>([])
+  const [allPrompts, setAllPrompts] = useState<PromptResponse[]>([]) // 전체 프롬프트 목록
   const [presentations, setPresentations] = useState<PresentationResponse[]>([])
   const [presenters, setPresenters] = useState<PresenterResponse[]>([])
+  const [selectedSession, setSelectedSession] = useState<string | null>(null) // 선택된 세션 ("세션1", "세션2", "패널토의")
   const [isLoading, setIsLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [editingPrompt, setEditingPrompt] = useState<PromptResponse | null>(null)
@@ -93,10 +95,29 @@ export default function PromptsPage() {
    * 초기 데이터 로드
    * 프롬프트 목록, 발표 목록, 발표자 목록을 동시에 조회
    */
-
   useEffect(() => {
     loadData()
   }, [])
+
+  /**
+   * 선택된 세션이 변경되면 프롬프트 필터링
+   */
+  useEffect(() => {
+    if (!selectedSession) {
+      setPrompts([])
+      return
+    }
+    
+    // 선택된 세션의 모든 발표의 프롬프트
+    const sessionPresentationIds = presentations
+      .filter((p) => p.session_type === selectedSession)
+      .map((p) => p.presentation_id)
+    
+    const filteredPrompts = allPrompts.filter((prompt) => 
+      prompt.presentation_id && sessionPresentationIds.includes(prompt.presentation_id)
+    )
+    setPrompts(filteredPrompts)
+  }, [selectedSession, allPrompts, presentations])
 
   /**
    * 프롬프트, 발표, 발표자 데이터 로드
@@ -109,9 +130,15 @@ export default function PromptsPage() {
         fetchPresentations(),
         fetchPresenters(),
       ])
-      setPrompts(promptsData)
+      setAllPrompts(promptsData)
       setPresentations(presentationsData)
       setPresenters(presentersData)
+      
+      // 초기 선택: 첫 번째 세션으로 시작
+      const availableSessions = Array.from(new Set(presentationsData.map((p) => p.session_type))).sort()
+      if (availableSessions.length > 0) {
+        setSelectedSession(availableSessions[0])
+      }
     } catch (error) {
       console.error("데이터 조회 실패:", error)
       toast({
@@ -276,6 +303,39 @@ export default function PromptsPage() {
     }
   }
 
+  /**
+   * 세션 선택
+   * @param session 세션 타입 ("세션1", "세션2", "패널토의")
+   */
+  const handleSelectSession = (session: string) => {
+    setSelectedSession(session)
+  }
+
+  /**
+   * 세션별 프롬프트 개수 조회
+   * @param session 세션 타입 ("세션1", "세션2", "패널토의")
+   * @returns 프롬프트 개수
+   */
+  const getPromptCountBySession = (session: string): number => {
+    // 해당 세션의 모든 발표의 프롬프트 개수
+    const sessionPresentationIds = presentations
+      .filter((p) => p.session_type === session)
+      .map((p) => p.presentation_id)
+    
+    return allPrompts.filter((prompt) => 
+      prompt.presentation_id && sessionPresentationIds.includes(prompt.presentation_id)
+    ).length
+  }
+
+  /**
+   * 사용 가능한 세션 목록 조회
+   * @returns 세션 타입 배열
+   */
+  const getAvailableSessions = (): string[] => {
+    const sessions = new Set(presentations.map((p) => p.session_type))
+    return Array.from(sessions).sort()
+  }
+
   return (
     <div className="min-h-screen p-4 md:p-6 relative overflow-hidden">
       <div className="fixed inset-0 pointer-events-none">
@@ -283,7 +343,7 @@ export default function PromptsPage() {
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-sk-red/3 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
+      <div className="max-w-[1600px] mx-auto relative z-10">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <Link
             href="/operation/common"
@@ -305,47 +365,130 @@ export default function PromptsPage() {
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-sk-red" />
           </div>
-        ) : prompts.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">등록된 프롬프트가 없습니다.</p>
-          </div>
         ) : (
-          <div className="space-y-3">
-            {prompts.map((prompt, index) => (
-              <motion.div
-                key={prompt.prompt_id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * index }}
-              >
-                <div className="corporate-card rounded-xl p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-3">
-                        <Badge variant="outline" className="border-sk-red/30 text-sk-red">
-                          {getPresentationTitle(prompt.presentation_id)}
-                        </Badge>
-                        <Badge variant="outline" className={getTypeColor(prompt.prompt_type)}>
-                          {prompt.prompt_type}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground line-clamp-2">{prompt.content}</p>
-                      <p className="text-xs text-muted-foreground/60 mt-2">ID: {prompt.prompt_id}</p>
-                    </div>
-                    <div className="flex gap-2 ml-4">
-                      <Button
-                        onClick={() => handleEdit(prompt)}
-                        variant="outline"
-                        size="sm"
-                        disabled={isSaving}
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
+          <div className="grid grid-cols-[320px_1fr] gap-6">
+            {/* 왼쪽: 세션 리스트 */}
+            <div className="space-y-3">
+              <div className="corporate-card rounded-xl p-4">
+                <h2 className="text-lg font-semibold text-foreground mb-4">세션 목록</h2>
+                <div className="space-y-2">
+                  {/* 각 세션별 프롬프트 */}
+                  {getAvailableSessions().length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      등록된 세션이 없습니다.
+                    </p>
+                  ) : (
+                    getAvailableSessions().map((session) => {
+                      const promptCount = getPromptCountBySession(session)
+                      const isSelected = selectedSession === session
+                      const sessionPresentations = presentations.filter((p) => p.session_type === session)
+                      
+                      return (
+                        <button
+                          key={session}
+                          onClick={() => handleSelectSession(session)}
+                          className={`w-full text-left p-3 rounded-lg transition-all ${
+                            isSelected
+                              ? "bg-sk-red/20 border-2 border-sk-red"
+                              : "bg-card/50 border-2 border-transparent hover:border-sk-red/30"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm font-medium truncate ${
+                                isSelected ? "text-sk-red" : "text-foreground"
+                              }`}>
+                                {session}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                발표 {sessionPresentations.length}개
+                              </p>
+                            </div>
+                            <Badge 
+                              variant="outline" 
+                              className={`shrink-0 ${
+                                isSelected 
+                                  ? "bg-sk-red text-white border-sk-red" 
+                                  : "bg-muted"
+                              }`}
+                            >
+                              {promptCount}개
+                            </Badge>
+                          </div>
+                        </button>
+                      )
+                    })
+                  )}
                 </div>
-              </motion.div>
-            ))}
+              </div>
+            </div>
+
+            {/* 오른쪽: 선택된 세션의 프롬프트 목록 */}
+            <div>
+              {!selectedSession ? (
+                <div className="corporate-card rounded-xl p-12 text-center">
+                  <p className="text-muted-foreground">왼쪽에서 세션을 선택해주세요.</p>
+                </div>
+              ) : prompts.length === 0 ? (
+                <div className="corporate-card rounded-xl p-12 text-center">
+                  <p className="text-muted-foreground mb-4">
+                    {selectedSession}에 등록된 프롬프트가 없습니다.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {prompts.map((prompt, index) => {
+                    // 프롬프트가 속한 발표 정보 찾기
+                    const presentation = prompt.presentation_id 
+                      ? presentations.find((p) => p.presentation_id === prompt.presentation_id)
+                      : null
+                    const presenter = presentation
+                      ? presenters.find((p) => p.presenter_id === presentation.presenter_id)
+                      : null
+                    
+                    return (
+                      <motion.div
+                        key={prompt.prompt_id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * index }}
+                      >
+                        <div className="corporate-card rounded-xl p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-3">
+                                <Badge variant="outline" className={getTypeColor(prompt.prompt_type)}>
+                                  {prompt.prompt_type}
+                                </Badge>
+                                {/* 발표 정보 표시 */}
+                                {presentation && (
+                                  <Badge variant="outline" className="border-sk-red/30 text-sk-red text-xs">
+                                    {presentation.topic}
+                                    {presenter && ` - ${presenter.name}`}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-muted-foreground line-clamp-3">{prompt.content}</p>
+                              <p className="text-xs text-muted-foreground/60 mt-2">ID: {prompt.prompt_id}</p>
+                            </div>
+                            <div className="flex gap-2 ml-4">
+                              <Button
+                                onClick={() => handleEdit(prompt)}
+                                variant="outline"
+                                size="sm"
+                                disabled={isSaving}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion"
 import Link from "next/link"
-import { ArrowLeft, Sparkles, Lightbulb, Calculator, Users, Loader2, Clock, CheckCircle, Play, Pause, AlertCircle } from "lucide-react"
+import { ArrowLeft, Sparkles, Lightbulb, Calculator, Users, Loader2, Clock, CheckCircle, Play, Pause, AlertCircle, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RefreshButton } from "@/components/ui/refresh-button"
@@ -550,6 +550,27 @@ export default function Session1OperationPage() {
                     autoRefreshInterval={5000}
                   />
                 </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
+            <div className="corporate-card rounded-xl p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                    <MessageSquare className="w-6 h-6 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">AI 정성평가 관리</h3>
+                    <p className="text-sm text-muted-foreground">AI 코멘트를 조회하고 관리합니다</p>
+                  </div>
+                </div>
+                <Link href="/operation/session1/qualitative-evaluation">
+                  <Button className="bg-purple-500 hover:bg-purple-600">
+                    관리하기
+                  </Button>
+                </Link>
               </div>
             </div>
           </motion.div>
