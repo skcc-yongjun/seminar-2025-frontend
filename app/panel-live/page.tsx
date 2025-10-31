@@ -267,7 +267,7 @@ function PanelLiveContent() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 + index * 0.1 }}
-              className="relative"
+              className={`relative ${index === participants.length - 1 ? "mb-4 md:mb-6" : ""}`}
             >
               <div className="flex items-center gap-4">
                 <div className="relative group flex-shrink-0">
@@ -462,7 +462,7 @@ function PanelLiveContent() {
               <div className="min-h-[280px] mb-12 space-y-4 flex flex-col justify-end">
                 {!isLiveActive ? (
                   <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic">
-                    라이브 시작 버튼을 눌러 AI 코멘트 폴링을 시작하세요...
+                    라이브 시작 버튼을 눌러 AI 요약을 시작하세요.
                   </p>
                 ) : messages.length === 0 ? (
                   <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic">
