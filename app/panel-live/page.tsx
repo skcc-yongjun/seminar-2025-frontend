@@ -471,11 +471,11 @@ function PanelLiveContent() {
 
               <div className="min-h-[280px] mb-12 space-y-4 flex flex-col justify-end">
                 {!isLiveActive ? (
-                  <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic">
+                  <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic text-center">
                     라이브 시작 버튼을 눌러 AI 요약을 시작하세요.
                   </p>
                 ) : messages.length === 0 ? (
-                  <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic">
+                  <p className="text-gray-500 text-2xl md:text-3xl leading-relaxed italic text-center">
                     AI 코멘트가 여기에 표시됩니다...
                   </p>
                 ) : (
