@@ -249,7 +249,7 @@ function PanelLiveContent() {
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-4xl md:text-5xl font-bold text-center text-cyan-400 mb-2"
+          className="text-5xl md:text-7xl font-bold text-center text-cyan-400 mb-2"
         >
           2026 글로벌 매크로 & 산업 전망
         </motion.h1>
@@ -257,7 +257,7 @@ function PanelLiveContent() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-center text-cyan-400/70 text-lg mb-8"
+          className="text-center text-cyan-400/70 text-2xl mb-8"
         >
           {sessionParam} - 실시간 라이브 모니터링
         </motion.p>
@@ -301,8 +301,8 @@ function PanelLiveContent() {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-white font-bold text-3xl mb-1">{participant.name}</h3>
-                  <p className="text-cyan-400/70 text-lg">{participant.title}</p>
+                  <h3 className="text-white font-bold text-5xl mb-1">{participant.name}</h3>
+                  <p className="text-cyan-400/70 text-2xl">{participant.title}</p>
                 </div>
               </div>
             </motion.div>
